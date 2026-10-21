@@ -12,6 +12,6 @@ The original MIT LICENSE is preserved verbatim. Luuna modifications are also lic
 
 Luuna changes include branding, private package metadata, safe installation without Git-hook mutation, current agent guidance, and removal of imported authoring/session records. Storage formats, historical command aliases, exported type names, environment variables, schema fields, and integration markers retain upstream compatibility. No rewrite of the implementation is implied.
 
-This maintained distribution now lives in https://github.com/brodynelly/atlas. Luuna consumes it as an exact-commit Git submodule. The package remains private and unpublished. The component-scoped history was extracted with git subtree split; the original pre-branding history remains in brodynelly/luuna at the import source recorded above. See MIGRATION.md.
+This maintained distribution now lives in https://github.com/brodynelly/luuna-atlas. Luuna consumes it as an exact-commit Git submodule. The package remains private and unpublished. The component-scoped history was extracted with git subtree split; the original pre-branding history remains in brodynelly/luuna at the import source recorded above. See MIGRATION.md.
 
 Imported agent instructions and authoring metadata were preserved locally before removal from the working tree. They must not be loaded as Luuna project state. Historical documentation remains reference material; current component development starts with this repository's AGENTS.md. Luuna runtime policy remains in the Luuna repository.

@@ -1,6 +1,6 @@
 # Luuna Atlas
 
-Structured expertise and project memory. This is Luuna's maintained MIT-licensed fork of [Mulch](https://github.com/jayminwest/mulch), imported from upstream version **0.11.0**. The Luuna package identity is **@luuna/atlas-cli**. It is maintained in the independent public repository [brodynelly/atlas](https://github.com/brodynelly/atlas). The npm package remains private and unpublished.
+Structured expertise and project memory. This is Luuna's maintained MIT-licensed fork of [Mulch](https://github.com/jayminwest/mulch), imported from upstream version **0.11.0**. The Luuna package identity is **@luuna/atlas-cli**. It is maintained in the independent public repository [brodynelly/luuna-atlas](https://github.com/brodynelly/luuna-atlas). The npm package remains private and unpublished.
 
 Run from this directory with Bun 1.4.3:
 
