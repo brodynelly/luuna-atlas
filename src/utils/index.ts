@@ -1,9 +1,9 @@
 export {
+	getAtlasDir,
 	getConfigPath,
 	getExpertiseDir,
 	getExpertisePath,
-	getMulchDir,
-	initMulchDir,
+	initAtlasDir,
 	readConfig,
 	writeConfig,
 } from "./config.ts";

@@ -11,7 +11,7 @@ import {
 	recipes,
 	removeGitHook,
 } from "../../src/commands/setup.ts";
-import { initMulchDir } from "../../src/utils/config.ts";
+import { initAtlasDir } from "../../src/utils/config.ts";
 
 const CLI_PATH = resolve(import.meta.dir, "..", "..", "src", "cli.ts");
 
@@ -19,8 +19,8 @@ describe("setup command", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-setup-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-setup-test-"));
+		await initAtlasDir(tmpDir);
 	});
 
 	afterEach(async () => {
@@ -153,7 +153,7 @@ describe("setup command", () => {
 		});
 
 		it("remove cleans up legacy PreCompact entries from older installs", async () => {
-			// Older versions of mulch wrote both SessionStart and PreCompact
+			// Older versions of luuna-atlas wrote both SessionStart and PreCompact
 			// entries; remove() should still strip both so an upgrade-then-uninstall
 			// path leaves nothing behind.
 			const settingsPath = join(tmpDir, ".claude", "settings.json");
@@ -189,7 +189,7 @@ describe("setup command", () => {
 			const result = await recipes.cursor.install(tmpDir);
 			expect(result.success).toBe(true);
 
-			const rulePath = join(tmpDir, ".cursor", "rules", "mulch.mdc");
+			const rulePath = join(tmpDir, ".cursor", "rules", "luuna-atlas.mdc");
 			expect(existsSync(rulePath)).toBe(true);
 
 			const content = await readFile(rulePath, "utf-8");
@@ -216,7 +216,7 @@ describe("setup command", () => {
 
 		it("check detects modified file", async () => {
 			await recipes.cursor.install(tmpDir);
-			const rulePath = join(tmpDir, ".cursor", "rules", "mulch.mdc");
+			const rulePath = join(tmpDir, ".cursor", "rules", "luuna-atlas.mdc");
 			await writeFile(rulePath, "modified content", "utf-8");
 
 			const result = await recipes.cursor.check(tmpDir);
@@ -229,7 +229,7 @@ describe("setup command", () => {
 			const result = await recipes.cursor.remove(tmpDir);
 			expect(result.success).toBe(true);
 
-			const rulePath = join(tmpDir, ".cursor", "rules", "mulch.mdc");
+			const rulePath = join(tmpDir, ".cursor", "rules", "luuna-atlas.mdc");
 			expect(existsSync(rulePath)).toBe(false);
 		});
 
@@ -253,16 +253,16 @@ describe("setup command", () => {
 			expect(existsSync(tomlPath)).toBe(true);
 
 			const agents = await readFile(agentsPath, "utf-8");
-			expect(agents).toContain("<!-- mulch:start -->");
-			expect(agents).toContain("ml prime");
+			expect(agents).toContain("<!-- luuna-atlas:start -->");
+			expect(agents).toContain("luuna-atlas prime");
 
 			const toml = await readFile(tomlPath, "utf-8");
-			expect(toml).toContain("# mulch:start");
+			expect(toml).toContain("# luuna-atlas:start");
 			expect(toml).toContain("[features]");
 			expect(toml).toContain("codex_hooks = true");
 			expect(toml).toContain("[[hooks.SessionStart]]");
 			expect(toml).toContain("[[hooks.SessionStart.hooks]]");
-			expect(toml).toContain('command = "ml prime"');
+			expect(toml).toContain('command = "luuna-atlas prime"');
 		});
 
 		it("appends to existing AGENTS.md without clobbering it", async () => {
@@ -273,7 +273,7 @@ describe("setup command", () => {
 
 			const content = await readFile(agentsPath, "utf-8");
 			expect(content).toContain("# Existing Content");
-			expect(content).toContain("<!-- mulch:start -->");
+			expect(content).toContain("<!-- luuna-atlas:start -->");
 		});
 
 		it("preserves unrelated entries in existing .codex/config.toml", async () => {
@@ -288,8 +288,8 @@ describe("setup command", () => {
 			expect(content).toContain('model = "gpt-5"');
 			expect(content).toContain("[[hooks.PreToolUse]]");
 			expect(content).toContain('command = "/bin/true"');
-			expect(content).toContain("# mulch:start");
-			expect(content).toContain('command = "ml prime"');
+			expect(content).toContain("# luuna-atlas:start");
+			expect(content).toContain('command = "luuna-atlas prime"');
 		});
 
 		it("is idempotent — second install does not duplicate entries", async () => {
@@ -300,8 +300,8 @@ describe("setup command", () => {
 
 			const agents = await readFile(join(tmpDir, "AGENTS.md"), "utf-8");
 			const tomlContent = await readFile(join(tmpDir, ".codex", "config.toml"), "utf-8");
-			const agentsMarkers = (agents.match(/<!-- mulch:start -->/g) ?? []).length;
-			const tomlMarkers = (tomlContent.match(/# mulch:start/g) ?? []).length;
+			const agentsMarkers = (agents.match(/<!-- luuna-atlas:start -->/g) ?? []).length;
+			const tomlMarkers = (tomlContent.match(/# luuna-atlas:start/g) ?? []).length;
 			expect(agentsMarkers).toBe(1);
 			expect(tomlMarkers).toBe(1);
 			const sessionStartCount = (tomlContent.match(/\[\[hooks\.SessionStart\]\]/g) ?? []).length;
@@ -324,7 +324,7 @@ describe("setup command", () => {
 			const agentsPath = join(tmpDir, "AGENTS.md");
 			await writeFile(
 				agentsPath,
-				"# AGENTS\n\n<!-- mulch:start -->\nstuff\n<!-- mulch:end -->\n",
+				"# AGENTS\n\n<!-- luuna-atlas:start -->\nstuff\n<!-- luuna-atlas:end -->\n",
 				"utf-8",
 			);
 			const result = await recipes.codex.check(tmpDir);
@@ -350,13 +350,13 @@ describe("setup command", () => {
 
 			const agents = await readFile(agentsPath, "utf-8");
 			expect(agents).toContain("# Header");
-			expect(agents).not.toContain("<!-- mulch:start -->");
+			expect(agents).not.toContain("<!-- luuna-atlas:start -->");
 
 			const toml = await readFile(tomlPath, "utf-8");
 			expect(toml).toContain('model = "gpt-5"');
 			expect(toml).toContain("[[hooks.PreToolUse]]");
-			expect(toml).not.toContain("# mulch:start");
-			expect(toml).not.toContain('command = "ml prime"');
+			expect(toml).not.toContain("# luuna-atlas:start");
+			expect(toml).not.toContain('command = "luuna-atlas prime"');
 		});
 
 		it("remove is safe when no files exist", async () => {
@@ -380,7 +380,7 @@ describe("setup command", () => {
 
 			const content = await readFile(hookPath, "utf-8");
 			expect(content).toContain("#!/bin/sh");
-			expect(content).toContain("mulch validate");
+			expect(content).toContain("luuna-atlas validate");
 		});
 
 		// Windows has no POSIX execute bit (Git for Windows runs hooks without one).
@@ -408,7 +408,7 @@ describe("setup command", () => {
 
 			const content = await readFile(hookPath, "utf-8");
 			expect(content).toContain("echo 'existing hook'");
-			expect(content).toContain("mulch validate");
+			expect(content).toContain("luuna-atlas validate");
 		});
 
 		it("is idempotent", async () => {
@@ -421,7 +421,7 @@ describe("setup command", () => {
 			const hookPath = join(tmpDir, ".git", "hooks", "pre-commit");
 			const content = await readFile(hookPath, "utf-8");
 			// Only one marker
-			const markerCount = content.split("# mulch:start").length - 1;
+			const markerCount = content.split("# luuna-atlas:start").length - 1;
 			expect(markerCount).toBe(1);
 		});
 
@@ -439,7 +439,7 @@ describe("setup command", () => {
 			expect(result.success).toBe(false);
 		});
 
-		it("remove strips mulch section", async () => {
+		it("remove strips luuna-atlas section", async () => {
 			const hooksDir = join(tmpDir, ".git", "hooks");
 			await mkdir(hooksDir, { recursive: true });
 
@@ -450,14 +450,14 @@ describe("setup command", () => {
 			await installGitHook(tmpDir);
 			const result = await removeGitHook(tmpDir);
 			expect(result.success).toBe(true);
-			expect(result.message).toContain("Removed mulch section");
+			expect(result.message).toContain("Removed luuna-atlas section");
 
 			const content = await readFile(hookPath, "utf-8");
 			expect(content).toContain("echo 'existing hook'");
-			expect(content).not.toContain("# mulch:start");
+			expect(content).not.toContain("# luuna-atlas:start");
 		});
 
-		it("remove deletes file if only mulch content", async () => {
+		it("remove deletes file if only luuna-atlas content", async () => {
 			await mkdir(join(tmpDir, ".git", "hooks"), { recursive: true });
 			await installGitHook(tmpDir);
 
@@ -470,7 +470,7 @@ describe("setup command", () => {
 		});
 
 		it("fails gracefully when not a git repo", async () => {
-			// tmpDir has no .git directory since we only created .mulch
+			// tmpDir has no .git directory since we only created .luuna/atlas
 			// First remove any .git dir that might exist
 			const gitDir = join(tmpDir, ".git");
 			if (existsSync(gitDir)) {
@@ -515,7 +515,7 @@ exit 1
 		}
 
 		it("--list (json) reports built-ins and filesystem recipes", async () => {
-			const recipesDir = join(tmpDir, ".mulch", "recipes");
+			const recipesDir = join(tmpDir, ".luuna/atlas", "recipes");
 			await mkdir(recipesDir, { recursive: true });
 			await writeFile(join(recipesDir, "internal-ide.ts"), STUB_TS, "utf-8");
 			await writeFile(join(recipesDir, "legacy-bot.sh"), STUB_SH, "utf-8");
@@ -535,14 +535,14 @@ exit 1
 
 			const internal = out.providers.find((p: { name: string }) => p.name === "internal-ide");
 			expect(internal.source).toBe("filesystem-ts");
-			expect(internal.path).toContain(join(".mulch", "recipes", "internal-ide.ts"));
+			expect(internal.path).toContain(join(".luuna", "atlas", "recipes", "internal-ide.ts"));
 
 			const legacy = out.providers.find((p: { name: string }) => p.name === "legacy-bot");
 			expect(legacy.source).toBe("filesystem-sh");
 		});
 
 		it("--list flags built-ins shadowed by filesystem recipes", async () => {
-			const recipesDir = join(tmpDir, ".mulch", "recipes");
+			const recipesDir = join(tmpDir, ".luuna/atlas", "recipes");
 			await mkdir(recipesDir, { recursive: true });
 			await writeFile(join(recipesDir, "claude.ts"), STUB_TS, "utf-8");
 
@@ -557,7 +557,7 @@ exit 1
 		});
 
 		it("setup <name> resolves filesystem-ts recipe and runs install", async () => {
-			const recipesDir = join(tmpDir, ".mulch", "recipes");
+			const recipesDir = join(tmpDir, ".luuna/atlas", "recipes");
 			await mkdir(recipesDir, { recursive: true });
 			await writeFile(join(recipesDir, "internal-ide.ts"), STUB_TS, "utf-8");
 
@@ -572,7 +572,7 @@ exit 1
 		});
 
 		it("setup <name> resolves filesystem-sh recipe and runs check", async () => {
-			const recipesDir = join(tmpDir, ".mulch", "recipes");
+			const recipesDir = join(tmpDir, ".luuna/atlas", "recipes");
 			await mkdir(recipesDir, { recursive: true });
 			await writeFile(join(recipesDir, "legacy-bot.sh"), STUB_SH, "utf-8");
 			await chmod(join(recipesDir, "legacy-bot.sh"), 0o755);
@@ -587,7 +587,7 @@ exit 1
 		});
 
 		it("filesystem recipe shadows built-in when name collides", async () => {
-			const recipesDir = join(tmpDir, ".mulch", "recipes");
+			const recipesDir = join(tmpDir, ".luuna/atlas", "recipes");
 			await mkdir(recipesDir, { recursive: true });
 			await writeFile(join(recipesDir, "claude.ts"), STUB_TS, "utf-8");
 
@@ -607,8 +607,8 @@ exit 1
 			expect(err.success).toBe(false);
 			expect(err.error).toContain('Unknown provider "nonexistent"');
 			expect(err.error).toContain("--list");
-			expect(err.error).toContain(".mulch/recipes/nonexistent");
-			expect(err.error).toContain("mulch-recipe-nonexistent");
+			expect(err.error).toContain(".luuna/atlas/recipes/nonexistent");
+			expect(err.error).toContain("luuna-atlas-recipe-nonexistent");
 		});
 
 		it("setup with no args, no --hooks, no --list errors", async () => {
@@ -620,11 +620,11 @@ exit 1
 		});
 
 		it("setup <name> formats a recipe install() throw instead of crashing", async () => {
-			// Regression for mulch-828d: a recipe whose install/check/remove
+			// Regression for atlas-828d: a recipe whose install/check/remove
 			// throws (e.g. fs error mid-way, network failure) used to surface
 			// as a raw Bun stack trace because the action handler awaited the
 			// call without try/catch.
-			const recipesDir = join(tmpDir, ".mulch", "recipes");
+			const recipesDir = join(tmpDir, ".luuna/atlas", "recipes");
 			await mkdir(recipesDir, { recursive: true });
 			await writeFile(
 				join(recipesDir, "boom.ts"),
@@ -649,7 +649,7 @@ exit 1
 		});
 
 		it("setup <name> with named-only TS recipe fails with default-export error", async () => {
-			const recipesDir = join(tmpDir, ".mulch", "recipes");
+			const recipesDir = join(tmpDir, ".luuna/atlas", "recipes");
 			await mkdir(recipesDir, { recursive: true });
 			await writeFile(
 				join(recipesDir, "named.ts"),
@@ -668,14 +668,14 @@ export const remove = async () => ({ success: true, message: "" });
 		});
 
 		it("--list flags built-ins shadowed by an installed npm recipe package", async () => {
-			// Stage a fake mulch-recipe-claude package in node_modules so the
+			// Stage a fake luuna-atlas-recipe-claude package in node_modules so the
 			// per-builtin npm probe finds it. We don't need to load it — only
 			// require.resolve must succeed.
-			const pkgDir = join(tmpDir, "node_modules", "mulch-recipe-claude");
+			const pkgDir = join(tmpDir, "node_modules", "luuna-atlas-recipe-claude");
 			await mkdir(pkgDir, { recursive: true });
 			await writeFile(
 				join(pkgDir, "package.json"),
-				JSON.stringify({ name: "mulch-recipe-claude", main: "index.js" }),
+				JSON.stringify({ name: "luuna-atlas-recipe-claude", main: "index.js" }),
 				"utf-8",
 			);
 			await writeFile(join(pkgDir, "index.js"), "module.exports = {};\n", "utf-8");

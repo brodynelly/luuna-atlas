@@ -11,13 +11,13 @@ const PKG_VERSION = (
 		version: string;
 	}
 ).version;
-const VERSION_MARKER = `<!-- mulch-onboard:v${PKG_VERSION} -->`;
+const VERSION_MARKER = `<!-- atlas-onboard:v${PKG_VERSION} -->`;
 
 describe("onboard command", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-onboard-test-"));
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-onboard-test-"));
 	});
 
 	afterEach(async () => {
@@ -33,10 +33,10 @@ describe("onboard command", () => {
 
 			expect(existsSync(join(tmpDir, "CLAUDE.md"))).toBe(true);
 			const content = await readFile(join(tmpDir, "CLAUDE.md"), "utf-8");
-			expect(content).toContain("## Project Expertise (Mulch)");
-			expect(content).toContain("ml prime");
-			expect(content).toContain("ml record");
-			expect(content).toContain("ml status");
+			expect(content).toContain("## Project Expertise (Atlas)");
+			expect(content).toContain("luuna-atlas prime");
+			expect(content).toContain("luuna-atlas record");
+			expect(content).toContain("luuna-atlas status");
 			expect(content).toContain(MARKER_START);
 			expect(content).toContain(MARKER_END);
 		} finally {
@@ -55,7 +55,7 @@ describe("onboard command", () => {
 
 			const content = await readFile(join(tmpDir, "CLAUDE.md"), "utf-8");
 			expect(content).toContain("# Existing content");
-			expect(content).toContain("## Project Expertise (Mulch)");
+			expect(content).toContain("## Project Expertise (Atlas)");
 		} finally {
 			consoleSpy.mockRestore();
 		}
@@ -71,7 +71,7 @@ describe("onboard command", () => {
 			const content = await readFile(join(tmpDir, "AGENTS.md"), "utf-8");
 			expect(content).toContain("# My Project");
 			expect(content).toContain("Some important info.");
-			expect(content).toContain("## Project Expertise (Mulch)");
+			expect(content).toContain("## Project Expertise (Atlas)");
 		} finally {
 			consoleSpy.mockRestore();
 		}
@@ -85,7 +85,7 @@ describe("onboard command", () => {
 			await runOnboard({ cwd: tmpDir });
 
 			const content = await readFile(join(tmpDir, "CLAUDE.md"), "utf-8");
-			const matches = content.match(/## Project Expertise \(Mulch\)/g);
+			const matches = content.match(/## Project Expertise \(Atlas\)/g);
 			expect(matches).toHaveLength(1);
 		} finally {
 			consoleSpy.mockRestore();
@@ -100,7 +100,7 @@ describe("onboard command", () => {
 			await runOnboard({ stdout: true, cwd: tmpDir });
 
 			expect(stdoutSpy).toHaveBeenCalledWith(
-				expect.stringContaining("## Project Expertise (Mulch)"),
+				expect.stringContaining("## Project Expertise (Atlas)"),
 			);
 			expect(existsSync(join(tmpDir, "AGENTS.md"))).toBe(false);
 			expect(existsSync(join(tmpDir, "CLAUDE.md"))).toBe(false);
@@ -131,7 +131,7 @@ describe("onboard command", () => {
 
 			const output = stdoutSpy.mock.calls[0]?.[0];
 			expect(output).toContain("At the start of every session");
-			expect(output).toContain("ml prime");
+			expect(output).toContain("luuna-atlas prime");
 		} finally {
 			stdoutSpy.mockRestore();
 		}
@@ -148,7 +148,7 @@ describe("onboard command", () => {
 
 			const output = stdoutSpy.mock.calls[0]?.[0];
 			expect(output).toContain("At the start of every session");
-			expect(output).toContain("ml prime");
+			expect(output).toContain("luuna-atlas prime");
 		} finally {
 			stdoutSpy.mockRestore();
 		}
@@ -163,8 +163,8 @@ describe("onboard command", () => {
 
 			const output = stdoutSpy.mock.calls[0]?.[0];
 			expect(output).toContain("Before You Finish");
-			expect(output).toContain("ml learn");
-			expect(output).toContain("ml sync");
+			expect(output).toContain("luuna-atlas learn");
+			expect(output).toContain("luuna-atlas sync");
 		} finally {
 			stdoutSpy.mockRestore();
 		}
@@ -177,8 +177,8 @@ describe("onboard command", () => {
 
 			const output = stdoutSpy.mock.calls[0]?.[0];
 			expect(output).toContain("Before You Finish");
-			expect(output).toContain("ml learn");
-			expect(output).toContain("ml sync");
+			expect(output).toContain("luuna-atlas learn");
+			expect(output).toContain("luuna-atlas sync");
 		} finally {
 			stdoutSpy.mockRestore();
 		}
@@ -190,9 +190,9 @@ describe("onboard command", () => {
 			await runOnboard({ stdout: true, cwd: tmpDir });
 
 			const output = stdoutSpy.mock.calls[0]?.[0];
-			expect(output).toContain("ml prime");
-			expect(output).toContain("ml record");
-			expect(output).toContain("ml status");
+			expect(output).toContain("luuna-atlas prime");
+			expect(output).toContain("luuna-atlas record");
+			expect(output).toContain("luuna-atlas status");
 		} finally {
 			stdoutSpy.mockRestore();
 		}
@@ -202,7 +202,7 @@ describe("onboard command", () => {
 
 	describe("marker-based update", () => {
 		it("updates an existing marker-wrapped snippet when content changes", async () => {
-			const oldSnippet = `${MARKER_START}\n## Project Expertise (Mulch)\n\nOld content here.\n${MARKER_END}`;
+			const oldSnippet = `${MARKER_START}\n## Project Expertise (Atlas)\n\nOld content here.\n${MARKER_END}`;
 			await writeFile(join(tmpDir, "CLAUDE.md"), `# My Project\n\n${oldSnippet}\n`, "utf-8");
 
 			const consoleSpy = spyOn(console, "log").mockImplementation(() => {});
@@ -210,13 +210,13 @@ describe("onboard command", () => {
 				await runOnboard({ cwd: tmpDir });
 
 				const content = await readFile(join(tmpDir, "CLAUDE.md"), "utf-8");
-				expect(content).toContain("ml prime");
+				expect(content).toContain("luuna-atlas prime");
 				expect(content).toContain(MARKER_START);
 				expect(content).toContain(MARKER_END);
 				expect(content).not.toContain("Old content here.");
 				expect(content).toContain("# My Project");
 				// Only one marker pair
-				const markerMatches = content.match(/<!-- mulch:start -->/g);
+				const markerMatches = content.match(/<!-- luuna-atlas:start -->/g);
 				expect(markerMatches).toHaveLength(1);
 			} finally {
 				consoleSpy.mockRestore();
@@ -265,7 +265,7 @@ describe("onboard command", () => {
 				expect(content).toContain("Some intro text.");
 				expect(content).toContain("## Other Section");
 				expect(content).toContain("More content.");
-				expect(content).toContain("ml prime");
+				expect(content).toContain("luuna-atlas prime");
 			} finally {
 				consoleSpy.mockRestore();
 			}
@@ -317,14 +317,14 @@ describe("onboard command", () => {
 				await runOnboard({ stdout: true, cwd: tmpDir });
 
 				const output = stdoutSpy.mock.calls[0]?.[0] as string;
-				expect(output).not.toContain("mulch-onboard-schema:");
+				expect(output).not.toContain("atlas-onboard-schema:");
 			} finally {
 				stdoutSpy.mockRestore();
 			}
 		});
 
 		it("updates outdated section when a different version marker is present", async () => {
-			const oldContent = `# Project\n\n${MARKER_START}\n## Project Expertise (Mulch)\n<!-- mulch-onboard:v0.0.1 -->\nold content\n${MARKER_END}\n`;
+			const oldContent = `# Project\n\n${MARKER_START}\n## Project Expertise (Atlas)\n<!-- atlas-onboard:v0.0.1 -->\nold content\n${MARKER_END}\n`;
 			await writeFile(join(tmpDir, "CLAUDE.md"), oldContent, "utf-8");
 
 			const consoleSpy = spyOn(console, "log").mockImplementation(() => {});
@@ -334,7 +334,7 @@ describe("onboard command", () => {
 				const content = await readFile(join(tmpDir, "CLAUDE.md"), "utf-8");
 				expect(content).toContain("# Project");
 				expect(content).toContain(VERSION_MARKER);
-				expect(content).not.toContain("mulch-onboard:v0.0.1");
+				expect(content).not.toContain("atlas-onboard:v0.0.1");
 				expect(content).not.toContain("old content");
 			} finally {
 				consoleSpy.mockRestore();
@@ -342,7 +342,7 @@ describe("onboard command", () => {
 		});
 
 		it("--check reports outdated for a different version marker", async () => {
-			const oldContent = `${MARKER_START}\n## Project Expertise (Mulch)\n<!-- mulch-onboard:v0.0.1 -->\nold\n${MARKER_END}`;
+			const oldContent = `${MARKER_START}\n## Project Expertise (Atlas)\n<!-- atlas-onboard:v0.0.1 -->\nold\n${MARKER_END}`;
 			await writeFile(join(tmpDir, "AGENTS.md"), oldContent, "utf-8");
 
 			const consoleSpy = spyOn(console, "log").mockImplementation(() => {});
@@ -355,8 +355,8 @@ describe("onboard command", () => {
 			}
 		});
 
-		it("--check reports outdated for legacy mulch-onboard-v:N marker", async () => {
-			const oldContent = `${MARKER_START}\n## Project Expertise (Mulch)\n<!-- mulch-onboard-v:0 -->\nold\n${MARKER_END}`;
+		it("--check reports outdated for legacy atlas-onboard-v:N marker", async () => {
+			const oldContent = `${MARKER_START}\n## Project Expertise (Atlas)\n<!-- atlas-onboard-v:0 -->\nold\n${MARKER_END}`;
 			await writeFile(join(tmpDir, "AGENTS.md"), oldContent, "utf-8");
 
 			const consoleSpy = spyOn(console, "log").mockImplementation(() => {});
@@ -373,13 +373,13 @@ describe("onboard command", () => {
 	// ── Legacy migration ──────────────────────────────────────
 
 	describe("legacy migration", () => {
-		const LEGACY_SNIPPET = `## Project Expertise (Mulch)
+		const LEGACY_SNIPPET = `## Project Expertise (Atlas)
 
-This project uses [Mulch](https://github.com/jayminwest/mulch) for structured expertise management.
+This project uses [Atlas](https://github.com/brodynelly/luuna-atlas) for structured expertise management.
 
 **At the start of every session**, run:
 \`\`\`bash
-mulch prime
+luuna-atlas prime
 \`\`\`
 
 This injects project-specific conventions, patterns, decisions, and other learnings into your context.
@@ -387,21 +387,21 @@ This injects project-specific conventions, patterns, decisions, and other learni
 **Before completing your task**, review your work for insights worth preserving — conventions discovered,
 patterns applied, failures encountered, or decisions made — and record them:
 \`\`\`bash
-mulch record <domain> --type <convention|pattern|failure|decision|reference|guide> --description "..."
+luuna-atlas record <domain> --type <convention|pattern|failure|decision|reference|guide> --description "..."
 \`\`\`
 
-Run \`mulch status\` to check domain health and entry counts.
-Run \`mulch --help\` for full usage.
+Run \`luuna-atlas status\` to check domain health and entry counts.
+Run \`luuna-atlas --help\` for full usage.
 
 ### Before You Finish
 
 1. Store insights from this work session:
    \`\`\`bash
-   mulch record <domain> --type <convention|pattern|failure|decision|reference|guide> --description "..."
+   luuna-atlas record <domain> --type <convention|pattern|failure|decision|reference|guide> --description "..."
    \`\`\`
 2. Validate and commit:
    \`\`\`bash
-   mulch validate && git add .mulch/ && git commit -m "mulch: record learnings"
+   luuna-atlas validate && git add .luuna/atlas/ && git commit -m "luuna-atlas: record learnings"
    \`\`\`
 `;
 
@@ -418,7 +418,7 @@ Run \`mulch --help\` for full usage.
 				expect(content).toContain(MARKER_END);
 				expect(content).toContain("# My Project");
 				// Only one header
-				const headers = content.match(/## Project Expertise \(Mulch\)/g);
+				const headers = content.match(/## Project Expertise \(Atlas\)/g);
 				expect(headers).toHaveLength(1);
 			} finally {
 				consoleSpy.mockRestore();
@@ -441,7 +441,7 @@ Run \`mulch --help\` for full usage.
 
 		it("handles edited legacy snippet (falls back to header-to-EOF)", async () => {
 			const editedLegacy =
-				"# My Project\n\n## Project Expertise (Mulch)\n\nSome custom text the user wrote.\n";
+				"# My Project\n\n## Project Expertise (Atlas)\n\nSome custom text the user wrote.\n";
 			await writeFile(join(tmpDir, "CLAUDE.md"), editedLegacy, "utf-8");
 
 			const consoleSpy = spyOn(console, "log").mockImplementation(() => {});
@@ -488,7 +488,7 @@ Run \`mulch --help\` for full usage.
 				await runOnboard({ cwd: tmpDir });
 
 				const content = await readFile(join(tmpDir, ".claude", "CLAUDE.md"), "utf-8");
-				expect(content).toContain("ml prime");
+				expect(content).toContain("luuna-atlas prime");
 				// Should NOT create root files
 				expect(existsSync(join(tmpDir, "CLAUDE.md"))).toBe(false);
 				expect(existsSync(join(tmpDir, "AGENTS.md"))).toBe(false);
@@ -509,7 +509,7 @@ Run \`mulch --help\` for full usage.
 
 				// Root should be updated
 				const rootContent = await readFile(join(tmpDir, "CLAUDE.md"), "utf-8");
-				expect(rootContent).toContain("ml prime");
+				expect(rootContent).toContain("luuna-atlas prime");
 				// Should warn about duplicate
 				expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("also found in"));
 			} finally {
@@ -529,9 +529,9 @@ Run \`mulch --help\` for full usage.
 
 				// Should update AGENTS.md, not add to CLAUDE.md
 				const agentsContent = await readFile(join(tmpDir, "AGENTS.md"), "utf-8");
-				expect(agentsContent).toContain("ml prime");
+				expect(agentsContent).toContain("luuna-atlas prime");
 				const claudeContent = await readFile(join(tmpDir, "CLAUDE.md"), "utf-8");
-				expect(claudeContent).not.toContain("mulch");
+				expect(claudeContent).not.toContain("luuna-atlas");
 			} finally {
 				consoleSpy.mockRestore();
 			}
@@ -541,7 +541,7 @@ Run \`mulch --help\` for full usage.
 			await mkdir(join(tmpDir, ".claude"), { recursive: true });
 			await writeFile(
 				join(tmpDir, ".claude", "CLAUDE.md"),
-				"# Config\n\n## Project Expertise (Mulch)\n\nOld text.\n",
+				"# Config\n\n## Project Expertise (Atlas)\n\nOld text.\n",
 				"utf-8",
 			);
 
@@ -551,7 +551,7 @@ Run \`mulch --help\` for full usage.
 
 				const content = await readFile(join(tmpDir, ".claude", "CLAUDE.md"), "utf-8");
 				expect(content).toContain(MARKER_START);
-				expect(content).toContain("ml prime");
+				expect(content).toContain("luuna-atlas prime");
 				expect(existsSync(join(tmpDir, "CLAUDE.md"))).toBe(false);
 				expect(existsSync(join(tmpDir, "AGENTS.md"))).toBe(false);
 			} finally {
@@ -608,7 +608,7 @@ Run \`mulch --help\` for full usage.
 		it("reports legacy when snippet has no markers", async () => {
 			await writeFile(
 				join(tmpDir, "CLAUDE.md"),
-				"## Project Expertise (Mulch)\n\nOld text.\n",
+				"## Project Expertise (Atlas)\n\nOld text.\n",
 				"utf-8",
 			);
 

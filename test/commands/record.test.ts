@@ -10,15 +10,15 @@ import { resetRegistry } from "../../src/registry/type-registry.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
 import type { ExpertiseRecord } from "../../src/schemas/record.ts";
 import { recordSchema } from "../../src/schemas/record-schema.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../src/utils/expertise.ts";
 
 describe("record command", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-record-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-record-test-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {}, architecture: {} } }, tmpDir);
 	});
 
@@ -259,7 +259,7 @@ describe("record command", () => {
 		const record = {
 			type: "reference",
 			name: "config-file",
-			description: "YAML config at .mulch/mulch.config.yaml",
+			description: "YAML config at .luuna/atlas/config.yaml",
 			files: ["src/utils/config.ts"],
 			classification: "foundational",
 			recorded_at: new Date().toISOString(),
@@ -275,7 +275,7 @@ describe("record command", () => {
 		const record = {
 			type: "guide",
 			name: "add-domain",
-			description: "Run mulch add <name> to create a new domain",
+			description: "Run luuna-atlas add <name> to create a new domain",
 			classification: "tactical",
 			recorded_at: new Date().toISOString(),
 		};
@@ -591,7 +591,7 @@ describe("record command", () => {
 			classification: "tactical",
 			recorded_at: new Date().toISOString(),
 			evidence: {
-				bead: "seeds-abc123",
+				bead: "missions-abc123",
 			},
 		};
 
@@ -609,14 +609,14 @@ describe("record command", () => {
 			classification: "tactical",
 			recorded_at: new Date().toISOString(),
 			evidence: {
-				bead: "seeds-xyz789",
+				bead: "missions-xyz789",
 			},
 		};
 		await appendRecord(filePath, record);
 
 		const records = await readExpertiseFile(filePath);
 		expect(records).toHaveLength(1);
-		expect(records[0]?.evidence?.bead).toBe("seeds-xyz789");
+		expect(records[0]?.evidence?.bead).toBe("missions-xyz789");
 	});
 
 	it("record with evidence.bead and other evidence fields validates", () => {
@@ -632,7 +632,7 @@ describe("record command", () => {
 				commit: "abc123def",
 				issue: "#42",
 				file: "src/test.ts",
-				bead: "seeds-999",
+				bead: "missions-999",
 			},
 		};
 
@@ -650,7 +650,7 @@ describe("record command", () => {
 			classification: "tactical",
 			recorded_at: new Date().toISOString(),
 			evidence: {
-				bead: "seeds-solo",
+				bead: "missions-solo",
 			},
 		};
 
@@ -856,8 +856,8 @@ describe("processStdinRecords", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-stdin-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-stdin-test-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {}, architecture: {} } }, tmpDir);
 	});
 
@@ -1347,8 +1347,8 @@ describe("--content flag for convention (pl-21a3)", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-content-flag-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-content-flag-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {} } }, tmpDir);
 		await createExpertiseFile(getExpertisePath("testing", tmpDir));
 	});
@@ -1416,7 +1416,7 @@ describe("--content flag for convention (pl-21a3)", () => {
 		);
 		expect(r.status).toBe(1);
 		expect(r.stderr).toMatch(/missing required flag\(s\): --content/);
-		expect(r.stderr).toMatch(/Retry: ml record testing --type convention/);
+		expect(r.stderr).toMatch(/Retry: luuna-atlas record testing --type convention/);
 		expect(r.stderr).toMatch(/--content/);
 		// Regression guard: the old tautological phrasing must not return.
 		expect(r.stderr).not.toContain("positional content for content");
@@ -1434,7 +1434,7 @@ describe("--content flag for convention (pl-21a3)", () => {
 		expect(out.success).toBe(false);
 		expect(out.command).toBe("record");
 		expect(out.error).toMatch(/missing required flag\(s\): --content/);
-		expect(out.error).toMatch(/Example: ml record testing --type convention .*--content/);
+		expect(out.error).toMatch(/Example: luuna-atlas record testing --type convention .*--content/);
 		expect(out.error).not.toContain("positional content for content");
 	});
 
@@ -1464,8 +1464,8 @@ describe("batch mode (--batch)", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-batch-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-batch-test-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {}, architecture: {} } }, tmpDir);
 	});
 
@@ -1733,8 +1733,8 @@ describe("validation hints", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-record-hints-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-record-hints-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {} } }, tmpDir);
 		const filePath = getExpertisePath("testing", tmpDir);
 		await createExpertiseFile(filePath);
@@ -1807,8 +1807,8 @@ describe("auto-create domain in CLI mode", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-record-autocreate-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-record-autocreate-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: {} }, tmpDir);
 	});
 
@@ -1922,17 +1922,17 @@ describe("auto-create domain in CLI mode", () => {
 });
 
 describe("evidence schema: multi-tracker fields", () => {
-	it("evidence.seeds validates against schema", () => {
+	it("evidence.missions validates against schema", () => {
 		const ajv = new Ajv();
 		const validate = ajv.compile(recordSchema);
 
 		const record = {
 			type: "pattern",
-			name: "seeds-linked",
-			description: "Pattern with seeds evidence",
+			name: "missions-linked",
+			description: "Pattern with missions evidence",
 			classification: "tactical",
 			recorded_at: new Date().toISOString(),
-			evidence: { seeds: "mulch-123a" },
+			evidence: { missions: "atlas-123a" },
 		};
 
 		expect(validate(record)).toBe(true);
@@ -1982,7 +1982,7 @@ describe("evidence schema: multi-tracker fields", () => {
 			evidence: {
 				commit: "abc123def",
 				bead: "bd-001",
-				seeds: "mulch-abc",
+				missions: "atlas-abc",
 				gh: "org/repo#99",
 				linear: "ENG-456",
 			},
@@ -1991,27 +1991,27 @@ describe("evidence schema: multi-tracker fields", () => {
 		expect(validate(record)).toBe(true);
 	});
 
-	it("evidence.seeds is stored and read back correctly", async () => {
-		const tmpDir2 = await mkdtemp(join(tmpdir(), "mulch-ev-test-"));
+	it("evidence.missions is stored and read back correctly", async () => {
+		const tmpDir2 = await mkdtemp(join(tmpdir(), "atlas-ev-test-"));
 		try {
-			await initMulchDir(tmpDir2);
+			await initAtlasDir(tmpDir2);
 			await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {} } }, tmpDir2);
 			const filePath = getExpertisePath("testing", tmpDir2);
 			await createExpertiseFile(filePath);
 
 			const record: ExpertiseRecord = {
 				type: "pattern",
-				name: "seeds-evidence",
-				description: "Pattern with seeds tracker evidence",
+				name: "missions-evidence",
+				description: "Pattern with missions tracker evidence",
 				classification: "tactical",
 				recorded_at: new Date().toISOString(),
-				evidence: { seeds: "mulch-xyz", gh: "org/repo#10" },
+				evidence: { missions: "atlas-xyz", gh: "org/repo#10" },
 			};
 			await appendRecord(filePath, record);
 
 			const records = await readExpertiseFile(filePath);
 			expect(records).toHaveLength(1);
-			expect(records[0]?.evidence?.seeds).toBe("mulch-xyz");
+			expect(records[0]?.evidence?.missions).toBe("atlas-xyz");
 			expect(records[0]?.evidence?.gh).toBe("org/repo#10");
 		} finally {
 			await rm(tmpDir2, { recursive: true, force: true });
@@ -2024,8 +2024,8 @@ describe("disabled-type writes (Phase 3)", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-disabled-write-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-disabled-write-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig(
 			{ ...DEFAULT_CONFIG, domains: { cli: {} }, disabled_types: ["failure"] },
 			tmpDir,
@@ -2136,13 +2136,13 @@ describe("dir_anchors (R-01)", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-dir-anchors-"));
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-dir-anchors-"));
 		// Real git repo so getContextFiles() can run; auto-population tests
 		// stage files into it to drive the heuristic.
 		execFileSync("git", ["init", "-q"], { cwd: tmpDir });
 		execFileSync("git", ["config", "user.email", "t@t"], { cwd: tmpDir });
 		execFileSync("git", ["config", "user.name", "t"], { cwd: tmpDir });
-		await initMulchDir(tmpDir);
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { cli: {} } }, tmpDir);
 		await createExpertiseFile(getExpertisePath("cli", tmpDir));
 	});
@@ -2199,7 +2199,7 @@ describe("dir_anchors (R-01)", () => {
 		expect(records[0]?.dir_anchors).toEqual(["src/foo"]);
 	});
 
-	it("normalizes a leading './' on write (mulch-c282)", async () => {
+	it("normalizes a leading './' on write (atlas-c282)", async () => {
 		const r = spawnSync(
 			"bun",
 			[
@@ -2219,7 +2219,7 @@ describe("dir_anchors (R-01)", () => {
 		expect(records[0]?.dir_anchors).toEqual(["src/foo"]);
 	});
 
-	it("rejects an absolute --dir-anchor path with a formatted error (mulch-c282)", async () => {
+	it("rejects an absolute --dir-anchor path with a formatted error (atlas-c282)", async () => {
 		const r = spawnSync(
 			"bun",
 			[
@@ -2241,7 +2241,7 @@ describe("dir_anchors (R-01)", () => {
 		expect(records).toEqual([]);
 	});
 
-	it("rejects a parent-traversal --dir-anchor with a formatted error (mulch-c282)", async () => {
+	it("rejects a parent-traversal --dir-anchor with a formatted error (atlas-c282)", async () => {
 		const r = spawnSync(
 			"bun",
 			[
@@ -2347,13 +2347,13 @@ describe("dir_anchors (R-01)", () => {
 	});
 });
 
-describe("--outcome-duration strict numeric parsing (mulch-5b9c)", () => {
+describe("--outcome-duration strict numeric parsing (atlas-5b9c)", () => {
 	const cliPath = resolve(process.cwd(), "src/cli.ts");
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-outdur-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-outdur-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { cli: {} } }, tmpDir);
 		await createExpertiseFile(getExpertisePath("cli", tmpDir));
 	});

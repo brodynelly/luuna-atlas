@@ -10,7 +10,7 @@
  * already fails the build when breached. This panel just surfaces the
  * current state in one place.
  *
- * Mulch has no bundle step, so there is no bundle-size row.
+ * Atlas has no bundle step, so there is no bundle-size row.
  *
  * All inputs are optional. Missing artifacts render a "—" placeholder
  * row rather than failing, so the reporter is safe to run before any

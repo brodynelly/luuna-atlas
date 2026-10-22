@@ -165,7 +165,7 @@ export function validateCustomTypeConfig(name: string, cfg: CustomTypeConfig): v
 	if (typeof cfg.summary === "string") {
 		// Reject `{tok}` references that won't resolve at render time. Without
 		// this, a typo (e.g. {description} on a type whose required field is
-		// `content`) renders as empty string in `ml prime` output, silently
+		// `content`) renders as empty string in `luuna-atlas prime` output, silently
 		// degrading every record of that type.
 		const validTokens = new Set<string>([...BASE_FIELDS, ...mergedSeen]);
 		for (const token of extractTemplateTokens(cfg.summary)) {

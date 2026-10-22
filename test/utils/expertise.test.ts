@@ -40,7 +40,7 @@ describe("expertise utils", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-test-"));
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-test-"));
 	});
 
 	afterEach(async () => {
@@ -286,7 +286,7 @@ describe("readExpertiseFile — unknown-type policy", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-unknown-"));
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-unknown-"));
 	});
 
 	afterEach(async () => {

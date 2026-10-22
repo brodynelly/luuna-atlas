@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import type { Command } from "commander";
-import { getExpertisePath, getMulchDir, readConfig } from "../utils/config.ts";
+import { getAtlasDir, getExpertisePath, readConfig } from "../utils/config.ts";
 import {
 	calculateDomainHealth,
 	countRecords,
@@ -16,13 +16,13 @@ export function registerStatusCommand(program: Command): void {
 		.description("Show status of expertise records")
 		.action(async () => {
 			const jsonMode = program.opts().json === true;
-			const mulchDir = getMulchDir();
+			const atlasDir = getAtlasDir();
 
-			if (!existsSync(mulchDir)) {
+			if (!existsSync(atlasDir)) {
 				reportCommandError(
 					"status",
 					jsonMode,
-					"No .mulch/ directory found. Run `mulch init` first.",
+					"No .luuna/atlas/ directory found. Run `luuna-atlas init` first.",
 				);
 				return;
 			}

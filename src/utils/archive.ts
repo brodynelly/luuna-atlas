@@ -2,17 +2,18 @@ import { randomBytes } from "node:crypto";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { ExpertiseRecord } from "../schemas/record.ts";
-import { getMulchDir, validateDomainName } from "./config.ts";
+import { getAtlasDir, validateDomainName } from "./config.ts";
 import { readExpertiseFile, writeExpertiseFile } from "./expertise.ts";
 import { renameReplacing } from "./fs-rename.ts";
 import { withFileLock } from "./lock.ts";
 
 const ARCHIVE_DIR = "archive";
 
-export const ARCHIVE_BANNER = "# ARCHIVED — not for active use. Run `ml restore <id>` to revive.";
+export const ARCHIVE_BANNER =
+	"# ARCHIVED — not for active use. Run `luuna-atlas restore <id>` to revive.";
 
 export function getArchiveDir(cwd: string = process.cwd()): string {
-	return join(getMulchDir(cwd), ARCHIVE_DIR);
+	return join(getAtlasDir(cwd), ARCHIVE_DIR);
 }
 
 export function getArchivePath(domain: string, cwd: string = process.cwd()): string {
@@ -127,7 +128,7 @@ export type RestoreResult = { ok: true } | { ok: false; conflict: ExpertiseRecor
 
 /**
  * Append a single record to a live expertise file under a lock. Used by
- * `ml restore` to push an archived record back into circulation. Refuses
+ * `luuna-atlas restore` to push an archived record back into circulation. Refuses
  * to write when a live record with the same id already exists — restoring
  * over a live id silently created duplicates pre-v0.8.1.
  */

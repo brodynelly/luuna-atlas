@@ -8,8 +8,8 @@
  *
  * Tracker regex patterns are sourced from `scripts/debt-markers-budget.json`
  * under the `trackerPatterns` key. Patterns are JavaScript regex sources,
- * matched case-insensitively. Defaults cover mulch tracker prefixes
- * (`mulch-XXXX` seeds issues, `mx-XXXX` mulch records), GitHub-style
+ * matched case-insensitively. Defaults cover luuna-atlas tracker prefixes
+ * (`atlas-XXXX` missions issues, `mx-XXXX` luuna-atlas records), GitHub-style
  * `#NNN` references, and any URL.
  *
  * Untracked markers must either be removed, paired with a tracker

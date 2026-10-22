@@ -6,7 +6,7 @@ import { Command } from "commander";
 import { registerReadyCommand } from "../../src/commands/ready.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
 import type { ExpertiseRecord } from "../../src/schemas/record.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../src/utils/expertise.ts";
 import { formatTimeAgo, getRecordSummary } from "../../src/utils/format.ts";
 
@@ -25,8 +25,8 @@ function daysAgo(days: number): string {
 }
 
 beforeEach(async () => {
-	tmpDir = await mkdtemp(join(tmpdir(), "mulch-ready-test-"));
-	await initMulchDir(tmpDir);
+	tmpDir = await mkdtemp(join(tmpdir(), "atlas-ready-test-"));
+	await initAtlasDir(tmpDir);
 	await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {}, api: {} } }, tmpDir);
 });
 
@@ -200,7 +200,7 @@ describe("getRecordSummary", () => {
 
 function makeReadyProgram(): Command {
 	const program = new Command();
-	program.name("mulch").option("--json", "output as structured JSON").exitOverride();
+	program.name("luuna-atlas").option("--json", "output as structured JSON").exitOverride();
 	registerReadyCommand(program);
 	return program;
 }
@@ -222,7 +222,7 @@ describe("ready command --limit strict parsing", () => {
 		const errSpy = spyOn(console, "error").mockImplementation(() => {});
 		try {
 			const program = makeReadyProgram();
-			await program.parseAsync(["node", "mulch", "ready", "--limit", "10abc"]);
+			await program.parseAsync(["node", "luuna-atlas", "ready", "--limit", "10abc"]);
 			expect(errSpy.mock.calls[0]?.[0]).toContain("--limit must be a positive integer");
 			expect(errSpy.mock.calls[0]?.[0]).toContain('"10abc"');
 			expect(process.exitCode).toBe(1);
@@ -236,7 +236,7 @@ describe("ready command --limit strict parsing", () => {
 		const errSpy = spyOn(console, "error").mockImplementation(() => {});
 		try {
 			const program = makeReadyProgram();
-			await program.parseAsync(["node", "mulch", "ready", "--limit", "3.7"]);
+			await program.parseAsync(["node", "luuna-atlas", "ready", "--limit", "3.7"]);
 			expect(errSpy.mock.calls[0]?.[0]).toContain("--limit must be a positive integer");
 			expect(process.exitCode).toBe(1);
 		} finally {
@@ -249,7 +249,7 @@ describe("ready command --limit strict parsing", () => {
 		const errSpy = spyOn(console, "error").mockImplementation(() => {});
 		try {
 			const program = makeReadyProgram();
-			await program.parseAsync(["node", "mulch", "ready", "--limit", "0"]);
+			await program.parseAsync(["node", "luuna-atlas", "ready", "--limit", "0"]);
 			expect(errSpy.mock.calls[0]?.[0]).toContain("--limit must be a positive integer");
 			expect(process.exitCode).toBe(1);
 		} finally {
@@ -262,7 +262,7 @@ describe("ready command --limit strict parsing", () => {
 		const logSpy = spyOn(console, "log").mockImplementation(() => {});
 		try {
 			const program = makeReadyProgram();
-			await program.parseAsync(["node", "mulch", "ready", "--limit", "5"]);
+			await program.parseAsync(["node", "luuna-atlas", "ready", "--limit", "5"]);
 			expect(process.exitCode).not.toBe(1);
 		} finally {
 			logSpy.mockRestore();

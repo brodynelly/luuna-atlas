@@ -100,7 +100,7 @@ export async function readExpertiseFile(
 		if (typeName && !def && !allowUnknown) {
 			const idPart = typeof raw.id === "string" ? ` (id=${raw.id})` : "";
 			throw new Error(
-				`Unknown record type "${typeName}" at ${filePath}:${i + 1}${idPart}. Register it under custom_types in mulch.config.yaml, remove the record, or pass --allow-unknown-types to bypass.`,
+				`Unknown record type "${typeName}" at ${filePath}:${i + 1}${idPart}. Register it under custom_types in config.yaml, remove the record, or pass --allow-unknown-types to bypass.`,
 			);
 		}
 
@@ -290,7 +290,7 @@ export function resolveRecordId(records: ExpertiseRecord[], identifier: string):
 
 	return {
 		ok: false,
-		error: `Record "${identifier}" not found. Run \`mulch query\` to see record IDs.`,
+		error: `Record "${identifier}" not found. Run \`luuna-atlas query\` to see record IDs.`,
 	};
 }
 

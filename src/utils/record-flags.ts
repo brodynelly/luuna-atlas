@@ -73,7 +73,7 @@ export function deriveName(text: string): string {
 
 /**
  * Name for a record whose --name was not passed: `deriveName` plus a short
- * content hash (mulch-9f0f). Named types upsert by name, so a bare derived
+ * content hash (atlas-9f0f). Named types upsert by name, so a bare derived
  * name would silently merge two distinct records sharing their first six
  * words. Identical text still maps to the same name (idempotent re-record).
  */
@@ -89,8 +89,8 @@ export function deriveTitle(text: string): string {
 }
 
 /**
- * `ml record` accepts `--description` (or positional [content]) as the primary
- * text for every built-in type (mulch-7164). Type-specific required-flag errors
+ * `luuna-atlas record` accepts `--description` (or positional [content]) as the primary
+ * text for every built-in type (atlas-7164). Type-specific required-flag errors
  * pushed agents to hand-edit the JSONL, so missing fields are filled instead:
  *   convention                  content  <- description
  *   pattern / reference / guide name     <- derived from description + hash

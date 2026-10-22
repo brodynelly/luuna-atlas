@@ -6,7 +6,7 @@ import { Command } from "commander";
 import { registerQueryCommand } from "../../src/commands/query.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
 import type { ExpertiseRecord } from "../../src/schemas/record.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import {
 	appendRecord,
 	createExpertiseFile,
@@ -25,8 +25,8 @@ describe("query command", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-query-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-query-test-"));
+		await initAtlasDir(tmpDir);
 	});
 
 	afterEach(async () => {
@@ -251,7 +251,7 @@ describe("query command", () => {
 
 		function makeProgram(): Command {
 			const program = new Command();
-			program.name("mulch").option("--json", "output as structured JSON").exitOverride();
+			program.name("luuna-atlas").option("--json", "output as structured JSON").exitOverride();
 			registerQueryCommand(program);
 			return program;
 		}
@@ -271,7 +271,7 @@ describe("query command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "--json", "query", "testing"]);
+				await program.parseAsync(["node", "luuna-atlas", "--json", "query", "testing"]);
 
 				expect(logSpy).toHaveBeenCalledTimes(1);
 				const output = JSON.parse(logSpy.mock.calls[0]?.[0]) as {
@@ -313,7 +313,7 @@ describe("query command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "--json", "query", "--all"]);
+				await program.parseAsync(["node", "luuna-atlas", "--json", "query", "--all"]);
 
 				expect(logSpy).toHaveBeenCalledTimes(1);
 				const output = JSON.parse(logSpy.mock.calls[0]?.[0]) as {
@@ -339,7 +339,7 @@ describe("query command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "--json", "query", "--all"]);
+				await program.parseAsync(["node", "luuna-atlas", "--json", "query", "--all"]);
 
 				expect(logSpy).toHaveBeenCalledTimes(1);
 				const output = JSON.parse(logSpy.mock.calls[0]?.[0]) as {
@@ -362,7 +362,7 @@ describe("query command", () => {
 			const errorSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "--json", "query", "nonexistent"]);
+				await program.parseAsync(["node", "luuna-atlas", "--json", "query", "nonexistent"]);
 
 				expect(errorSpy).toHaveBeenCalledTimes(1);
 				const output = JSON.parse(errorSpy.mock.calls[0]?.[0]) as {
@@ -385,12 +385,12 @@ describe("query command", () => {
 			const errorSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "query", "nonexistent"]);
+				await program.parseAsync(["node", "luuna-atlas", "query", "nonexistent"]);
 
 				expect(errorSpy).toHaveBeenCalledTimes(2);
 				expect(errorSpy.mock.calls[0]?.[0]).toContain("nonexistent");
-				expect(errorSpy.mock.calls[1]?.[0]).toContain("ml add nonexistent");
-				expect(errorSpy.mock.calls[1]?.[0]).toContain(".mulch/mulch.config.yaml");
+				expect(errorSpy.mock.calls[1]?.[0]).toContain("luuna-atlas add nonexistent");
+				expect(errorSpy.mock.calls[1]?.[0]).toContain(".luuna/atlas/config.yaml");
 			} finally {
 				errorSpy.mockRestore();
 			}
@@ -403,7 +403,7 @@ describe("query command", () => {
 			const errorSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "--json", "query"]);
+				await program.parseAsync(["node", "luuna-atlas", "--json", "query"]);
 
 				expect(errorSpy).toHaveBeenCalledTimes(1);
 				const output = JSON.parse(errorSpy.mock.calls[0]?.[0]) as {
@@ -419,14 +419,14 @@ describe("query command", () => {
 			}
 		});
 
-		it("returns JSON error when no .mulch/ directory exists", async () => {
-			// Do not call initMulchDir — use a bare tmpDir
-			const bareTmpDir = await mkdtemp(join(tmpdir(), "mulch-query-bare-"));
+		it("returns JSON error when no .luuna/atlas/ directory exists", async () => {
+			// Do not call initAtlasDir — use a bare tmpDir
+			const bareTmpDir = await mkdtemp(join(tmpdir(), "atlas-query-bare-"));
 			process.chdir(bareTmpDir);
 			const errorSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "--json", "query", "--all"]);
+				await program.parseAsync(["node", "luuna-atlas", "--json", "query", "--all"]);
 
 				expect(errorSpy).toHaveBeenCalledTimes(1);
 				const output = JSON.parse(errorSpy.mock.calls[0]?.[0]) as {
@@ -436,7 +436,7 @@ describe("query command", () => {
 				};
 				expect(output.success).toBe(false);
 				expect(output.command).toBe("query");
-				expect(output.error).toContain(".mulch/");
+				expect(output.error).toContain(".luuna/atlas/");
 			} finally {
 				errorSpy.mockRestore();
 				// Leave the directory first: Windows cannot remove the current cwd.
@@ -469,7 +469,7 @@ describe("query command", () => {
 				const program = makeProgram();
 				await program.parseAsync([
 					"node",
-					"mulch",
+					"luuna-atlas",
 					"--json",
 					"query",
 					"testing",
@@ -513,7 +513,7 @@ describe("query command", () => {
 				const program = makeProgram();
 				await program.parseAsync([
 					"node",
-					"mulch",
+					"luuna-atlas",
 					"--json",
 					"query",
 					"testing",
@@ -564,7 +564,7 @@ describe("query command", () => {
 				const program = makeProgram();
 				await program.parseAsync([
 					"node",
-					"mulch",
+					"luuna-atlas",
 					"--json",
 					"query",
 					"testing",
@@ -597,7 +597,7 @@ describe("query command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "--json", "query", "testing"]);
+				await program.parseAsync(["node", "luuna-atlas", "--json", "query", "testing"]);
 
 				expect(logSpy).toHaveBeenCalledTimes(1);
 				const output = JSON.parse(logSpy.mock.calls[0]?.[0]) as {
@@ -736,7 +736,7 @@ describe("query command", () => {
 
 		function makeProgram(): Command {
 			const program = new Command();
-			program.name("mulch").option("--json", "output as structured JSON").exitOverride();
+			program.name("luuna-atlas").option("--json", "output as structured JSON").exitOverride();
 			registerQueryCommand(program);
 			return program;
 		}
@@ -773,7 +773,7 @@ describe("query command", () => {
 				const program = makeProgram();
 				await program.parseAsync([
 					"node",
-					"mulch",
+					"luuna-atlas",
 					"--json",
 					"query",
 					"testing",
@@ -824,7 +824,7 @@ describe("query command", () => {
 				const program = makeProgram();
 				await program.parseAsync([
 					"node",
-					"mulch",
+					"luuna-atlas",
 					"--json",
 					"query",
 					"testing",
@@ -863,7 +863,7 @@ describe("query command", () => {
 				const program = makeProgram();
 				await program.parseAsync([
 					"node",
-					"mulch",
+					"luuna-atlas",
 					"--json",
 					"query",
 					"testing",
@@ -910,7 +910,7 @@ describe("query command", () => {
 				const program = makeProgram();
 				await program.parseAsync([
 					"node",
-					"mulch",
+					"luuna-atlas",
 					"--json",
 					"query",
 					"testing",
@@ -1092,7 +1092,7 @@ describe("query command", () => {
 
 		function makeProgram(): Command {
 			const program = new Command();
-			program.name("mulch").option("--json", "output as structured JSON").exitOverride();
+			program.name("luuna-atlas").option("--json", "output as structured JSON").exitOverride();
 			registerQueryCommand(program);
 			return program;
 		}
@@ -1113,7 +1113,14 @@ describe("query command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "query", "testing", "--format", "compact"]);
+				await program.parseAsync([
+					"node",
+					"luuna-atlas",
+					"query",
+					"testing",
+					"--format",
+					"compact",
+				]);
 
 				expect(logSpy).toHaveBeenCalledTimes(1);
 				const output = logSpy.mock.calls[0]?.[0];
@@ -1146,7 +1153,7 @@ describe("query command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "query", "testing", "--format", "ids"]);
+				await program.parseAsync(["node", "luuna-atlas", "query", "testing", "--format", "ids"]);
 
 				expect(logSpy).toHaveBeenCalledTimes(1);
 				const output = logSpy.mock.calls[0]?.[0];
@@ -1181,7 +1188,7 @@ describe("query command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "query", "testing", "--format", "ids"]);
+				await program.parseAsync(["node", "luuna-atlas", "query", "testing", "--format", "ids"]);
 
 				expect(logSpy).toHaveBeenCalledTimes(1);
 				const output = logSpy.mock.calls[0]?.[0];
@@ -1208,7 +1215,7 @@ describe("query command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "query", "testing"]);
+				await program.parseAsync(["node", "luuna-atlas", "query", "testing"]);
 
 				expect(logSpy).toHaveBeenCalledTimes(1);
 				const output = logSpy.mock.calls[0]?.[0];
@@ -1233,7 +1240,7 @@ describe("query command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "query", "testing", "--format", "xml"]);
+				await program.parseAsync(["node", "luuna-atlas", "query", "testing", "--format", "xml"]);
 
 				const output = logSpy.mock.calls[0]?.[0];
 				expect(output).toContain('<domain name="testing"');
@@ -1258,7 +1265,7 @@ describe("query command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "query", "testing", "--format", "plain"]);
+				await program.parseAsync(["node", "luuna-atlas", "query", "testing", "--format", "plain"]);
 
 				const output = logSpy.mock.calls[0]?.[0];
 				expect(output).toContain("[testing]");
@@ -1286,12 +1293,12 @@ describe("query command", () => {
 			try {
 				const program = new Command();
 				program
-					.name("mulch")
+					.name("luuna-atlas")
 					.option("--json", "output as structured JSON")
 					.option("--format <format>", "global format")
 					.exitOverride();
 				registerQueryCommand(program);
-				await program.parseAsync(["node", "mulch", "--format", "xml", "query", "testing"]);
+				await program.parseAsync(["node", "luuna-atlas", "--format", "xml", "query", "testing"]);
 
 				const output = logSpy.mock.calls[0]?.[0];
 				expect(output).toContain('<domain name="testing"');
@@ -1316,14 +1323,14 @@ describe("query command", () => {
 			try {
 				const program = new Command();
 				program
-					.name("mulch")
+					.name("luuna-atlas")
 					.option("--json", "output as structured JSON")
 					.option("--format <format>", "global format")
 					.exitOverride();
 				registerQueryCommand(program);
 				await program.parseAsync([
 					"node",
-					"mulch",
+					"luuna-atlas",
 					"--format",
 					"xml",
 					"query",

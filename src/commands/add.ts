@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import chalk from "chalk";
 import type { Command } from "commander";
-import { getExpertisePath, getMulchDir, readConfig, writeConfig } from "../utils/config.ts";
+import { getAtlasDir, getExpertisePath, readConfig, writeConfig } from "../utils/config.ts";
 import { createExpertiseFile } from "../utils/expertise.ts";
 import { outputJson, reportCommandError } from "../utils/json-output.ts";
 import { isQuiet } from "../utils/palette.ts";
@@ -13,10 +13,14 @@ export function registerAddCommand(program: Command): void {
 		.description("Add a new expertise domain")
 		.action(async (domain: string) => {
 			const jsonMode = program.opts().json === true;
-			const mulchDir = getMulchDir();
+			const atlasDir = getAtlasDir();
 
-			if (!existsSync(mulchDir)) {
-				reportCommandError("add", jsonMode, "No .mulch/ directory found. Run `mulch init` first.");
+			if (!existsSync(atlasDir)) {
+				reportCommandError(
+					"add",
+					jsonMode,
+					"No .luuna/atlas/ directory found. Run `luuna-atlas init` first.",
+				);
 				return;
 			}
 

@@ -9,7 +9,7 @@ import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
 import {
 	addDomain,
 	getExpertisePath,
-	initMulchDir,
+	initAtlasDir,
 	readConfig,
 	removeDomain,
 	writeConfig,
@@ -37,7 +37,7 @@ async function runDeleteDomain(
 		program.option("--json", "output JSON");
 		program.exitOverride();
 		registerDeleteDomainCommand(program);
-		await program.parseAsync(["node", "mulch", "delete-domain", ...args]);
+		await program.parseAsync(["node", "luuna-atlas", "delete-domain", ...args]);
 	} catch {
 		// ignore
 	} finally {
@@ -75,7 +75,7 @@ async function runDeleteDomainJson(
 		program.option("--json", "output JSON");
 		program.exitOverride();
 		registerDeleteDomainCommand(program);
-		await program.parseAsync(["node", "mulch", "--json", "delete-domain", ...args]);
+		await program.parseAsync(["node", "luuna-atlas", "--json", "delete-domain", ...args]);
 	} catch {
 		// ignore
 	} finally {
@@ -99,8 +99,8 @@ describe("delete-domain command (removeDomain)", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-delete-domain-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-delete-domain-test-"));
+		await initAtlasDir(tmpDir);
 	});
 
 	afterEach(async () => {
@@ -172,8 +172,8 @@ describe("delete-domain CLI", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-delete-domain-cli-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-delete-domain-cli-test-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {} } }, tmpDir);
 		const filePath = getExpertisePath("testing", tmpDir);
 		await createExpertiseFile(filePath);

@@ -4,7 +4,7 @@ import { createLogger, isPinoPrettyAvailable, redactDbUrl, resolveLogLevel } fro
 
 /**
  * Capture one log line emitted by a logger writing to an in-memory stream.
- * No mocks — a real Writable, asserted against real JSON output, per mulch's
+ * No mocks — a real Writable, asserted against real JSON output, per luuna-atlas's
  * testing conventions.
  */
 function captureLine(
@@ -50,12 +50,12 @@ describe("createLogger redaction", () => {
 });
 
 describe("resolveLogLevel", () => {
-	test("MULCH_LOG_LEVEL wins", () => {
-		expect(resolveLogLevel({ MULCH_LOG_LEVEL: "warn" } as NodeJS.ProcessEnv)).toBe("warn");
+	test("LUUNA_ATLAS_LOG_LEVEL wins", () => {
+		expect(resolveLogLevel({ LUUNA_ATLAS_LOG_LEVEL: "warn" } as NodeJS.ProcessEnv)).toBe("warn");
 	});
 
-	test("MULCH_DEBUG implies debug", () => {
-		expect(resolveLogLevel({ MULCH_DEBUG: "1" } as NodeJS.ProcessEnv)).toBe("debug");
+	test("LUUNA_ATLAS_DEBUG implies debug", () => {
+		expect(resolveLogLevel({ LUUNA_ATLAS_DEBUG: "1" } as NodeJS.ProcessEnv)).toBe("debug");
 	});
 
 	test("defaults to info", () => {
@@ -111,19 +111,23 @@ describe("pino-pretty transport fallback", () => {
 
 describe("redactDbUrl", () => {
 	test("masks postgres credentials", () => {
-		const redacted = redactDbUrl("postgres://alice:hunter2@db.example/mulch");
+		const redacted = redactDbUrl("postgres://alice:hunter2@db.example/luuna-atlas");
 		expect(redacted).not.toContain("hunter2");
 		expect(redacted).not.toContain("alice");
 		expect(redacted).toContain("db.example");
 	});
 
 	test("passes through sqlite and sentinel values unchanged", () => {
-		expect(redactDbUrl("sqlite:///var/data/mulch.db")).toBe("sqlite:///var/data/mulch.db");
+		expect(redactDbUrl("sqlite:///var/data/luuna-atlas.db")).toBe(
+			"sqlite:///var/data/luuna-atlas.db",
+		);
 		expect(redactDbUrl(":memory:")).toBe(":memory:");
 	});
 
 	test("passes through credential-free URLs unchanged", () => {
-		expect(redactDbUrl("postgres://db.example/mulch")).toBe("postgres://db.example/mulch");
+		expect(redactDbUrl("postgres://db.example/luuna-atlas")).toBe(
+			"postgres://db.example/luuna-atlas",
+		);
 	});
 
 	test("collapses an unparseable URL to a safe placeholder", () => {

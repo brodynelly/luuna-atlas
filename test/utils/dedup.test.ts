@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
 import type { ExpertiseRecord } from "../../src/schemas/record.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import {
 	appendRecord,
 	createExpertiseFile,
@@ -17,8 +17,8 @@ describe("deduplication", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-dedup-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-dedup-test-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {} } }, tmpDir);
 	});
 

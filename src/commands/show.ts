@@ -34,7 +34,7 @@ async function findRecordsById(
 		if (!first) {
 			return {
 				ok: false,
-				error: `Record "${identifier}" not found. Run \`ml search\` or \`ml prime\` to see record IDs.`,
+				error: `Record "${identifier}" not found. Run \`luuna-atlas search\` or \`luuna-atlas prime\` to see record IDs.`,
 			};
 		}
 		if (matches.length > 1) {
@@ -53,7 +53,7 @@ export function registerShowCommand(program: Command): void {
 	program
 		.command("show")
 		.argument("<ids...>", "record ID(s) (e.g. mx-abc123, abc123, or abc)")
-		.description("Show full record bodies by ID (the detail behind `ml prime`'s index)")
+		.description("Show full record bodies by ID (the detail behind `luuna-atlas prime`'s index)")
 		.action(async (ids: string[]) => {
 			const jsonMode = program.opts().json === true;
 			try {

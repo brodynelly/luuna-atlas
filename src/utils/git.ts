@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import type { ExpertiseRecord } from "../schemas/record.ts";
 import type { TrackerName } from "./active-work.ts";
 import { fileLivesUnderDir } from "./dir-anchors.ts";
+import { evidenceMissionRef } from "./legacy-layout.ts";
 
 export function isGitRepo(cwd: string): boolean {
 	try {
@@ -175,11 +176,11 @@ export function filterByActiveContext(
 	const { changedFiles, trackers } = ctx;
 	return records.filter((r) => {
 		const ev = r.evidence;
-		const seedsMatch = !!(ev?.seeds && trackers.seeds && ev.seeds === trackers.seeds);
+		const missionsMatch = !!(trackers.missions && evidenceMissionRef(ev) === trackers.missions);
 		const ghMatch = !!(ev?.gh && trackers.gh && ev.gh === trackers.gh);
 		const linearMatch = !!(ev?.linear && trackers.linear && ev.linear === trackers.linear);
 		const beadMatch = !!(ev?.bead && trackers.bead && ev.bead === trackers.bead);
-		if (seedsMatch || ghMatch || linearMatch || beadMatch) return true;
+		if (missionsMatch || ghMatch || linearMatch || beadMatch) return true;
 
 		return !hasFileAnchors(r) || matchesFileAnchors(r, changedFiles);
 	});

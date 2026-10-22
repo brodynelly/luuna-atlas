@@ -1,11 +1,11 @@
-// `--description` as the primary text for every built-in type (mulch-7164).
+// `--description` as the primary text for every built-in type (atlas-7164).
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import { readExpertiseFile } from "../../src/utils/expertise.ts";
 import {
 	applyDescriptionDefaults,
@@ -60,12 +60,12 @@ describe("applyDescriptionDefaults", () => {
 	});
 });
 
-describe("ml record --description for every type", () => {
+describe("luuna-atlas record --description for every type", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-record-desc-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-record-desc-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { cli: {} } }, tmpDir);
 	});
 
@@ -105,7 +105,7 @@ describe("ml record --description for every type", () => {
 		const b = "Use withFileLock for every JSONL write in prune.ts";
 		expect(record("--type", "pattern", "--description", a).status).toBe(0);
 		// Without the hash the second write silently upserted over the first.
-		// Now the names differ, so the near-dup guard (mulch-a378) speaks up...
+		// Now the names differ, so the near-dup guard (atlas-a378) speaks up...
 		const dup = record("--type", "pattern", "--description", b);
 		expect(dup.status).toBe(1);
 		expect(dup.stderr).toContain("similar record(s) already exist");

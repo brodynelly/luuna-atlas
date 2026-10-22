@@ -13,64 +13,65 @@ import { getCurrentVersion } from "../utils/version.ts";
 // Single marker carries both display and detection: snippets are considered
 // current iff they include the marker for the running CLI's package version.
 // Patch bumps therefore prompt re-run, which is the desired UX (the visible
-// version in CLAUDE.md should track the installed Mulch).
+// version in CLAUDE.md should track the installed Atlas).
 export function getVersionMarker(): string {
-	return `<!-- mulch-onboard:v${getCurrentVersion()} -->`;
+	return `<!-- atlas-onboard:v${getCurrentVersion()} -->`;
 }
 
 function buildSnippet(sessionClose?: SessionCloseConfig): string {
 	const pkgVersion = getCurrentVersion();
-	return `## Project Expertise (Mulch)
-<!-- mulch-onboard:v${pkgVersion} -->
+	return `## Project Expertise (Atlas)
+<!-- atlas-onboard:v${pkgVersion} -->
 
-This project uses [Mulch](https://github.com/jayminwest/mulch) v${pkgVersion} for structured expertise management.
+This project uses [Atlas](https://github.com/brodynelly/luuna-atlas) v${pkgVersion} for structured expertise management.
 
 **At the start of every session**, run:
 \`\`\`bash
-ml prime
+luuna-atlas prime
 \`\`\`
 
 Prints a budget-capped index of project expertise: one line per record (id, type, summary,
-anchors), failures first. Run \`ml show <id>\` for a full record and \`ml prime --files src/foo.ts\`
+anchors), failures first. Run \`luuna-atlas show <id>\` for a full record and \`luuna-atlas prime --files src/foo.ts\`
 before editing a file to load only records relevant to that path.
 
 **Record only what a future agent would get wrong without it.** Prefer \`failure\` records
 (symptom -> root cause -> preventive check); anchor conventions and patterns with \`--files\` or
-\`--dir-anchor\`. \`ml record\` blocks exact duplicates and flags near-duplicates of existing
+\`--dir-anchor\`. \`luuna-atlas record\` blocks exact duplicates and flags near-duplicates of existing
 records (suggesting \`--supersedes <id>\`; \`--force\` records anyway):
 \`\`\`bash
-ml record <domain> --type <convention|pattern|failure|decision|reference|guide> --description "..."
+luuna-atlas record <domain> --type <convention|pattern|failure|decision|reference|guide> --description "..."
 \`\`\`
 
 Evidence auto-populates from git (current commit + changed files). Link explicitly with
-\`--evidence-seeds <id>\` / \`--evidence-gh <id>\` / \`--evidence-linear <id>\` / \`--evidence-bead <id>\`,
+\`--evidence-missions <id>\` / \`--evidence-gh <id>\` / \`--evidence-linear <id>\` / \`--evidence-bead <id>\`,
 \`--evidence-commit <sha>\`, or \`--relates-to <mx-id>\`. Upserts of named records merge outcomes
 instead of replacing them; validation failures print a copy-paste retry hint with missing fields
 pre-filled.
 
-Run \`ml status\` for domain health, \`ml doctor\` to check record integrity (add \`--fix\` to strip
-broken file anchors), \`ml --help\` for the full command list. Write commands use file locking and
+Run \`luuna-atlas status\` for domain health, \`luuna-atlas doctor\` to check record integrity (add \`--fix\` to strip
+broken file anchors), \`luuna-atlas --help\` for the full command list. Write commands use file locking and
 atomic writes, so multiple agents can record concurrently. Expertise survives \`git worktree\`
-cleanup — \`.mulch/\` resolves to the main repo.
+cleanup — \`.luuna/atlas/\` resolves to the main repo.
 
-\`ml prune\` soft-archives stale records to \`.mulch/archive/\` instead of deleting them; pass
-\`--hard\` for true deletion. Restore an archived record with \`ml restore <id>\`. Do not read
-\`.mulch/archive/\` directly — those records are stale by definition. If you need historical
-context, run \`ml search --archived <query>\`.
+\`luuna-atlas prune\` soft-archives stale records to \`.luuna/atlas/archive/\` instead of deleting them; pass
+\`--hard\` for true deletion. Restore an archived record with \`luuna-atlas restore <id>\`. Do not read
+\`.luuna/atlas/archive/\` directly — those records are stale by definition. If you need historical
+context, run \`luuna-atlas search --archived <query>\`.
 
 ${getSessionEndReminder("embedded", sessionClose)}
 `;
 }
 
-const LEGACY_HEADER = "## Project Expertise (Mulch)";
-const LEGACY_TAIL = 'mulch validate && git add .mulch/ && git commit -m "mulch: record learnings"';
+const LEGACY_HEADER = "## Project Expertise (Atlas)";
+const LEGACY_TAIL =
+	'luuna-atlas validate && git add .luuna/atlas/ && git commit -m "luuna-atlas: record learnings"';
 
 function getSnippet(_provider: string | undefined, sessionClose?: SessionCloseConfig): string {
 	// All providers use the same standardized snippet.
 	return buildSnippet(sessionClose);
 }
 
-// `ml onboard` may run before `ml init`, so reading the config gracefully
+// `luuna-atlas onboard` may run before `luuna-atlas init`, so reading the config gracefully
 // degrades to "no preset configured" rather than failing the command.
 async function readSessionCloseConfig(cwd: string): Promise<SessionCloseConfig | undefined> {
 	try {
@@ -261,10 +262,10 @@ export async function runOnboard(options: {
 			});
 		} else {
 			const messages: Record<string, string> = {
-				not_installed: `Mulch snippet is not installed in ${target.fileName}.`,
-				up_to_date: `Mulch snippet in ${target.fileName} is up to date.`,
-				outdated: `Mulch snippet in ${target.fileName} is outdated. Run \`ml onboard\` to update.`,
-				legacy: `Mulch snippet in ${target.fileName} uses legacy format (no markers). Run \`ml onboard\` to migrate.`,
+				not_installed: `Atlas snippet is not installed in ${target.fileName}.`,
+				up_to_date: `Atlas snippet in ${target.fileName} is up to date.`,
+				outdated: `Atlas snippet in ${target.fileName} is outdated. Run \`luuna-atlas onboard\` to update.`,
+				legacy: `Atlas snippet in ${target.fileName} uses legacy format (no markers). Run \`luuna-atlas onboard\` to migrate.`,
 			};
 			const colors: Record<string, (s: string) => string> = {
 				not_installed: chalk.yellow,
@@ -280,7 +281,7 @@ export async function runOnboard(options: {
 		if (duplicates.length > 0) {
 			const names = duplicates.map((d) => d.fileName).join(", ");
 			if (!options.jsonMode && !isQuiet()) {
-				console.log(chalk.yellow(`Warning: mulch snippet also found in: ${names}`));
+				console.log(chalk.yellow(`Warning: luuna-atlas snippet also found in: ${names}`));
 			}
 		}
 		return;
@@ -330,11 +331,11 @@ export async function runOnboard(options: {
 		});
 	} else {
 		const messages: Record<string, string> = {
-			created: `Mulch onboarding snippet written to ${target.fileName}.`,
-			appended: `Mulch onboarding snippet appended to ${target.fileName}.`,
-			updated: `Mulch onboarding snippet updated in ${target.fileName}.`,
-			migrated: `Mulch onboarding snippet migrated to marker format in ${target.fileName}.`,
-			up_to_date: `Mulch snippet in ${target.fileName} is already up to date. No changes made.`,
+			created: `Atlas onboarding snippet written to ${target.fileName}.`,
+			appended: `Atlas onboarding snippet appended to ${target.fileName}.`,
+			updated: `Atlas onboarding snippet updated in ${target.fileName}.`,
+			migrated: `Atlas onboarding snippet migrated to marker format in ${target.fileName}.`,
+			up_to_date: `Atlas snippet in ${target.fileName} is already up to date. No changes made.`,
 		};
 		const color = action === "up_to_date" ? chalk.yellow : chalk.green;
 		if (!isQuiet()) console.log(color(messages[action]));
@@ -343,7 +344,7 @@ export async function runOnboard(options: {
 	if (duplicates.length > 0) {
 		const names = duplicates.map((d) => d.fileName).join(", ");
 		if (!options.jsonMode && !isQuiet()) {
-			console.log(chalk.yellow(`Warning: mulch snippet also found in: ${names}`));
+			console.log(chalk.yellow(`Warning: luuna-atlas snippet also found in: ${names}`));
 		}
 	}
 }
@@ -351,7 +352,7 @@ export async function runOnboard(options: {
 export function registerOnboardCommand(program: Command): void {
 	program
 		.command("onboard")
-		.description("Generate or update a CLAUDE.md/AGENTS.md snippet pointing to ml prime")
+		.description("Generate or update a CLAUDE.md/AGENTS.md snippet pointing to luuna-atlas prime")
 		.option("--stdout", "print snippet to stdout instead of writing to file")
 		.option("--provider <provider>", "customize snippet for a specific provider (e.g. claude)")
 		.option("--check", "check if onboarding snippet is installed and up to date")

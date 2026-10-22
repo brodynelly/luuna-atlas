@@ -9,7 +9,7 @@ import { resetRegistry } from "../../src/registry/type-registry.ts";
 import type { CustomTypeConfig } from "../../src/schemas/config.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
 import type { ExpertiseRecord } from "../../src/schemas/record.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import {
 	appendRecord,
 	createExpertiseFile,
@@ -43,8 +43,8 @@ describe("custom_types end-to-end", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-custom-e2e-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-custom-e2e-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig(
 			{
 				...DEFAULT_CONFIG,

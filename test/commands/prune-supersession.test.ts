@@ -8,7 +8,7 @@ import { registerPruneCommand } from "../../src/commands/prune.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
 import type { ExpertiseRecord } from "../../src/schemas/record.ts";
 import { getArchivePath, readArchiveFile } from "../../src/utils/archive.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../src/utils/expertise.ts";
 
 function daysAgo(days: number): string {
@@ -44,7 +44,7 @@ async function runPrune(tmpDir: string, args: string[]): Promise<CapturedRun> {
 		program.option("--json", "output JSON");
 		program.exitOverride();
 		registerPruneCommand(program);
-		await program.parseAsync(["node", "mulch", "prune", ...args]);
+		await program.parseAsync(["node", "luuna-atlas", "prune", ...args]);
 	} catch {
 		// commander exitOverride throws on errors; the inner action sets process.exitCode.
 	} finally {
@@ -82,12 +82,12 @@ function findById(records: ExpertiseRecord[], id: string): ExpertiseRecord | und
 	return records.find((r) => r.id === id);
 }
 
-describe("ml prune — supersession-based auto-demotion (R-05e)", () => {
+describe("luuna-atlas prune — supersession-based auto-demotion (R-05e)", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-prune-supersession-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-prune-supersession-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {}, architecture: {} } }, tmpDir);
 	});
 

@@ -1,4 +1,4 @@
-# Mulch — V1 Scope
+# Atlas — V1 Scope
 
 ## One-Liner
 Structured expertise management for AI agents — store, query, and inject project learnings across sessions via git-tracked JSONL files.
@@ -6,7 +6,7 @@ Structured expertise management for AI agents — store, query, and inject proje
 ## V1 Definition of Done
 
 ### Core Commands (14)
-- [x] `init` — creates `.mulch/`, config, `.gitattributes` (merge=union), `.mulch/README.md`
+- [x] `init` — creates `.luuna/atlas/`, config, `.gitattributes` (merge=union), `.luuna/atlas/README.md`
 - [x] `add` — adds a domain to config
 - [x] `record` — stores expertise with type/classification/evidence; semantic dedup detection; auto-creates domain; per-type required fields enforced
 - [x] `query` — retrieves records for a domain; `--format` flag (markdown, compact, ids)
@@ -25,13 +25,13 @@ Structured expertise management for AI agents — store, query, and inject proje
 - [x] `compact` — deduplicates and consolidates records; `--analyze` finds candidates (3+ same type, 2+ stale)
 - [x] `prune` — removes stale records by classification shelf life (foundational=permanent, tactical=14d, observational=30d)
 - [x] `doctor` — health checks; `--fix` auto-repairs; detects invalid JSON, legacy outcome field, stale locks; details printed for non-pass checks
-- [x] `sync` — validates, stages, and commits `.mulch/` changes (git-integrated)
-- [x] `diff` — shows uncommitted `.mulch/` changes
+- [x] `sync` — validates, stages, and commits `.luuna/atlas/` changes (git-integrated)
+- [x] `diff` — shows uncommitted `.luuna/atlas/` changes
 - [x] `learn` — shows recently modified files to help decide what to record
-- [x] `ready` — shows unblocked work from `.seeds/`
+- [x] `ready` — shows unblocked work from `.luuna/missions/`
 
 ### Agent Onboarding Commands (2)
-- [x] `onboard` — idempotent insertion of Mulch usage block into target file via `<!-- mulch:start/end -->` markers
+- [x] `onboard` — idempotent insertion of Atlas usage block into target file via `<!-- luuna-atlas:start/end -->` markers
 - [x] `setup` — installs provider-specific integration recipes; 6 providers: claude, cursor, codex, gemini, windsurf, aider; idempotent install/check/remove
 
 ### Schema & Record Model
@@ -71,9 +71,9 @@ Structured expertise management for AI agents — store, query, and inject proje
 - [x] TypeScript strict mode clean (`bun run typecheck`)
 - [x] Linting: 0 errors; 435 `noNonNullAssertion` warnings (Biome style rule — all safe in context)
 - [x] CI: GitHub Actions runs lint + typecheck + test on push/PR (Ubuntu only — no macOS/Windows matrix)
-- [x] Published to npm as `@os-eco/mulch-cli` v0.6.3 (2026-02-26)
+- [x] Published to npm as `@luuna/atlas-cli` v0.6.3 (2026-02-26)
 - [x] Version consistent across `package.json`, `src/cli.ts`, and npm registry
-- [x] Shell completion scripts generated for bash, zsh, fish (`ml completions <shell>`)
+- [x] Shell completion scripts generated for bash, zsh, fish (`luuna-atlas completions <shell>`)
 
 ### Code Health
 - [x] 6,486 lines in `src/commands/`, ~2,000 lines in `src/utils/`, 40 source files total
@@ -83,8 +83,8 @@ Structured expertise management for AI agents — store, query, and inject proje
 
 ## Explicitly Out of Scope for V1
 
-- `mulch rank` command — confirmation score top-N without text query; deferred as mulch-cky (P3)
-- Semantic clustering in `compact --analyze` (TF-IDF / cosine similarity grouping); deferred as mulch-e2bd (P3)
+- `luuna-atlas rank` command — confirmation score top-N without text query; deferred as atlas-cky (P3)
+- Semantic clustering in `compact --analyze` (TF-IDF / cosine similarity grouping); deferred as atlas-e2bd (P3)
 - Web UI or dashboard for browsing expertise
 - Remote/cloud sync — git is the transport layer
 - Multi-repo expertise federation (querying across repos)
@@ -96,11 +96,11 @@ Structured expertise management for AI agents — store, query, and inject proje
 
 ## Current State
 
-Mulch is V1-complete. All 24 CLI commands are implemented and tested. 775 tests pass across 39 files with 1793 `expect()` calls, no mocks, and no skipped tests. TypeScript strict mode and CI are clean. Published to npm at v0.6.3 (2026-02-26). The programmatic API is stable and actively used by overstory. Multi-agent concurrency is battle-tested (advisory locks + atomic writes + git merge=union). Source code has zero TODO/FIXME/HACK comments.
+Atlas is V1-complete. All 24 CLI commands are implemented and tested. 775 tests pass across 39 files with 1793 `expect()` calls, no mocks, and no skipped tests. TypeScript strict mode and CI are clean. Published to npm at v0.6.3 (2026-02-26). The programmatic API is stable and actively used by overstory. Multi-agent concurrency is battle-tested (advisory locks + atomic writes + git merge=union). Source code has zero TODO/FIXME/HACK comments.
 
 Test count grew from 763 (v0.6.3 release) to 775 (+12) since last release — new coverage for sync git integration, upgrade version checking, and bulk delete. The upgrade `--check` test timeout was recently increased to 20s to handle npm registry latency.
 
-The only open deferred items are the `rank` command (mulch-cky, P3) and semantic clustering in compact (mulch-e2bd, P3). Neither is required for V1.
+The only open deferred items are the `rank` command (atlas-cky, P3) and semantic clustering in compact (atlas-e2bd, P3). Neither is required for V1.
 
 **Estimated completion: ~95%.** Remaining 5% is lint warning resolution and shell completion end-to-end verification.
 
@@ -111,7 +111,7 @@ The only open deferred items are the `rank` command (mulch-cky, P3) and semantic
    - **Option B**: Accept as-is (current approach — all are contextually safe)
    - **Option C**: Auto-fix the FIXABLE ones in `doctor.ts`, document the rest as intentional
 
-2. **Shell tab-completion end-to-end:** `ml completions <shell>` generates correct scripts (verified in tests). Actual shell integration — sourcing the script, triggering completions on tab — has not been tested programmatically. Options:
+2. **Shell tab-completion end-to-end:** `luuna-atlas completions <shell>` generates correct scripts (verified in tests). Actual shell integration — sourcing the script, triggering completions on tab — has not been tested programmatically. Options:
    - Manual verification in bash/zsh/fish before release
    - Add GitHub Actions step that sources the script and invokes completion in a subshell
    - Document as manual verification step in release checklist
@@ -123,6 +123,6 @@ The only open deferred items are the `rank` command (mulch-cky, P3) and semantic
 ## Known Edge Cases / Risks
 
 - **Lock timeout:** 5s timeout for advisory locks; stale detection at 30s. Sufficient for typical interactive use. Long-running operations (e.g., large compaction) may time out under high concurrency.
-- **`ml sync` git ref lock contention:** Multiple agents running `ml sync` concurrently may hit git ref lock errors. Agents should coordinate sync timing or accept retries.
+- **`luuna-atlas sync` git ref lock contention:** Multiple agents running `luuna-atlas sync` concurrently may hit git ref lock errors. Agents should coordinate sync timing or accept retries.
 - **`prime --export` race condition:** If multiple agents write to the same `--export` file simultaneously, the last write wins (no lock on export target). Not a concern for read-only prime, but exports are not safe under concurrent writes to the same path.
 - **CI Ubuntu-only:** No cross-platform test coverage. Potential for macOS-specific filesystem or path issues to go undetected.

@@ -68,7 +68,7 @@ export function registerRankCommand(program: Command): void {
 							} else {
 								console.error(chalk.red(`Error: ${msg}`));
 								console.error(
-									`Hint: Run \`ml add ${domain}\` to create this domain, or check .mulch/mulch.config.yaml`,
+									`Hint: Run \`luuna-atlas add ${domain}\` to create this domain, or check .luuna/atlas/config.yaml`,
 								);
 							}
 							process.exitCode = 1;

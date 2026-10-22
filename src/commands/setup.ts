@@ -4,8 +4,8 @@ import { createRequire } from "node:module";
 import { dirname, join, relative } from "node:path";
 import chalk from "chalk";
 import type { Command } from "commander";
-import { missingMulchHooks, syncMulchHooks } from "../utils/claude-hooks.ts";
-import { getMulchDir, readConfig } from "../utils/config.ts";
+import { missingAtlasHooks, syncAtlasHooks } from "../utils/claude-hooks.ts";
+import { getAtlasDir, readConfig } from "../utils/config.ts";
 import { getSessionEndReminder } from "../utils/format.ts";
 import { outputJson, outputJsonError, reportCommandError } from "../utils/json-output.ts";
 import {
@@ -23,8 +23,8 @@ import {
 	resolveRecipe,
 } from "../utils/recipe-discovery.ts";
 
-// Read prime.session_close from .mulch/mulch.config.yaml. Returns undefined
-// when mulch isn't initialized yet (setup may run before `ml init`) so the
+// Read prime.session_close from .luuna/atlas/config.yaml. Returns undefined
+// when luuna-atlas isn't initialized yet (setup may run before `luuna-atlas init`) so the
 // caller falls back to the default preset rather than failing.
 async function readSessionCloseConfig(cwd: string) {
 	try {
@@ -39,15 +39,15 @@ async function readSessionCloseConfig(cwd: string) {
 // Git hook helpers
 // ────────────────────────────────────────────────────────────
 
-const HOOK_MARKER_START = "# mulch:start";
-const HOOK_MARKER_END = "# mulch:end";
+const HOOK_MARKER_START = "# luuna-atlas:start";
+const HOOK_MARKER_END = "# luuna-atlas:end";
 
-const MULCH_HOOK_SECTION = `${HOOK_MARKER_START}
-# Run mulch validate before committing
-if command -v mulch >/dev/null 2>&1; then
-  mulch validate
+const ATLAS_HOOK_SECTION = `${HOOK_MARKER_START}
+# Run luuna-atlas validate before committing
+if command -v luuna-atlas >/dev/null 2>&1; then
+  luuna-atlas validate
   if [ $? -ne 0 ]; then
-    echo "mulch validate failed. Commit aborted."
+    echo "luuna-atlas validate failed. Commit aborted."
     exit 1
   fi
 fi
@@ -79,15 +79,15 @@ async function installGitHook(cwd: string): Promise<RecipeResult> {
 	}
 
 	if (content) {
-		content = `${content.trimEnd()}\n\n${MULCH_HOOK_SECTION}\n`;
+		content = `${content.trimEnd()}\n\n${ATLAS_HOOK_SECTION}\n`;
 	} else {
-		content = `#!/bin/sh\n\n${MULCH_HOOK_SECTION}\n`;
+		content = `#!/bin/sh\n\n${ATLAS_HOOK_SECTION}\n`;
 	}
 
 	await writeFile(hookPath, content, "utf-8");
 	await chmod(hookPath, 0o755);
 
-	return { success: true, message: "Installed mulch pre-commit git hook." };
+	return { success: true, message: "Installed luuna-atlas pre-commit git hook." };
 }
 
 async function checkGitHook(cwd: string): Promise<RecipeResult> {
@@ -100,7 +100,7 @@ async function checkGitHook(cwd: string): Promise<RecipeResult> {
 	if (!content.includes(HOOK_MARKER_START)) {
 		return {
 			success: false,
-			message: "Git pre-commit hook exists but has no mulch section.",
+			message: "Git pre-commit hook exists but has no luuna-atlas section.",
 		};
 	}
 
@@ -120,7 +120,7 @@ async function removeGitHook(cwd: string): Promise<RecipeResult> {
 	if (!content.includes(HOOK_MARKER_START)) {
 		return {
 			success: true,
-			message: "No mulch section in pre-commit hook; nothing to remove.",
+			message: "No luuna-atlas section in pre-commit hook; nothing to remove.",
 		};
 	}
 
@@ -135,14 +135,14 @@ async function removeGitHook(cwd: string): Promise<RecipeResult> {
 		await unlink(hookPath);
 		return {
 			success: true,
-			message: "Removed mulch pre-commit hook (file deleted).",
+			message: "Removed luuna-atlas pre-commit hook (file deleted).",
 		};
 	}
 
 	await writeFile(hookPath, `${cleaned}\n`, "utf-8");
 	return {
 		success: true,
-		message: "Removed mulch section from pre-commit hook.",
+		message: "Removed luuna-atlas section from pre-commit hook.",
 	};
 }
 
@@ -153,7 +153,7 @@ async function removeGitHook(cwd: string): Promise<RecipeResult> {
 // ── Claude ──────────────────────────────────────────────────
 // Hook specs and the settings merge live in utils/claude-hooks.ts.
 
-const CLAUDE_HOOK_COMMAND = "ml prime";
+const CLAUDE_HOOK_COMMAND = "luuna-atlas prime";
 
 function claudeSettingsPath(cwd: string): string {
 	return join(cwd, ".claude", "settings.json");
@@ -180,7 +180,7 @@ async function syncClaudeSettings(cwd: string, remove: boolean): Promise<boolean
 	const settingsPath = claudeSettingsPath(cwd);
 	const current = await readClaudeSettings(settingsPath);
 	if (current === null && remove) return null;
-	const result = syncMulchHooks(current ?? {}, remove);
+	const result = syncAtlasHooks(current ?? {}, remove);
 	if (result.changed) {
 		await mkdir(dirname(settingsPath), { recursive: true });
 		await writeFile(settingsPath, `${JSON.stringify(result.settings, null, 2)}\n`, "utf-8");
@@ -195,7 +195,7 @@ const claudeRecipe: ProviderRecipe = {
 			? {
 					success: true,
 					message:
-						"Installed Claude hooks: SessionStart `ml prime`, PreToolUse `ml hook` (file-anchored records + .mulch/expertise guard).",
+						"Installed Claude hooks: SessionStart `luuna-atlas prime`, PreToolUse `luuna-atlas hook` (file-anchored records + .luuna/atlas/expertise guard).",
 				}
 			: { success: true, message: "Claude hooks already installed." };
 	},
@@ -205,7 +205,7 @@ const claudeRecipe: ProviderRecipe = {
 		if (settings === null) {
 			return { success: false, message: "Claude settings.json not found." };
 		}
-		const missing = missingMulchHooks(settings);
+		const missing = missingAtlasHooks(settings);
 		return missing.length > 0
 			? { success: false, message: `Missing hooks for: ${missing.join(", ")}.` }
 			: { success: true, message: "Claude hooks are installed and correct." };
@@ -219,8 +219,8 @@ const claudeRecipe: ProviderRecipe = {
 		return {
 			success: true,
 			message: changed
-				? "Removed mulch hooks from Claude settings."
-				: "No mulch hooks found in Claude settings.",
+				? "Removed luuna-atlas hooks from Claude settings."
+				: "No luuna-atlas hooks found in Claude settings.",
 		};
 	},
 };
@@ -228,7 +228,7 @@ const claudeRecipe: ProviderRecipe = {
 // ── Cursor ──────────────────────────────────────────────────
 
 function cursorRulePath(cwd: string): string {
-	return join(cwd, ".cursor", "rules", "mulch.mdc");
+	return join(cwd, ".cursor", "rules", "luuna-atlas.mdc");
 }
 
 // Built from config at install/check time so projects can swap the session-close
@@ -237,23 +237,23 @@ async function buildCursorRuleContent(cwd: string): Promise<string> {
 	const sessionClose = await readSessionCloseConfig(cwd);
 	const footer = getSessionEndReminder("embedded", sessionClose);
 	return `---
-description: Mulch expertise integration
+description: Atlas expertise integration
 globs: *
 alwaysApply: true
 ---
 
-# Mulch Expertise
+# Atlas Expertise
 
 At the start of every session, run the following command to load project expertise:
 
 \`\`\`
-ml prime
+luuna-atlas prime
 \`\`\`
 
 This injects project-specific conventions, patterns, decisions, and other learnings into your context.
-Use \`ml prime --files src/foo.ts\` to load only records relevant to specific files.
+Use \`luuna-atlas prime --files src/foo.ts\` to load only records relevant to specific files.
 
-Evidence auto-populates from git (current commit + changed files). Link trackers explicitly with \`--evidence-seeds <id>\` / \`--evidence-gh <id>\` / \`--evidence-linear <id>\` / \`--evidence-bead <id>\`, or \`--relates-to <mx-id>\`.
+Evidence auto-populates from git (current commit + changed files). Link trackers explicitly with \`--evidence-missions <id>\` / \`--evidence-gh <id>\` / \`--evidence-linear <id>\` / \`--evidence-bead <id>\`, or \`--relates-to <mx-id>\`.
 
 ${footer}
 `;
@@ -276,7 +276,7 @@ const cursorRecipe: ProviderRecipe = {
 
 		return {
 			success: true,
-			message: "Installed Cursor rule at .cursor/rules/mulch.mdc.",
+			message: "Installed Cursor rule at .cursor/rules/luuna-atlas.mdc.",
 		};
 	},
 
@@ -319,14 +319,14 @@ async function buildCodexSection(cwd: string): Promise<string> {
 	const sessionClose = await readSessionCloseConfig(cwd);
 	const footer = getSessionEndReminder("embedded", sessionClose);
 	return `${MARKER_START}
-## Mulch Expertise
+## Atlas Expertise
 
-At the start of every session, run \`ml prime\` to load project expertise.
+At the start of every session, run \`luuna-atlas prime\` to load project expertise.
 
 This injects project-specific conventions, patterns, decisions, and other learnings into your context.
-Use \`ml prime --files src/foo.ts\` to load only records relevant to specific files.
+Use \`luuna-atlas prime --files src/foo.ts\` to load only records relevant to specific files.
 
-Evidence auto-populates from git (current commit + changed files). Link trackers explicitly with \`--evidence-seeds <id>\` / \`--evidence-gh <id>\` / \`--evidence-linear <id>\` / \`--evidence-bead <id>\`, or \`--relates-to <mx-id>\`.
+Evidence auto-populates from git (current commit + changed files). Link trackers explicitly with \`--evidence-missions <id>\` / \`--evidence-gh <id>\` / \`--evidence-linear <id>\` / \`--evidence-bead <id>\`, or \`--relates-to <mx-id>\`.
 
 ${footer}
 ${MARKER_END}`;
@@ -339,8 +339,8 @@ ${MARKER_END}`;
 // We fence the managed block in marker comments so we can re-find it for
 // idempotent install and clean removal without disturbing user-added entries.
 
-const CODEX_TOML_MARKER_START = "# mulch:start — managed by `ml setup codex`";
-const CODEX_TOML_MARKER_END = "# mulch:end";
+const CODEX_TOML_MARKER_START = "# luuna-atlas:start — managed by `luuna-atlas setup codex`";
+const CODEX_TOML_MARKER_END = "# luuna-atlas:end";
 
 const CODEX_TOML_BLOCK = `${CODEX_TOML_MARKER_START}
 [features]
@@ -350,8 +350,8 @@ codex_hooks = true
 
 [[hooks.SessionStart.hooks]]
 type = "command"
-command = "ml prime"
-statusMessage = "Loading mulch expertise"
+command = "luuna-atlas prime"
+statusMessage = "Loading luuna-atlas expertise"
 ${CODEX_TOML_MARKER_END}`;
 
 function codexConfigPath(cwd: string): string {
@@ -397,7 +397,7 @@ const codexRecipe: ProviderRecipe = {
 			await writeFile(agentsPath, newAgents, "utf-8");
 		}
 
-		// 2. .codex/config.toml — SessionStart hook running `ml prime`
+		// 2. .codex/config.toml — SessionStart hook running `luuna-atlas prime`
 		let tomlContent = "";
 		let tomlAlready = false;
 		if (existsSync(tomlPath)) {
@@ -421,7 +421,7 @@ const codexRecipe: ProviderRecipe = {
 		}
 
 		const installed: string[] = [];
-		if (!agentsAlready) installed.push("AGENTS.md mulch section");
+		if (!agentsAlready) installed.push("AGENTS.md luuna-atlas section");
 		if (!tomlAlready) installed.push(".codex/config.toml SessionStart hook");
 		return { success: true, message: `Installed Codex integration: ${installed.join(", ")}.` };
 	},
@@ -437,7 +437,7 @@ const codexRecipe: ProviderRecipe = {
 		if (!hasMarkerSection(agentsContent)) {
 			return {
 				success: false,
-				message: "AGENTS.md exists but has no mulch section.",
+				message: "AGENTS.md exists but has no luuna-atlas section.",
 			};
 		}
 
@@ -448,7 +448,7 @@ const codexRecipe: ProviderRecipe = {
 		if (!hasCodexTomlBlock(tomlContent)) {
 			return {
 				success: false,
-				message: ".codex/config.toml exists but has no mulch SessionStart hook.",
+				message: ".codex/config.toml exists but has no luuna-atlas SessionStart hook.",
 			};
 		}
 
@@ -468,7 +468,7 @@ const codexRecipe: ProviderRecipe = {
 			if (hasMarkerSection(content)) {
 				const cleaned = removeMarkerSection(content);
 				await writeFile(agentsPath, cleaned, "utf-8");
-				removed.push("AGENTS.md mulch section");
+				removed.push("AGENTS.md luuna-atlas section");
 			}
 		}
 
@@ -501,8 +501,8 @@ const codexRecipe: ProviderRecipe = {
 // ── Recipe registry ─────────────────────────────────────────
 
 /**
- * Built-in recipes shipped with mulch. Filesystem (`.mulch/recipes/<name>.{ts,sh}`)
- * and npm (`mulch-recipe-<name>`) discovery is handled by `resolveRecipe` in
+ * Built-in recipes shipped with luuna-atlas. Filesystem (`.luuna/atlas/recipes/<name>.{ts,sh}`)
+ * and npm (`luuna-atlas-recipe-<name>`) discovery is handled by `resolveRecipe` in
  * `utils/recipe-discovery.ts` and takes precedence over these in that order.
  */
 const BUILTIN_RECIPES = {
@@ -525,7 +525,7 @@ export {
 	buildCursorRuleContent,
 	buildCodexSection,
 	CLAUDE_HOOK_COMMAND,
-	MULCH_HOOK_SECTION,
+	ATLAS_HOOK_SECTION,
 	installGitHook,
 	checkGitHook,
 	removeGitHook,
@@ -540,13 +540,16 @@ export function registerSetupCommand(program: Command): void {
 		.command("setup")
 		.argument(
 			"[provider]",
-			`agent provider (built-in: ${BUILTIN_PROVIDER_NAMES.join(", ")}; or any name resolvable from .mulch/recipes/ or ${NPM_RECIPE_PREFIX}*)`,
+			`agent provider (built-in: ${BUILTIN_PROVIDER_NAMES.join(", ")}; or any name resolvable from .luuna/atlas/recipes/ or ${NPM_RECIPE_PREFIX}*)`,
 		)
-		.description("Set up mulch integration for a specific agent provider")
+		.description("Set up luuna-atlas integration for a specific agent provider")
 		.option("--check", "verify provider integration is installed")
 		.option("--remove", "remove provider integration")
-		.option("--hooks", "install a pre-commit git hook running mulch validate")
-		.option("--list", "list discovered providers (built-in, .mulch/recipes/, mulch-recipe-* npm)")
+		.option("--hooks", "install a pre-commit git hook running luuna-atlas validate")
+		.option(
+			"--list",
+			"list discovered providers (built-in, .luuna/atlas/recipes/, luuna-atlas-recipe-* npm)",
+		)
 		.action(
 			async (
 				provider: string | undefined,
@@ -559,13 +562,13 @@ export function registerSetupCommand(program: Command): void {
 			) => {
 				const jsonMode = program.opts().json === true;
 
-				// Verify .mulch/ exists
-				const mulchDir = getMulchDir();
-				if (!existsSync(mulchDir)) {
+				// Verify .luuna/atlas/ exists
+				const atlasDir = getAtlasDir();
+				if (!existsSync(atlasDir)) {
 					reportCommandError(
 						"setup",
 						jsonMode,
-						"No .mulch/ directory found. Run `mulch init` first.",
+						"No .luuna/atlas/ directory found. Run `luuna-atlas init` first.",
 					);
 					return;
 				}
@@ -635,7 +638,7 @@ export function registerSetupCommand(program: Command): void {
 				}
 
 				if (!resolved) {
-					const hint = `Unknown provider "${provider}". Run \`ml setup --list\` to see discovered providers, or add a recipe at .mulch/recipes/${provider}.{ts,sh} or install ${NPM_RECIPE_PREFIX}${provider}.`;
+					const hint = `Unknown provider "${provider}". Run \`luuna-atlas setup --list\` to see discovered providers, or add a recipe at .luuna/atlas/recipes/${provider}.{ts,sh} or install ${NPM_RECIPE_PREFIX}${provider}.`;
 					reportCommandError("setup", jsonMode, hint);
 					return;
 				}
@@ -698,7 +701,7 @@ interface ProviderListing {
 
 function npmShadowExists(name: string, cwd: string): boolean {
 	// resolveRecipe prefers filesystem \u2192 npm \u2192 built-in, so an installed
-	// `mulch-recipe-<name>` package shadows the built-in (and is itself shadowed
+	// `luuna-atlas-recipe-<name>` package shadows the built-in (and is itself shadowed
 	// by a filesystem recipe of the same name). Probe per-builtin rather than
 	// enumerating node_modules \u2014 fast, and avoids rummaging through unrelated
 	// packages.
@@ -719,7 +722,7 @@ async function gatherProviderListings(cwd: string): Promise<ProviderListing[]> {
 	for (const name of BUILTIN_PROVIDER_NAMES) {
 		// Resolution order is filesystem \u2192 npm \u2192 built-in, so a filesystem
 		// shadow wins over npm. Report the actual winner so the marker isn't a
-		// lie about what `ml setup <name>` would run.
+		// lie about what `luuna-atlas setup <name>` would run.
 		const fsShadow = fsRecipes.find((r) => r.name === name);
 		const shadowedBy: ProviderListing["shadowedBy"] | undefined = fsShadow
 			? fsShadow.source
@@ -784,7 +787,7 @@ async function runList(cwd: string, jsonMode: boolean): Promise<void> {
 	console.log("");
 	console.log(
 		chalk.dim(
-			`Resolution order: filesystem (.mulch/recipes/<name>.{ts,sh}) \u2192 npm (${NPM_RECIPE_PREFIX}<name>) \u2192 built-in.`,
+			`Resolution order: filesystem (.luuna/atlas/recipes/<name>.{ts,sh}) \u2192 npm (${NPM_RECIPE_PREFIX}<name>) \u2192 built-in.`,
 		),
 	);
 }

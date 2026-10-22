@@ -25,7 +25,7 @@ jobs:
           python3 - <<'PY'
           import subprocess, re
           paths = subprocess.check_output(['git', 'ls-files', '-z'], text=True).split('\0')
-          bad = [p for p in paths if re.search(r'(^|/)(node_modules|\.pi|\.seeds|\.mulch|\.canopy)/|(^|/)\.env($|\.(?!example$))', p)]
+          bad = [p for p in paths if re.search(r'(^|/)(node_modules|\.pi|\.luuna)/|(^|/)\.env($|\.(?!example$))', p)]
           assert not bad, 'Private artifacts must not be tracked'
           PY
   verify-windows:

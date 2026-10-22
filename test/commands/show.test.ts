@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { Command } from "commander";
 import { registerShowCommand } from "../../src/commands/show.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import { appendRecord, createExpertiseFile } from "../../src/utils/expertise.ts";
 
 describe("show command", () => {
@@ -14,8 +14,8 @@ describe("show command", () => {
 
 	beforeEach(async () => {
 		originalCwd = process.cwd();
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-show-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-show-test-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { cli: {}, db: {} } }, tmpDir);
 		const now = new Date().toISOString();
 		const cliPath = getExpertisePath("cli", tmpDir);
@@ -48,12 +48,12 @@ describe("show command", () => {
 
 	async function runShow(args: string[]): Promise<{ out: string; err: string }> {
 		const program = new Command();
-		program.name("mulch").option("--json", "output as structured JSON").exitOverride();
+		program.name("luuna-atlas").option("--json", "output as structured JSON").exitOverride();
 		registerShowCommand(program);
 		const logSpy = spyOn(console, "log").mockImplementation(() => {});
 		const errSpy = spyOn(console, "error").mockImplementation(() => {});
 		try {
-			await program.parseAsync(["node", "mulch", ...args]);
+			await program.parseAsync(["node", "luuna-atlas", ...args]);
 			return {
 				out: logSpy.mock.calls.map((c) => String(c[0])).join("\n"),
 				err: errSpy.mock.calls.map((c) => String(c[0])).join("\n"),

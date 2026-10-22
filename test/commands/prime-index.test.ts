@@ -5,19 +5,19 @@ import { join } from "node:path";
 import { Command } from "commander";
 import { registerPrimeCommand } from "../../src/commands/prime.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { getExpertisePath, initMulchDir, readConfig, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, readConfig, writeConfig } from "../../src/utils/config.ts";
 import { appendRecord, createExpertiseFile } from "../../src/utils/expertise.ts";
 
-// Index-mode prime (mulch-bffe): failure-first ranking, anchored-failure
+// Index-mode prime (atlas-bffe): failure-first ranking, anchored-failure
 // pinning under --budget, --records-only hook output, supersession hiding.
-describe("prime index mode (mulch-bffe)", () => {
+describe("prime index mode (atlas-bffe)", () => {
 	let tmpDir: string;
 	let originalCwd: string;
 
 	beforeEach(async () => {
 		originalCwd = process.cwd();
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-prime-index-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-prime-index-test-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { cli: {} } }, tmpDir);
 		const cliPath = getExpertisePath("cli", tmpDir);
 		await createExpertiseFile(cliPath);
@@ -65,12 +65,12 @@ describe("prime index mode (mulch-bffe)", () => {
 
 	async function runPrime(args: string[]): Promise<string> {
 		const program = new Command();
-		program.name("mulch").option("--json", "output as structured JSON").exitOverride();
+		program.name("luuna-atlas").option("--json", "output as structured JSON").exitOverride();
 		registerPrimeCommand(program);
 		const logSpy = spyOn(console, "log").mockImplementation(() => {});
 		const errSpy = spyOn(console, "error").mockImplementation(() => {});
 		try {
-			await program.parseAsync(["node", "mulch", "prime", ...args]);
+			await program.parseAsync(["node", "luuna-atlas", "prime", ...args]);
 			return logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 		} finally {
 			logSpy.mockRestore();

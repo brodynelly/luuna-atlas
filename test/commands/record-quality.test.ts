@@ -1,4 +1,4 @@
-// Write-time quality gate on `ml record` (mulch-a378): exact-duplicate
+// Write-time quality gate on `luuna-atlas record` (atlas-a378): exact-duplicate
 // hard block, near-duplicate detection, and quality.level warnings.
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { spawnSync } from "node:child_process";
@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { DEFAULT_CONFIG, type QualityLevel } from "../../src/schemas/config.ts";
 import type { ExpertiseRecord } from "../../src/schemas/record.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import { appendRecord, readExpertiseFile } from "../../src/utils/expertise.ts";
 
 const cliPath = resolve(process.cwd(), "src/cli.ts");
@@ -17,7 +17,7 @@ const EXISTING =
 const REWORDED =
 	"Prefer withFileLock for each expertise write because concurrent agents race on the JSONL file otherwise";
 
-describe("ml record quality gate", () => {
+describe("luuna-atlas record quality gate", () => {
 	let tmpDir: string;
 
 	async function setup(level?: QualityLevel): Promise<void> {
@@ -47,8 +47,8 @@ describe("ml record quality gate", () => {
 	}
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-record-quality-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-record-quality-"));
+		await initAtlasDir(tmpDir);
 	});
 
 	afterEach(async () => {
@@ -62,7 +62,7 @@ describe("ml record quality gate", () => {
 			const r = record(variant, "--type", "convention", ...extra);
 			expect(r.status).toBe(1);
 			expect(r.stderr).toMatch(/duplicate convention already exists in backend \(mx-[0-9a-f]+\)/);
-			expect(r.stderr).toMatch(/ml outcome backend mx-/);
+			expect(r.stderr).toMatch(/luuna-atlas outcome backend mx-/);
 		}
 		expect(await count()).toBe(1);
 	});

@@ -227,10 +227,10 @@ async function handleAnalyze(jsonMode: boolean, domain?: string): Promise<void> 
 
 	console.log(chalk.dim("To compact manually:"));
 	console.log(
-		chalk.dim("  mulch compact <domain> --apply --records <ids> --type <type> [fields...]"),
+		chalk.dim("  luuna-atlas compact <domain> --apply --records <ids> --type <type> [fields...]"),
 	);
 	console.log(chalk.dim("\nTo compact automatically:"));
-	console.log(chalk.dim("  mulch compact --auto [--dry-run]"));
+	console.log(chalk.dim("  luuna-atlas compact --auto [--dry-run]"));
 }
 
 // Type-specific fields a manual --replace record must carry, in flag order.
@@ -465,7 +465,7 @@ async function handleAuto(
 			}
 		});
 
-		// Soft-archive the originals so `ml restore <id>` can undo a compaction.
+		// Soft-archive the originals so `luuna-atlas restore <id>` can undo a compaction.
 		// Runs after the live lock releases (archiveRecords takes its own lock
 		// on the archive file).
 		if (toArchive.length > 0) {
@@ -528,7 +528,7 @@ export async function resolveReplacement(
 	if (hookRes.ranAny && hookRes.payload?.replacement) {
 		const candidate = { ...hookRes.payload.replacement };
 		// Auto-populate the supersedes link if the hook omitted it: the
-		// replacement must always carry the originals' IDs so `ml restore` works
+		// replacement must always carry the originals' IDs so `luuna-atlas restore` works
 		// and history is traceable. The hook may also set it explicitly.
 		const sourceIds = recordsToCompact.map((r) => r.id).filter((id): id is string => !!id);
 		if (!Array.isArray(candidate.supersedes) || candidate.supersedes.length === 0) {
@@ -579,7 +579,7 @@ export function mergeRecords(records: ExpertiseRecord[]): ExpertiseRecord {
 			break;
 		case "manual":
 			throw new Error(
-				`Type "${def.name}" has compact strategy "manual" — use \`mulch compact --apply\` to compact manually.`,
+				`Type "${def.name}" has compact strategy "manual" — use \`luuna-atlas compact --apply\` to compact manually.`,
 			);
 	}
 

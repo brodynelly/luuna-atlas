@@ -52,7 +52,7 @@ export function registerUpgradeCommand(program: Command): void {
 						updated: false,
 					});
 				} else {
-					printSuccess(`mulch is up to date (v${current})`);
+					printSuccess(`luuna-atlas is up to date (v${current})`);
 				}
 				return;
 			}
@@ -102,7 +102,7 @@ export function registerUpgradeCommand(program: Command): void {
 					updated: true,
 				});
 			} else {
-				printSuccess(`Updated mulch v${current} → v${latest}`);
+				printSuccess(`Updated luuna-atlas v${current} → v${latest}`);
 			}
 		});
 }

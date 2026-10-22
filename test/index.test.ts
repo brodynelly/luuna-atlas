@@ -5,13 +5,13 @@ import { join } from "node:path";
 
 // Import all exports from src/index.ts
 import type {
+	AtlasConfig,
 	Classification,
 	ConventionRecord,
 	DecisionRecord,
 	Evidence,
 	ExpertiseRecord,
 	FailureRecord,
-	MulchConfig,
 	PatternRecord,
 	RecordType,
 } from "../src/index.ts";
@@ -33,7 +33,7 @@ describe("src/index.ts exports", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-index-test-"));
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-index-test-"));
 	});
 
 	afterEach(async () => {
@@ -112,8 +112,8 @@ describe("src/index.ts exports", () => {
 			expect(record.type).toBe("convention");
 		});
 
-		it("exports MulchConfig type", () => {
-			const config: MulchConfig = {
+		it("exports AtlasConfig type", () => {
+			const config: AtlasConfig = {
 				version: "1",
 				domains: { test: {} },
 				governance: {
@@ -147,10 +147,10 @@ describe("src/index.ts exports", () => {
 		it("exports and uses readConfig", async () => {
 			// Create a minimal config file
 			const { mkdir } = await import("node:fs/promises");
-			const configDir = join(tmpDir, ".mulch");
+			const configDir = join(tmpDir, ".luuna/atlas");
 			await mkdir(configDir, { recursive: true });
 
-			const configPath = join(configDir, "mulch.config.yaml");
+			const configPath = join(configDir, "config.yaml");
 			const configContent = `version: "1"
 domains: {}
 governance:
@@ -167,7 +167,7 @@ governance:
 
 		it("exports and uses getExpertisePath", () => {
 			const path = getExpertisePath("testing", tmpDir);
-			expect(path).toBe(join(tmpDir, ".mulch", "expertise", "testing.jsonl"));
+			expect(path).toBe(join(tmpDir, ".luuna/atlas", "expertise", "testing.jsonl"));
 		});
 	});
 
@@ -297,7 +297,7 @@ governance:
 			const filePath = getExpertisePath(domain, tmpDir);
 
 			// Ensure directory exists
-			const expertiseDir = join(tmpDir, ".mulch", "expertise");
+			const expertiseDir = join(tmpDir, ".luuna/atlas", "expertise");
 			await mkdir(expertiseDir, { recursive: true });
 
 			// Create initial record

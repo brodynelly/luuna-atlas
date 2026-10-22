@@ -97,7 +97,7 @@ export function extractBacktickedPaths(markdown: string): string[] {
 		if (/^\.[A-Za-z0-9]+$/.test(token)) continue;
 		if (!/^[.A-Za-z0-9_][A-Za-z0-9_.\-/]*\/?$/.test(token)) continue;
 		const looksLikePath =
-			token.includes("/") || /\.(md|json|ya?ml|toml|ts|tsx|js|sh|lock)$/.test(token);
+			token.includes("/") || /\.(md|json|ya?luuna-atlas|toml|ts|tsx|js|sh|lock)$/.test(token);
 		if (!looksLikePath) continue;
 		const cleaned = token.replace(/\/+$/, "");
 		if (cleaned.includes("<") || cleaned.includes(">")) continue;

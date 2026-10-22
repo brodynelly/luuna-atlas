@@ -44,7 +44,7 @@ async function acquireLock(lockPath: string): Promise<void> {
 
 			if (Date.now() >= deadline) {
 				throw new Error(
-					`Timed out waiting for lock on ${lockPath}. If no other mulch process is running, delete the lock file manually.`,
+					`Timed out waiting for lock on ${lockPath}. If no other luuna-atlas process is running, delete the lock file manually.`,
 				);
 			}
 

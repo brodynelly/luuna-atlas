@@ -11,7 +11,7 @@ import {
 } from "../../src/registry/type-registry.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
 import { recordSchema } from "../../src/schemas/record-schema.ts";
-import { initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 
 const baseTimestamp = "2026-05-07T00:00:00Z";
 
@@ -164,8 +164,8 @@ describe("custom types extending built-ins inherit owner and status", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-owner-status-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-owner-status-"));
+		await initAtlasDir(tmpDir);
 	});
 
 	afterEach(async () => {

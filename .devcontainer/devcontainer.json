@@ -1,5 +1,5 @@
 {
-	"name": "mulch (Bun)",
+	"name": "luuna-atlas (Bun)",
 	"image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
 	"features": {
 		"ghcr.io/devcontainers/features/git:1": {},

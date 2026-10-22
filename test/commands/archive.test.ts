@@ -9,7 +9,7 @@ import { registerRestoreCommand } from "../../src/commands/restore.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
 import type { ExpertiseRecord } from "../../src/schemas/record.ts";
 import { getArchivePath, readArchiveFile } from "../../src/utils/archive.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../src/utils/expertise.ts";
 
 interface CapturedRun {
@@ -43,7 +43,7 @@ async function runCommand(
 		program.option("--json", "output JSON");
 		program.exitOverride();
 		register(program);
-		await program.parseAsync(["node", "mulch", ...args]);
+		await program.parseAsync(["node", "luuna-atlas", ...args]);
 	} catch {
 		// commander exitOverride throws on errors; the inner action sets process.exitCode.
 	} finally {
@@ -73,12 +73,12 @@ async function seedDomain(
 	}
 }
 
-describe("ml archive", () => {
+describe("luuna-atlas archive", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-archive-cmd-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-archive-cmd-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {} } }, tmpDir);
 	});
 
@@ -130,7 +130,7 @@ describe("ml archive", () => {
 		expect(typeof archived[0]?.archived_at).toBe("string");
 	});
 
-	it("accepts prefix ids (matches `ml delete`/`ml restore` resolution)", async () => {
+	it("accepts prefix ids (matches `luuna-atlas delete`/`luuna-atlas restore` resolution)", async () => {
 		await seedDomain(tmpDir, "testing", [
 			{
 				id: "mx-abcdef12",
@@ -382,7 +382,7 @@ describe("ml archive", () => {
 		});
 	});
 
-	it("round-trips through `ml restore`: archived → restored back to live without status fields", async () => {
+	it("round-trips through `luuna-atlas restore`: archived → restored back to live without status fields", async () => {
 		await seedDomain(tmpDir, "testing", [
 			{
 				id: "mx-rnd00001",

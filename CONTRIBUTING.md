@@ -1,14 +1,14 @@
-# Contributing to Mulch
+# Contributing to Atlas
 
-Thanks for your interest in contributing to Mulch! This guide covers everything you need to get started.
+Thanks for your interest in contributing to Atlas! This guide covers everything you need to get started.
 
 ## Getting Started
 
 1. **Fork** the repository on GitHub
 2. **Clone** your fork locally:
    ```bash
-   git clone https://github.com/<your-username>/mulch.git
-   cd mulch
+   git clone https://github.com/<your-username>/luuna-atlas.git
+   cd luuna-atlas
    ```
 3. **Install** dependencies:
    ```bash
@@ -43,7 +43,7 @@ Always run `npm run lint` and `npm run test` before submitting a PR.
 
 ## TypeScript Conventions
 
-Mulch is an ESM-only TypeScript project. Please follow these conventions:
+Atlas is an ESM-only TypeScript project. Please follow these conventions:
 
 ### ESM Imports
 
@@ -99,7 +99,7 @@ describe("my-command", () => {
   let testDir: string;
 
   beforeEach(async () => {
-    testDir = await mkdtemp(join(tmpdir(), "mulch-test-"));
+    testDir = await mkdtemp(join(tmpdir(), "atlas-test-"));
   });
 
   afterEach(async () => {
@@ -142,7 +142,7 @@ Prefix with `fix:`, `feat:`, or `docs:` when the category is clear. Plain descri
 
 ## Reporting Issues
 
-Use [GitHub Issues](https://github.com/jayminwest/mulch/issues) for bug reports and feature requests. For security vulnerabilities, see [SECURITY.md](SECURITY.md).
+Use [GitHub Issues](https://github.com/brodynelly/luuna-atlas/issues) for bug reports and feature requests. For security vulnerabilities, see [SECURITY.md](SECURITY.md).
 
 ## License
 

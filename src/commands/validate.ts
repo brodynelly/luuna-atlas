@@ -80,7 +80,7 @@ export function registerValidateCommand(program: Command): void {
 								totalErrors++;
 								const id = (parsed as { id?: unknown }).id;
 								const idPart = typeof id === "string" ? ` (id=${id})` : "";
-								const msg = `Unknown record type "${t}"${idPart}. Register it under custom_types in mulch.config.yaml or remove the record.`;
+								const msg = `Unknown record type "${t}"${idPart}. Register it under custom_types in config.yaml or remove the record.`;
 								errors.push({ domain, line: lineNumber, message: msg });
 								if (!jsonMode) {
 									console.error(chalk.red(`${domain}:${lineNumber} - ${msg}`));
@@ -100,7 +100,7 @@ export function registerValidateCommand(program: Command): void {
 					) {
 						totalWarnings++;
 						const msg =
-							'Legacy "outcome" field (singular); run `mulch doctor --fix` to migrate to "outcomes[]"';
+							'Legacy "outcome" field (singular); run `luuna-atlas doctor --fix` to migrate to "outcomes[]"';
 						warnings.push({ domain, line: lineNumber, message: msg });
 						if (!jsonMode) {
 							console.error(chalk.yellow(`${domain}:${lineNumber} - ${msg}`));

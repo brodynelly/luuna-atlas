@@ -30,7 +30,7 @@ export function registerDeleteDomainCommand(program: Command): void {
 						console.error(chalk.red(`Error: domain "${domain}" not found in config.`));
 						console.error(
 							chalk.red(
-								`Hint: Run \`mulch add ${domain}\` to create it, or check \`mulch status\` for existing domains.`,
+								`Hint: Run \`luuna-atlas add ${domain}\` to create it, or check \`luuna-atlas status\` for existing domains.`,
 							),
 						);
 					}

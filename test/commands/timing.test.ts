@@ -19,7 +19,7 @@ describe("--timing flag", () => {
 		const stdout = result.stdout.toString();
 		expect(stdout).not.toContain("Done in");
 		// stdout should still contain actual command output
-		expect(stdout).toContain("mulch");
+		expect(stdout).toContain("luuna-atlas");
 	});
 
 	it("does not print timing without --timing flag", () => {

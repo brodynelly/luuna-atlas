@@ -45,11 +45,11 @@ function pattern(id: string, files: string[], commit: string): ExpertiseRecord {
 	} as ExpertiseRecord;
 }
 
-describe("findStaleRecords (mulch-094a)", () => {
+describe("findStaleRecords (atlas-094a)", () => {
 	let dir: string;
 
 	beforeEach(async () => {
-		dir = await mkdtemp(join(tmpdir(), "mulch-staleness-test-"));
+		dir = await mkdtemp(join(tmpdir(), "atlas-staleness-test-"));
 		git(dir, ["init", "-q", "-b", "main"]);
 		git(dir, ["config", "user.email", "test@test.com"]);
 		git(dir, ["config", "user.name", "Test"]);
@@ -142,7 +142,7 @@ describe("findStaleRecords (mulch-094a)", () => {
 	});
 
 	it("degrades to local checks outside a git repo", async () => {
-		const plain = await mkdtemp(join(tmpdir(), "mulch-staleness-nogit-"));
+		const plain = await mkdtemp(join(tmpdir(), "atlas-staleness-nogit-"));
 		try {
 			await writeFile(join(plain, "a.ts"), "x");
 			const stale = findStaleRecords([pattern("mx-0050", ["a.ts"], "abc1234")], {
@@ -156,7 +156,7 @@ describe("findStaleRecords (mulch-094a)", () => {
 	});
 });
 
-describe("stale demotion + marker (mulch-094a)", () => {
+describe("stale demotion + marker (atlas-094a)", () => {
 	it("ranks stale records after fresh ones within the same budget tier", () => {
 		const fresh = convention({ id: "mx-0101", content: "fresh rule" });
 		const stale = convention({ id: "mx-0102", content: "stale rule" });

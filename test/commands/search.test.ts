@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { Command } from "commander";
 import { registerSearchCommand } from "../../src/commands/search.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import {
 	appendRecord,
 	createExpertiseFile,
@@ -25,8 +25,8 @@ describe("search command", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-search-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-search-test-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { database: {}, api: {} } }, tmpDir);
 		const dbPath = getExpertisePath("database", tmpDir);
 		const apiPath = getExpertisePath("api", tmpDir);
@@ -849,7 +849,7 @@ describe("search command", () => {
 
 		function makeProgram(): Command {
 			const program = new Command();
-			program.name("mulch").option("--json", "output as structured JSON").exitOverride();
+			program.name("luuna-atlas").option("--json", "output as structured JSON").exitOverride();
 			registerSearchCommand(program);
 			return program;
 		}
@@ -859,12 +859,19 @@ describe("search command", () => {
 			const errorSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "search", "--domain", "nonexistent", "query"]);
+				await program.parseAsync([
+					"node",
+					"luuna-atlas",
+					"search",
+					"--domain",
+					"nonexistent",
+					"query",
+				]);
 
 				expect(errorSpy).toHaveBeenCalledTimes(2);
 				expect(errorSpy.mock.calls[0]?.[0]).toContain("nonexistent");
-				expect(errorSpy.mock.calls[1]?.[0]).toContain("mulch add nonexistent");
-				expect(errorSpy.mock.calls[1]?.[0]).toContain(".mulch/mulch.config.yaml");
+				expect(errorSpy.mock.calls[1]?.[0]).toContain("luuna-atlas add nonexistent");
+				expect(errorSpy.mock.calls[1]?.[0]).toContain(".luuna/atlas/config.yaml");
 			} finally {
 				errorSpy.mockRestore();
 			}
@@ -885,7 +892,7 @@ describe("search command", () => {
 
 		function makeProgram(): Command {
 			const program = new Command();
-			program.name("mulch").option("--json", "output as structured JSON").exitOverride();
+			program.name("luuna-atlas").option("--json", "output as structured JSON").exitOverride();
 			registerSearchCommand(program);
 			return program;
 		}
@@ -906,7 +913,7 @@ describe("search command", () => {
 				const program = makeProgram();
 				await program.parseAsync([
 					"node",
-					"mulch",
+					"luuna-atlas",
 					"search",
 					"Compact search test",
 					"--format",
@@ -944,7 +951,7 @@ describe("search command", () => {
 				const program = makeProgram();
 				await program.parseAsync([
 					"node",
-					"mulch",
+					"luuna-atlas",
 					"search",
 					"ids format search test",
 					"--format",
@@ -981,7 +988,7 @@ describe("search command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "search", "skiptest", "--format", "ids"]);
+				await program.parseAsync(["node", "luuna-atlas", "search", "skiptest", "--format", "ids"]);
 
 				expect(logSpy).toHaveBeenCalledTimes(1);
 				const output = logSpy.mock.calls[0]?.[0];
@@ -998,7 +1005,7 @@ describe("search command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "search", "WAL"]);
+				await program.parseAsync(["node", "luuna-atlas", "search", "WAL"]);
 
 				expect(logSpy).toHaveBeenCalledTimes(2); // output + match count
 				const output = logSpy.mock.calls[0]?.[0];
@@ -1013,7 +1020,7 @@ describe("search command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "search", "WAL", "--format", "xml"]);
+				await program.parseAsync(["node", "luuna-atlas", "search", "WAL", "--format", "xml"]);
 
 				const output = logSpy.mock.calls[0]?.[0];
 				expect(output).toContain('<domain name="database"');
@@ -1027,7 +1034,7 @@ describe("search command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "search", "WAL", "--format", "plain"]);
+				await program.parseAsync(["node", "luuna-atlas", "search", "WAL", "--format", "plain"]);
 
 				const output = logSpy.mock.calls[0]?.[0];
 				expect(output).toContain("[database]");
@@ -1044,12 +1051,12 @@ describe("search command", () => {
 			try {
 				const program = new Command();
 				program
-					.name("mulch")
+					.name("luuna-atlas")
 					.option("--json", "output as structured JSON")
 					.option("--format <format>", "global format")
 					.exitOverride();
 				registerSearchCommand(program);
-				await program.parseAsync(["node", "mulch", "--format", "xml", "search", "WAL"]);
+				await program.parseAsync(["node", "luuna-atlas", "--format", "xml", "search", "WAL"]);
 
 				const output = logSpy.mock.calls[0]?.[0];
 				expect(output).toContain('<domain name="database"');

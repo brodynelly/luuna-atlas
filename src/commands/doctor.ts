@@ -4,12 +4,12 @@ import { resolve } from "node:path";
 import chalk from "chalk";
 import type { Command } from "commander";
 import { getRegistry, type TypeDefinition } from "../registry/type-registry.ts";
-import { type MulchConfig, validateAnchorValidityConfig } from "../schemas/config.ts";
+import { type AtlasConfig, validateAnchorValidityConfig } from "../schemas/config.ts";
 import type { ExpertiseRecord } from "../schemas/record.ts";
 import {
+	getAtlasDir,
 	getExpertiseDir,
 	getExpertisePath,
-	getMulchDir,
 	readConfig,
 	writeConfig,
 } from "../utils/config.ts";
@@ -42,12 +42,12 @@ interface DoctorCheck {
 
 async function checkConfig(cwd?: string): Promise<DoctorCheck> {
 	try {
-		const mulchDir = getMulchDir(cwd);
-		if (!existsSync(mulchDir)) {
+		const atlasDir = getAtlasDir(cwd);
+		if (!existsSync(atlasDir)) {
 			return {
 				name: "config",
 				status: "fail",
-				message: "No .mulch/ directory found",
+				message: "No .luuna/atlas/ directory found",
 				fixable: false,
 				details: [],
 			};
@@ -78,7 +78,7 @@ interface DomainLine {
 }
 
 /** Yield every non-empty line of every domain file; unreadable files are skipped. */
-async function* walkDomainLines(config: MulchConfig, cwd?: string): AsyncGenerator<DomainLine> {
+async function* walkDomainLines(config: AtlasConfig, cwd?: string): AsyncGenerator<DomainLine> {
 	for (const domain of Object.keys(config.domains)) {
 		const filePath = getExpertisePath(domain, cwd);
 		let content: string;
@@ -98,7 +98,7 @@ async function* walkDomainLines(config: MulchConfig, cwd?: string): AsyncGenerat
 
 /** Like walkDomainLines, but parsed; invalid JSON is skipped (jsonl-integrity reports it). */
 async function* walkDomainRecords(
-	config: MulchConfig,
+	config: AtlasConfig,
 	cwd?: string,
 ): AsyncGenerator<{ domain: string; lineNo: number; parsed: unknown }> {
 	for await (const { domain, lineNo, line } of walkDomainLines(config, cwd)) {
@@ -112,7 +112,7 @@ async function* walkDomainRecords(
 	}
 }
 
-async function checkJsonlIntegrity(config: MulchConfig, cwd?: string): Promise<DoctorCheck> {
+async function checkJsonlIntegrity(config: AtlasConfig, cwd?: string): Promise<DoctorCheck> {
 	const details: string[] = [];
 	for await (const { domain, lineNo, line } of walkDomainLines(config, cwd)) {
 		try {
@@ -139,7 +139,7 @@ async function checkJsonlIntegrity(config: MulchConfig, cwd?: string): Promise<D
 	};
 }
 
-async function checkSchemaValidation(config: MulchConfig, cwd?: string): Promise<DoctorCheck> {
+async function checkSchemaValidation(config: AtlasConfig, cwd?: string): Promise<DoctorCheck> {
 	const registry = getRegistry();
 	const validate = registry.validator;
 	const details: string[] = [];
@@ -182,7 +182,7 @@ async function checkSchemaValidation(config: MulchConfig, cwd?: string): Promise
 	};
 }
 
-async function checkStaleRecords(config: MulchConfig, cwd?: string): Promise<DoctorCheck> {
+async function checkStaleRecords(config: AtlasConfig, cwd?: string): Promise<DoctorCheck> {
 	const now = new Date();
 	const shelfLife = config.classification_defaults.shelf_life;
 	const details: string[] = [];
@@ -216,7 +216,7 @@ async function checkStaleRecords(config: MulchConfig, cwd?: string): Promise<Doc
 	};
 }
 
-async function checkTypeRegistry(config: MulchConfig, cwd?: string): Promise<DoctorCheck> {
+async function checkTypeRegistry(config: AtlasConfig, cwd?: string): Promise<DoctorCheck> {
 	const registry = getRegistry();
 	const builtinDefs = registry.builtinDefs();
 	const customDefs = registry.customDefs();
@@ -258,7 +258,7 @@ async function checkTypeRegistry(config: MulchConfig, cwd?: string): Promise<Doc
 	};
 }
 
-async function checkUnknownTypes(config: MulchConfig, cwd?: string): Promise<DoctorCheck> {
+async function checkUnknownTypes(config: AtlasConfig, cwd?: string): Promise<DoctorCheck> {
 	const registry = getRegistry();
 	const details: string[] = [];
 
@@ -291,7 +291,7 @@ async function checkUnknownTypes(config: MulchConfig, cwd?: string): Promise<Doc
 	};
 }
 
-async function checkOrphanedDomains(config: MulchConfig, cwd?: string): Promise<DoctorCheck> {
+async function checkOrphanedDomains(config: AtlasConfig, cwd?: string): Promise<DoctorCheck> {
 	const expertiseDir = getExpertiseDir(cwd);
 	const details: string[] = [];
 
@@ -336,7 +336,7 @@ async function checkOrphanedDomains(config: MulchConfig, cwd?: string): Promise<
 	};
 }
 
-async function checkDuplicates(config: MulchConfig, cwd?: string): Promise<DoctorCheck> {
+async function checkDuplicates(config: AtlasConfig, cwd?: string): Promise<DoctorCheck> {
 	const details: string[] = [];
 	let dupCount = 0;
 
@@ -373,7 +373,7 @@ async function checkDuplicates(config: MulchConfig, cwd?: string): Promise<Docto
 	};
 }
 
-async function checkLegacyOutcome(config: MulchConfig, cwd?: string): Promise<DoctorCheck> {
+async function checkLegacyOutcome(config: AtlasConfig, cwd?: string): Promise<DoctorCheck> {
 	const details: string[] = [];
 
 	for await (const { domain, lineNo, parsed } of walkDomainRecords(config, cwd)) {
@@ -407,7 +407,7 @@ async function checkLegacyOutcome(config: MulchConfig, cwd?: string): Promise<Do
 	};
 }
 
-async function checkFileAnchors(config: MulchConfig, cwd?: string): Promise<DoctorCheck> {
+async function checkFileAnchors(config: AtlasConfig, cwd?: string): Promise<DoctorCheck> {
 	const projectRoot = cwd ?? process.cwd();
 	const details: string[] = [];
 
@@ -454,7 +454,7 @@ async function checkFileAnchors(config: MulchConfig, cwd?: string): Promise<Doct
 	};
 }
 
-async function checkGovernance(config: MulchConfig, cwd?: string): Promise<DoctorCheck> {
+async function checkGovernance(config: AtlasConfig, cwd?: string): Promise<DoctorCheck> {
 	const details: string[] = [];
 	let worstStatus: "pass" | "warn" | "fail" = "pass";
 
@@ -499,11 +499,11 @@ async function checkGovernance(config: MulchConfig, cwd?: string): Promise<Docto
 	};
 }
 
-// Informational: report whether `ml compact` runs the mechanical merge (no
+// Informational: report whether `luuna-atlas compact` runs the mechanical merge (no
 // `pre-compact` hook registered) vs. a semantic summarizer (one or more
 // scripts configured). Always passes; the message tells the user which mode
 // they're in.
-function checkCompactSummarizer(config: MulchConfig): DoctorCheck {
+function checkCompactSummarizer(config: AtlasConfig): DoctorCheck {
 	const scripts = (config.hooks?.["pre-compact"] ?? []).filter(
 		(s) => typeof s === "string" && s.trim().length > 0,
 	);
@@ -525,7 +525,7 @@ function checkCompactSummarizer(config: MulchConfig): DoctorCheck {
 	};
 }
 
-function checkDecayConfig(config: MulchConfig): DoctorCheck {
+function checkDecayConfig(config: AtlasConfig): DoctorCheck {
 	const cfg = config.decay?.anchor_validity;
 	if (!cfg) {
 		return {
@@ -559,7 +559,7 @@ function checkDecayConfig(config: MulchConfig): DoctorCheck {
 // domain-level rules (allowed_types / required_fields). Used by both the
 // informational and failing checks so we read+parse JSONL once.
 async function collectDomainConformance(
-	config: MulchConfig,
+	config: AtlasConfig,
 	cwd?: string,
 ): Promise<{
 	perDomain: Array<{
@@ -653,7 +653,7 @@ async function collectDomainConformance(
 // (additionalProperties: false), so writes silently fail with a confusing AJV
 // error. Surfacing this at doctor time tells the user to either declare a
 // custom_type that holds the field or drop it from required_fields.
-async function checkDomainRulesCompatibility(config: MulchConfig): Promise<DoctorCheck> {
+async function checkDomainRulesCompatibility(config: AtlasConfig): Promise<DoctorCheck> {
 	const registry = getRegistry();
 	const details: string[] = [];
 	let count = 0;
@@ -687,7 +687,7 @@ async function checkDomainRulesCompatibility(config: MulchConfig): Promise<Docto
 }
 
 async function checkDomainConformance(
-	config: MulchConfig,
+	config: AtlasConfig,
 	cwd?: string,
 ): Promise<{ info: DoctorCheck; violations: DoctorCheck }> {
 	const { perDomain, violations } = await collectDomainConformance(config, cwd);
@@ -756,13 +756,13 @@ async function checkUpdateAvailable(): Promise<DoctorCheck> {
 		status: "warn",
 		message: `Update available: ${current} → ${latest}`,
 		fixable: false,
-		details: ["Run `mulch upgrade` to upgrade"],
+		details: ["Run `luuna-atlas upgrade` to upgrade"],
 	};
 }
 
 async function applyFixes(
 	checks: DoctorCheck[],
-	config: MulchConfig,
+	config: AtlasConfig,
 	cwd?: string,
 ): Promise<string[]> {
 	const fixed: string[] = [];
@@ -1001,7 +1001,7 @@ export function registerDoctorCommand(program: Command): void {
 				if (jsonMode) {
 					outputJson({ success: false, command: "doctor", checks, summary });
 				} else {
-					if (!isQuiet()) console.log("Mulch Doctor");
+					if (!isQuiet()) console.log("Atlas Doctor");
 					console.error(`  ${icons.fail} ${chalk.red(configCheck.message)}`);
 					if (!isQuiet()) console.log("\n0 passed, 0 warnings, 1 failed");
 				}
@@ -1050,7 +1050,7 @@ export function registerDoctorCommand(program: Command): void {
 					...(options.fix && { fixed }),
 				});
 			} else {
-				if (!isQuiet()) console.log("Mulch Doctor");
+				if (!isQuiet()) console.log("Atlas Doctor");
 				for (const check of checks) {
 					const icon =
 						check.status === "pass"

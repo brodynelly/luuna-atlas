@@ -28,7 +28,7 @@ function isGitRepo(cwd: string): boolean {
 
 function gitHasChanges(cwd: string): boolean {
 	try {
-		const status = execFileSync("git", ["status", "--porcelain", ".mulch/"], {
+		const status = execFileSync("git", ["status", "--porcelain", ".luuna/atlas/"], {
 			cwd,
 			encoding: "utf-8",
 			stdio: ["pipe", "pipe", "pipe"],
@@ -40,7 +40,7 @@ function gitHasChanges(cwd: string): boolean {
 }
 
 function gitAdd(cwd: string): void {
-	execFileSync("git", ["add", ".mulch/"], { cwd, stdio: "pipe" });
+	execFileSync("git", ["add", ".luuna/atlas/"], { cwd, stdio: "pipe" });
 }
 
 function gitCommit(cwd: string, message: string): string {
@@ -60,7 +60,7 @@ interface ValidateResult {
 async function validateExpertise(cwd?: string): Promise<ValidateResult> {
 	// Re-init registry from on-disk config so sync validates against the user's
 	// current types — important for worktree/CI lag where JSONL (merge=union)
-	// can land before mulch.config.yaml does. Once config catches up, sync
+	// can land before config.yaml does. Once config catches up, sync
 	// reconciles correctly without needing a restart.
 	await initRegistryFromConfig(cwd);
 	const config = await readConfig(cwd);
@@ -119,7 +119,7 @@ async function validateExpertise(cwd?: string): Promise<ValidateResult> {
 						errors.push({
 							domain,
 							line: lineNumber,
-							message: `Unknown record type "${t}"${idPart}. Register it under custom_types in mulch.config.yaml or remove the record.`,
+							message: `Unknown record type "${t}"${idPart}. Register it under custom_types in config.yaml or remove the record.`,
 						});
 						continue;
 					}
@@ -149,7 +149,7 @@ async function validateExpertise(cwd?: string): Promise<ValidateResult> {
 					errors.push({
 						domain,
 						line: lineNumber,
-						message: `type "${recordType}"${idPart} is not allowed in domain "${domain}". Allowed types: ${allowedTypes.join(", ")}. Fix the record or relax allowed_types in mulch.config.yaml.`,
+						message: `type "${recordType}"${idPart} is not allowed in domain "${domain}". Allowed types: ${allowedTypes.join(", ")}. Fix the record or relax allowed_types in config.yaml.`,
 					});
 					continue;
 				}
@@ -160,7 +160,7 @@ async function validateExpertise(cwd?: string): Promise<ValidateResult> {
 						errors.push({
 							domain,
 							line: lineNumber,
-							message: `record${idPart} missing required field(s) ${missing.map((f) => `"${f}"`).join(", ")} in domain "${domain}". Fix the record or relax required_fields in mulch.config.yaml.`,
+							message: `record${idPart} missing required field(s) ${missing.map((f) => `"${f}"`).join(", ")} in domain "${domain}". Fix the record or relax required_fields in config.yaml.`,
 						});
 					}
 				}
@@ -174,7 +174,7 @@ async function validateExpertise(cwd?: string): Promise<ValidateResult> {
 export function registerSyncCommand(program: Command): void {
 	program
 		.command("sync")
-		.description("Validate, stage, and commit .mulch/ changes")
+		.description("Validate, stage, and commit .luuna/atlas/ changes")
 		.option("--message <message>", "custom commit message")
 		.option("--no-validate", "skip validation step")
 		.action(async (options: { message?: string; validate?: boolean }) => {
@@ -237,7 +237,7 @@ export function registerSyncCommand(program: Command): void {
 				}
 			}
 
-			// Skip commit if inside a worktree — .mulch/ changes belong to the main repo
+			// Skip commit if inside a worktree — .luuna/atlas/ changes belong to the main repo
 			if (isInsideWorktree(cwd)) {
 				if (jsonMode) {
 					outputJson({
@@ -246,12 +246,12 @@ export function registerSyncCommand(program: Command): void {
 						validated: options.validate !== false,
 						committed: false,
 						message:
-							"Skipped commit: running inside a git worktree. Changes are written to the main repo's .mulch/.",
+							"Skipped commit: running inside a git worktree. Changes are written to the main repo's .luuna/atlas/.",
 					});
 				} else {
 					if (!isQuiet())
 						console.log(
-							`${brand("ℹ")} Skipped commit: running inside a git worktree. Changes are written to the main repo's .mulch/.`,
+							`${brand("ℹ")} Skipped commit: running inside a git worktree. Changes are written to the main repo's .luuna/atlas/.`,
 						);
 				}
 				return;
@@ -268,13 +268,13 @@ export function registerSyncCommand(program: Command): void {
 						message: "No changes to commit",
 					});
 				} else {
-					if (!isQuiet()) console.log("No .mulch/ changes to commit.");
+					if (!isQuiet()) console.log("No .luuna/atlas/ changes to commit.");
 				}
 				return;
 			}
 
 			// Git add + commit
-			const commitMessage = options.message ?? "mulch: update expertise";
+			const commitMessage = options.message ?? "luuna-atlas: update expertise";
 			try {
 				gitAdd(cwd);
 				gitCommit(cwd, commitMessage);
@@ -289,7 +289,9 @@ export function registerSyncCommand(program: Command): void {
 					});
 				} else {
 					if (!isQuiet())
-						console.log(`${brand("✓")} ${brand(`Committed .mulch/ changes: "${commitMessage}"`)}`);
+						console.log(
+							`${brand("✓")} ${brand(`Committed .luuna/atlas/ changes: "${commitMessage}"`)}`,
+						);
 				}
 			} catch (err) {
 				if (jsonMode) {

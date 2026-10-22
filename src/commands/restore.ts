@@ -18,7 +18,7 @@ export function registerRestoreCommand(program: Command): void {
 	program
 		.command("restore")
 		.argument("<id>", "archived record ID (e.g. mx-abc123, abc123, or abc)")
-		.description("Restore a soft-archived record from .mulch/archive/ back to live expertise")
+		.description("Restore a soft-archived record from .luuna/atlas/archive/ back to live expertise")
 		.action(async (id: string) => {
 			const jsonMode = program.opts().json === true;
 			try {
@@ -40,7 +40,7 @@ export function registerRestoreCommand(program: Command): void {
 				}
 
 				if (matches.length === 0) {
-					const msg = `Archived record "${id}" not found in any domain. Run \`ml search --archived <query>\` to browse archives.`;
+					const msg = `Archived record "${id}" not found in any domain. Run \`luuna-atlas search --archived <query>\` to browse archives.`;
 					reportCommandError("restore", jsonMode, msg);
 					return;
 				}
@@ -70,7 +70,7 @@ export function registerRestoreCommand(program: Command): void {
 				const liveExisting = await readExpertiseFile(expertisePath);
 				const livePreConflict = liveExisting.find((r) => r.id === recordId);
 				if (livePreConflict) {
-					const msg = `Live record "${recordId}" already exists in domain "${domain}" (classification: ${livePreConflict.classification}). Delete or rename the live record before restoring, or run \`ml search --archived ${recordId}\` to inspect the archived copy.`;
+					const msg = `Live record "${recordId}" already exists in domain "${domain}" (classification: ${livePreConflict.classification}). Delete or rename the live record before restoring, or run \`luuna-atlas search --archived ${recordId}\` to inspect the archived copy.`;
 					reportCommandError("restore", jsonMode, msg);
 					return;
 				}
@@ -84,7 +84,7 @@ export function registerRestoreCommand(program: Command): void {
 
 				// Capture the original archive_reason BEFORE stripping so we can
 				// surface it in the success line and preserve it on a rollback
-				// re-archive. Archives written before mulch-b41a have no reason
+				// re-archive. Archives written before atlas-b41a have no reason
 				// on disk — fall back to "manual" so the field is always set.
 				const originalReason = removed.archive_reason ?? "manual";
 				const live = stripArchiveFields(removed);

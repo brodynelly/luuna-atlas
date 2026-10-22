@@ -1,8 +1,8 @@
-// JSON Schema for MulchConfig (.mulch/mulch.config.yaml).
+// JSON Schema for AtlasConfig (.luuna/atlas/config.yaml).
 //
-// Hand-authored to mirror the TypeScript MulchConfig interface in ./config.ts.
-// Powers `ml config schema` for warren and any other tool that needs to render
-// a generic configuration UI against mulch's settings. Keep this in lockstep
+// Hand-authored to mirror the TypeScript AtlasConfig interface in ./config.ts.
+// Powers `luuna-atlas config schema` for warren and any other tool that needs to render
+// a generic configuration UI against luuna-atlas's settings. Keep this in lockstep
 // with the TS interface — when you add a knob, add it here too (a doctor /
 // test-time check enforces parity).
 //
@@ -75,7 +75,7 @@ const customTypeConfigSchema = {
 		summary: {
 			type: "string",
 			title: "Summary template",
-			description: "Compact-line summary template used by `ml prime`.",
+			description: "Compact-line summary template used by `luuna-atlas prime`.",
 		},
 		extracts_files: {
 			type: "boolean",
@@ -90,13 +90,13 @@ const customTypeConfigSchema = {
 		compact: {
 			type: "string",
 			title: "Compact strategy",
-			description: "How `ml compact` collapses duplicates of this type.",
+			description: "How `luuna-atlas compact` collapses duplicates of this type.",
 			enum: ["concat", "merge_outcomes", "keep_latest", "manual"],
 		},
 		section_title: {
 			type: "string",
 			title: "Section title",
-			description: "Heading used when grouping this type in `ml prime` output.",
+			description: "Heading used when grouping this type in `luuna-atlas prime` output.",
 		},
 		aliases: {
 			type: "object",
@@ -116,13 +116,13 @@ const auditThresholdsSchema = {
 	type: "object",
 	title: "Audit thresholds",
 	description:
-		"PASS/WARN/FAIL bands for `ml audit`. Below `_warn` is FAIL; between `_warn` and the primary threshold is WARN; meeting the primary threshold is PASS. Floater and stale knobs use a single PASS ceiling.",
+		"PASS/WARN/FAIL bands for `luuna-atlas audit`. Below `_warn` is FAIL; between `_warn` and the primary threshold is WARN; meeting the primary threshold is PASS. Floater and stale knobs use a single PASS ceiling.",
 	properties: {
 		evidence_coverage: {
 			type: "number",
 			title: "Evidence coverage (PASS)",
 			description:
-				"PASS when ≥ this fraction of records carry any tracker (seeds/gh/linear/bead) or commit evidence. Range: [0, 1].",
+				"PASS when ≥ this fraction of records carry any tracker (missions/gh/linear/bead) or commit evidence. Range: [0, 1].",
 			minimum: 0,
 			maximum: 1,
 			default: 0.5,
@@ -187,14 +187,14 @@ const auditConfigSchema = {
 	type: "object",
 	title: "Audit configuration",
 	description:
-		"Knobs for `ml audit`. Global thresholds are merged on top of defaults; per-domain entries layer on top of the global thresholds for that domain only.",
+		"Knobs for `luuna-atlas audit`. Global thresholds are merged on top of defaults; per-domain entries layer on top of the global thresholds for that domain only.",
 	properties: {
 		thresholds: auditThresholdsSchema,
 		ignore_domains: {
 			type: "array",
 			title: "Domains excluded from audit",
 			description:
-				"Domains skipped entirely by `ml audit` (e.g. reference-doc domains that are legitimately convention-heavy and evidence-light).",
+				"Domains skipped entirely by `luuna-atlas audit` (e.g. reference-doc domains that are legitimately convention-heavy and evidence-light).",
 			items: { type: "string" },
 		},
 		per_domain: {
@@ -212,7 +212,7 @@ const anchorValidityConfigSchema = {
 	type: "object",
 	title: "Anchor-validity decay",
 	description:
-		"Tier-demotion knobs for `ml prune --check-anchors`. A record decays one tier per pass when its file/dir anchors stop resolving and `valid_fraction` drops below `threshold`, provided the record is older than `grace_days`. Records with zero anchors are exempt (absence means 'applies globally').",
+		"Tier-demotion knobs for `luuna-atlas prune --check-anchors`. A record decays one tier per pass when its file/dir anchors stop resolving and `valid_fraction` drops below `threshold`, provided the record is older than `grace_days`. Records with zero anchors are exempt (absence means 'applies globally').",
 	properties: {
 		threshold: {
 			type: "number",
@@ -249,9 +249,9 @@ const hookCommandList = {
 
 export const configSchema = {
 	$schema: "http://json-schema.org/draft-07/schema#",
-	title: "Mulch Configuration",
+	title: "Atlas Configuration",
 	description:
-		"Schema for .mulch/mulch.config.yaml. Mirrors the MulchConfig TypeScript interface in src/schemas/config.ts. Consumers (e.g. warren) render generic configuration UIs against this schema via `ml config schema --json`.",
+		"Schema for .luuna/atlas/config.yaml. Mirrors the AtlasConfig TypeScript interface in src/schemas/config.ts. Consumers (e.g. warren) render generic configuration UIs against this schema via `luuna-atlas config schema --json`.",
 	type: "object",
 	required: ["version", "domains", "governance", "classification_defaults"],
 	properties: {
@@ -266,7 +266,7 @@ export const configSchema = {
 			type: "object",
 			title: "Domains",
 			description:
-				"Per-domain configuration keyed by domain name. Empty object is valid (a fresh project starts with no declared domains; `ml record` auto-creates them).",
+				"Per-domain configuration keyed by domain name. Empty object is valid (a fresh project starts with no declared domains; `luuna-atlas record` auto-creates them).",
 			additionalProperties: domainConfigSchema,
 			default: {},
 		},
@@ -274,7 +274,7 @@ export const configSchema = {
 			type: "object",
 			title: "Governance limits",
 			description:
-				"Per-domain record-count thresholds. Mulch warns at `warn_entries` and refuses writes past `hard_limit` (configurable per project).",
+				"Per-domain record-count thresholds. Atlas warns at `warn_entries` and refuses writes past `hard_limit` (configurable per project).",
 			properties: {
 				max_entries: {
 					type: "integer",
@@ -287,7 +287,8 @@ export const configSchema = {
 				warn_entries: {
 					type: "integer",
 					title: "Warn threshold",
-					description: "Threshold at which `ml record` prints a 'consider compacting' warning.",
+					description:
+						"Threshold at which `luuna-atlas record` prints a 'consider compacting' warning.",
 					minimum: 1,
 					default: 150,
 				},
@@ -311,7 +312,7 @@ export const configSchema = {
 					type: "object",
 					title: "Shelf life (days)",
 					description:
-						"How long records of each classification remain in primary expertise before `ml prune` considers them stale. `foundational` records are permanent and are not listed here.",
+						"How long records of each classification remain in primary expertise before `luuna-atlas prune` considers them stale. `foundational` records are permanent and are not listed here.",
 					properties: {
 						tactical: {
 							type: "integer",
@@ -339,7 +340,7 @@ export const configSchema = {
 		prime: {
 			type: "object",
 			title: "Prime defaults",
-			description: "Defaults applied when `ml prime` is invoked without overriding flags.",
+			description: "Defaults applied when `luuna-atlas prime` is invoked without overriding flags.",
 			properties: {
 				default_mode: {
 					type: "string",
@@ -391,7 +392,7 @@ export const configSchema = {
 					type: "object",
 					title: "Session-close footer",
 					description:
-						"Footer appended after `ml prime` (and the embedded snippet emitted by `ml setup` / `ml onboard`). `style` selects a built-in preset; `custom` overrides the preset with verbatim prose.",
+						"Footer appended after `luuna-atlas prime` (and the embedded snippet emitted by `luuna-atlas setup` / `luuna-atlas onboard`). `style` selects a built-in preset; `custom` overrides the preset with verbatim prose.",
 					properties: {
 						style: {
 							type: "string",
@@ -405,7 +406,7 @@ export const configSchema = {
 							type: "string",
 							title: "Custom override",
 							description:
-								"Verbatim prose to emit in place of the preset. Wins over `style` when both are set; the embedded variant (used by `ml setup` / `ml onboard`) is also overridden.",
+								"Verbatim prose to emit in place of the preset. Wins over `style` when both are set; the embedded variant (used by `luuna-atlas setup` / `luuna-atlas onboard`) is also overridden.",
 						},
 					},
 					additionalProperties: false,
@@ -416,7 +417,7 @@ export const configSchema = {
 		search: {
 			type: "object",
 			title: "Search tuning",
-			description: "Knobs that tune `ml search` / `ml rank` ranking.",
+			description: "Knobs that tune `luuna-atlas search` / `luuna-atlas rank` ranking.",
 			properties: {
 				boost_factor: {
 					type: "number",
@@ -441,7 +442,7 @@ export const configSchema = {
 			type: "object",
 			title: "Decay knobs",
 			description:
-				"Configuration for tier-demotion behavior in `ml prune`. Currently only `anchor_validity` is wired; `weight` is reserved for the future fitness blend.",
+				"Configuration for tier-demotion behavior in `luuna-atlas prune`. Currently only `anchor_validity` is wired; `weight` is reserved for the future fitness blend.",
 			properties: {
 				anchor_validity: anchorValidityConfigSchema,
 			},
@@ -452,7 +453,7 @@ export const configSchema = {
 			type: "object",
 			title: "Record quality gate",
 			description:
-				"Write-time checks on `ml record`: near-duplicates, conventions/patterns with no anchor or evidence, conventions that restate code. `level`: `warn` (default) prints and writes, `error` blocks unless --force, `off` skips. Exact duplicates are always blocked.",
+				"Write-time checks on `luuna-atlas record`: near-duplicates, conventions/patterns with no anchor or evidence, conventions that restate code. `level`: `warn` (default) prints and writes, `error` blocks unless --force, `off` skips. Exact duplicates are always blocked.",
 			properties: { level: { type: "string", enum: ["warn", "error", "off"], default: "warn" } },
 			additionalProperties: false,
 		},
@@ -467,7 +468,7 @@ export const configSchema = {
 			type: "object",
 			title: "Lifecycle hooks",
 			description:
-				"Ordered shell scripts invoked at each lifecycle event. Scripts receive the payload as JSON on stdin (with MULCH_HOOK=1; cwd at project root). `pre-*` hooks block on non-zero exit; `post-*` hooks emit a warning. `pre-record`, `pre-prime`, and `pre-compact` may mutate the payload via stdout JSON; `pre-prune` is block-or-allow only.",
+				"Ordered shell scripts invoked at each lifecycle event. Scripts receive the payload as JSON on stdin (with LUUNA_ATLAS_HOOK=1; cwd at project root). `pre-*` hooks block on non-zero exit; `post-*` hooks emit a warning. `pre-record`, `pre-prime`, and `pre-compact` may mutate the payload via stdout JSON; `pre-prune` is block-or-allow only.",
 			properties: {
 				"pre-record": hookCommandList,
 				"post-record": hookCommandList,

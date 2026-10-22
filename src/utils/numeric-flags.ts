@@ -1,7 +1,7 @@
 // Strict numeric-flag parsers. `Number.parseFloat("10abc")` silently strips
 // trailing garbage and `Number.parseInt("3.7", 10)` truncates to 3 — both
 // would let typos through and write nonsense (NaN, partial values) to
-// .mulch/expertise/*.jsonl. Use a regex gate + Number() to reject anything
+// .luuna/atlas/expertise/*.jsonl. Use a regex gate + Number() to reject anything
 // that isn't a clean numeric literal. Convention: mx-5b9578.
 
 const POSITIVE_INT_RE = /^\d+$/;

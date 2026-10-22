@@ -163,13 +163,13 @@ export function registerPrimeCommand(program: Command): void {
 
 				if (options.manifest && isScoped) {
 					const msg =
-						"--manifest cannot be combined with scoping arguments. Manifest mode lists available domains; use `ml prime <domain>` or `ml prime --files <path>` to load records.";
+						"--manifest cannot be combined with scoping arguments. Manifest mode lists available domains; use `luuna-atlas prime <domain>` or `luuna-atlas prime --files <path>` to load records.";
 					reportCommandError("prime", jsonMode, msg);
 					return;
 				}
 
 				// Mode resolution: explicit flags / config win. Otherwise the default
-				// is the budget-capped record index (mulch-bffe), which replaced the
+				// is the budget-capped record index (atlas-bffe), which replaced the
 				// v0.10 size-based auto-flip to manifest: every repo gets the same
 				// shape, and the budget keeps large corpora small.
 				const configMode = config.prime?.default_mode;
@@ -191,7 +191,7 @@ export function registerPrimeCommand(program: Command): void {
 								`Error: Domain "${d}" not found in config. Available domains: ${Object.keys(config.domains).join(", ")}`,
 							);
 							console.error(
-								`Hint: Run \`ml add ${d}\` to create this domain, or check .mulch/mulch.config.yaml`,
+								`Hint: Run \`luuna-atlas add ${d}\` to create this domain, or check .luuna/atlas/config.yaml`,
 							);
 						}
 						process.exitCode = 1;
@@ -212,7 +212,7 @@ export function registerPrimeCommand(program: Command): void {
 								`Error: Excluded domain "${d}" not found in config. Available domains: ${Object.keys(config.domains).join(", ")}`,
 							);
 							console.error(
-								`Hint: Run \`ml add ${d}\` to create this domain, or check .mulch/mulch.config.yaml`,
+								`Hint: Run \`luuna-atlas add ${d}\` to create this domain, or check .luuna/atlas/config.yaml`,
 							);
 						}
 						process.exitCode = 1;
@@ -282,7 +282,7 @@ export function registerPrimeCommand(program: Command): void {
 					explicitMode === "manifest" && !isScoped && !options.dryRun && !options.recordsOnly;
 
 				// Superseded records are hidden: a live record's `supersedes` list
-				// names what it replaced, and `ml show <id>` still reaches the old one.
+				// names what it replaced, and `luuna-atlas show <id>` still reaches the old one.
 				const { supersededIds } = collectSupersededIds(loaded);
 				if (supersededIds.size > 0) {
 					for (let i = 0; i < loaded.length; i++) {
@@ -315,7 +315,7 @@ export function registerPrimeCommand(program: Command): void {
 						const changedFiles = getActiveFiles(cwd);
 						const active = resolveActiveWork({ cwd });
 						const trackers = {
-							seeds: active.seeds,
+							missions: active.missions,
 							gh: active.gh,
 							linear: active.linear,
 							bead: active.bead,
@@ -354,7 +354,7 @@ export function registerPrimeCommand(program: Command): void {
 						const sources: string[] = [];
 						if (activeContext.changedFiles.length > 0) sources.push("git status");
 						const trackerBits: string[] = [];
-						for (const t of ["seeds", "gh", "linear", "bead"] as const) {
+						for (const t of ["missions", "gh", "linear", "bead"] as const) {
 							const v = activeContext.trackers[t];
 							if (v) trackerBits.push(`${t}:${v}`);
 						}
@@ -432,10 +432,10 @@ export function registerPrimeCommand(program: Command): void {
 						? (r: ExpertiseRecord) => matchesFileAnchors(r, scopeFiles)
 						: undefined;
 
-					// Staleness (mulch-094a): stale records rank last within their
+					// Staleness (atlas-094a): stale records rank last within their
 					// budget tier and carry a "(stale?)" marker. Computed over the
 					// already-scoped records so the git pathspec stays small. Only
-					// anchor/git reasons count here; shelf_life stays in `ml stale`.
+					// anchor/git reasons count here; shelf_life stays in `luuna-atlas stale`.
 					const staleIds = jsonMode
 						? new Set<string>()
 						: primeStaleIds(

@@ -1,12 +1,12 @@
-// `ml setup claude` settings merge (mulch-7164).
+// `luuna-atlas setup claude` settings merge (atlas-7164).
 import { describe, expect, it } from "bun:test";
-import { CLAUDE_HOOKS, missingMulchHooks, syncMulchHooks } from "../../src/utils/claude-hooks.ts";
+import { CLAUDE_HOOKS, missingAtlasHooks, syncAtlasHooks } from "../../src/utils/claude-hooks.ts";
 
 const other = { matcher: "Bash", hooks: [{ type: "command", command: "other-guard" }] };
 
-describe("syncMulchHooks", () => {
+describe("syncAtlasHooks", () => {
 	it("installs SessionStart prime + PreToolUse hook and keeps unrelated hooks", () => {
-		const { settings, changed } = syncMulchHooks(
+		const { settings, changed } = syncAtlasHooks(
 			{ model: "x", hooks: { PreToolUse: [other] } },
 			false,
 		);
@@ -17,62 +17,62 @@ describe("syncMulchHooks", () => {
 			other,
 			{
 				matcher: "Read|Edit|Write|MultiEdit|NotebookEdit|Bash",
-				hooks: [{ type: "command", command: "ml hook" }],
+				hooks: [{ type: "command", command: "luuna-atlas hook" }],
 			},
 		]);
 		expect(hooks.SessionStart).toEqual([
-			{ matcher: "", hooks: [{ type: "command", command: "ml prime" }] },
+			{ matcher: "", hooks: [{ type: "command", command: "luuna-atlas prime" }] },
 		]);
-		expect(missingMulchHooks(settings)).toEqual([]);
-		expect(syncMulchHooks(settings, false).changed).toBe(false);
+		expect(missingAtlasHooks(settings)).toEqual([]);
+		expect(syncAtlasHooks(settings, false).changed).toBe(false);
 	});
 
-	it("replaces stale mulch handlers instead of duplicating them", () => {
+	it("replaces stale luuna-atlas handlers instead of duplicating them", () => {
 		const old = {
 			hooks: {
 				SessionStart: [
 					{
 						matcher: "",
 						hooks: [
-							{ type: "command", command: "ml prime --full" },
+							{ type: "command", command: "luuna-atlas prime --full" },
 							{ type: "command", command: "keep-me" },
 						],
 					},
 				],
 			},
 		};
-		expect(missingMulchHooks(old)).toEqual(["SessionStart", "PreToolUse"]);
-		const { settings } = syncMulchHooks(old, false);
+		expect(missingAtlasHooks(old)).toEqual(["SessionStart", "PreToolUse"]);
+		const { settings } = syncAtlasHooks(old, false);
 		const start = (settings.hooks as Record<string, unknown[]>).SessionStart;
 		expect(start).toEqual([
 			{ matcher: "", hooks: [{ type: "command", command: "keep-me" }] },
-			{ matcher: "", hooks: [{ type: "command", command: "ml prime" }] },
+			{ matcher: "", hooks: [{ type: "command", command: "luuna-atlas prime" }] },
 		]);
 	});
 
-	it("remove strips mulch handlers everywhere and drops empty events", () => {
-		const installed = syncMulchHooks({ hooks: { PreToolUse: [other] } }, false).settings;
+	it("remove strips luuna-atlas handlers everywhere and drops empty events", () => {
+		const installed = syncAtlasHooks({ hooks: { PreToolUse: [other] } }, false).settings;
 		const withLegacy = {
 			...installed,
 			hooks: {
 				...(installed.hooks as object),
-				PreCompact: [{ matcher: "", hooks: [{ type: "command", command: "mulch prime" }] }],
+				PreCompact: [{ matcher: "", hooks: [{ type: "command", command: "luuna-atlas prime" }] }],
 			},
 		};
-		const { settings, changed } = syncMulchHooks(withLegacy, true);
+		const { settings, changed } = syncAtlasHooks(withLegacy, true);
 		expect(changed).toBe(true);
 		expect(settings.hooks).toEqual({ PreToolUse: [other] });
-		expect(syncMulchHooks({}, true)).toEqual({ settings: {}, changed: false });
-		expect(syncMulchHooks(syncMulchHooks({}, false).settings, true).settings).toEqual({});
+		expect(syncAtlasHooks({}, true)).toEqual({ settings: {}, changed: false });
+		expect(syncAtlasHooks(syncAtlasHooks({}, false).settings, true).settings).toEqual({});
 	});
 
 	it("refuses malformed hook shapes", () => {
-		expect(() => syncMulchHooks({ hooks: [] }, false)).toThrow("not an object");
-		expect(() => syncMulchHooks({ hooks: { PreToolUse: {} } }, false)).toThrow("not an array");
-		expect(() => missingMulchHooks({ hooks: "x" })).toThrow("not an object");
+		expect(() => syncAtlasHooks({ hooks: [] }, false)).toThrow("not an object");
+		expect(() => syncAtlasHooks({ hooks: { PreToolUse: {} } }, false)).toThrow("not an array");
+		expect(() => missingAtlasHooks({ hooks: "x" })).toThrow("not an object");
 	});
 
 	it("ships exactly two handlers", () => {
-		expect(CLAUDE_HOOKS.map((h) => h.command)).toEqual(["ml prime", "ml hook"]);
+		expect(CLAUDE_HOOKS.map((h) => h.command)).toEqual(["luuna-atlas prime", "luuna-atlas hook"]);
 	});
 });

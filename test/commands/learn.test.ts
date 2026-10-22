@@ -4,15 +4,15 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { matchFilesToDomains } from "../../src/commands/learn.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import { appendRecord, createExpertiseFile } from "../../src/utils/expertise.ts";
 
 describe("learn command", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-learn-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-learn-test-"));
+		await initAtlasDir(tmpDir);
 	});
 
 	afterEach(async () => {

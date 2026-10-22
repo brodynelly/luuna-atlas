@@ -4,14 +4,14 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import yaml from "js-yaml";
-import type { MulchConfig } from "../../src/schemas/config.ts";
+import type { AtlasConfig } from "../../src/schemas/config.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
 import {
+	getAtlasDir,
 	getConfigPath,
 	getExpertiseDir,
 	getExpertisePath,
-	getMulchDir,
-	initMulchDir,
+	initAtlasDir,
 	readConfig,
 	validateDomainName,
 	writeConfig,
@@ -21,7 +21,7 @@ describe("config utils", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-test-"));
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-test-"));
 	});
 
 	afterEach(async () => {
@@ -29,36 +29,36 @@ describe("config utils", () => {
 	});
 
 	describe("path helpers", () => {
-		it("getMulchDir returns .mulch under cwd", () => {
-			expect(getMulchDir("/some/path")).toBe(join("/some/path", ".mulch"));
+		it("getAtlasDir returns .luuna/atlas under cwd", () => {
+			expect(getAtlasDir("/some/path")).toBe(join("/some/path", ".luuna", "atlas"));
 		});
 
-		it("getConfigPath returns config file under .mulch", () => {
-			expect(getConfigPath("/some/path")).toBe(join("/some/path", ".mulch", "mulch.config.yaml"));
+		it("getConfigPath returns config file under .luuna/atlas", () => {
+			expect(getConfigPath("/some/path")).toBe(join("/some/path", ".luuna", "atlas", "config.yaml"));
 		});
 
-		it("getExpertiseDir returns expertise dir under .mulch", () => {
-			expect(getExpertiseDir("/some/path")).toBe(join("/some/path", ".mulch", "expertise"));
+		it("getExpertiseDir returns expertise dir under .luuna/atlas", () => {
+			expect(getExpertiseDir("/some/path")).toBe(join("/some/path", ".luuna", "atlas", "expertise"));
 		});
 
 		it("getExpertisePath returns JSONL file for a domain", () => {
 			expect(getExpertisePath("testing", "/some/path")).toBe(
-				join("/some/path", ".mulch", "expertise", "testing.jsonl"),
+				join("/some/path", ".luuna", "atlas", "expertise", "testing.jsonl"),
 			);
 		});
 	});
 
-	describe("initMulchDir", () => {
-		it("creates .mulch directory structure", async () => {
-			await initMulchDir(tmpDir);
+	describe("initAtlasDir", () => {
+		it("creates .luuna/atlas directory structure", async () => {
+			await initAtlasDir(tmpDir);
 
-			expect(existsSync(getMulchDir(tmpDir))).toBe(true);
+			expect(existsSync(getAtlasDir(tmpDir))).toBe(true);
 			expect(existsSync(getExpertiseDir(tmpDir))).toBe(true);
 			expect(existsSync(getConfigPath(tmpDir))).toBe(true);
 		});
 
 		it("writes default config", async () => {
-			await initMulchDir(tmpDir);
+			await initAtlasDir(tmpDir);
 
 			const config = await readConfig(tmpDir);
 			expect(config.version).toBe(DEFAULT_CONFIG.version);
@@ -67,14 +67,14 @@ describe("config utils", () => {
 		});
 
 		it("can be called twice without error", async () => {
-			await initMulchDir(tmpDir);
-			await expect(initMulchDir(tmpDir)).resolves.toBeUndefined();
+			await initAtlasDir(tmpDir);
+			await expect(initAtlasDir(tmpDir)).resolves.toBeUndefined();
 		});
 	});
 
 	describe("readConfig", () => {
 		it("reads a valid YAML config", async () => {
-			await initMulchDir(tmpDir);
+			await initAtlasDir(tmpDir);
 			const config = await readConfig(tmpDir);
 
 			expect(config).toBeDefined();
@@ -93,7 +93,7 @@ describe("config utils", () => {
 			// top-level sections. Consumers (doctor, prune, status, compact, prime)
 			// destructure these directly, so readConfig must apply defaults
 			// instead of crashing downstream with TypeError.
-			await initMulchDir(tmpDir);
+			await initAtlasDir(tmpDir);
 			const minimalYaml = `domains:
   cli: {}
 `;
@@ -106,7 +106,7 @@ describe("config utils", () => {
 		});
 
 		it("preserves partial governance overrides while filling missing keys", async () => {
-			await initMulchDir(tmpDir);
+			await initAtlasDir(tmpDir);
 			const partialYaml = `domains:
   cli: {}
 governance:
@@ -121,11 +121,11 @@ governance:
 		});
 
 		it("formats YAML parse errors with a friendly message", async () => {
-			await initMulchDir(tmpDir);
+			await initAtlasDir(tmpDir);
 			// Invalid YAML — unclosed bracket
 			await writeFile(getConfigPath(tmpDir), "domains: {cli: {", "utf-8");
 
-			await expect(readConfig(tmpDir)).rejects.toThrow(/Failed to parse mulch.config.yaml/);
+			await expect(readConfig(tmpDir)).rejects.toThrow(/Failed to parse config.yaml/);
 		});
 	});
 
@@ -181,7 +181,7 @@ governance:
 	describe("getExpertisePath with validation", () => {
 		it("returns path for valid domain", () => {
 			expect(getExpertisePath("testing", "/some/path")).toBe(
-				join("/some/path", ".mulch", "expertise", "testing.jsonl"),
+				join("/some/path", ".luuna", "atlas", "expertise", "testing.jsonl"),
 			);
 		});
 
@@ -194,23 +194,23 @@ governance:
 
 	describe("writeConfig", () => {
 		it("writes valid YAML config", async () => {
-			await initMulchDir(tmpDir);
+			await initAtlasDir(tmpDir);
 
-			const customConfig: MulchConfig = {
+			const customConfig: AtlasConfig = {
 				...DEFAULT_CONFIG,
 				domains: { testing: {}, architecture: {} },
 			};
 			await writeConfig(customConfig, tmpDir);
 
 			const rawContent = await readFile(getConfigPath(tmpDir), "utf-8");
-			const parsed = yaml.load(rawContent) as MulchConfig;
+			const parsed = yaml.load(rawContent) as AtlasConfig;
 			expect(parsed.domains).toEqual({ testing: {}, architecture: {} });
 		});
 
 		it("roundtrips config correctly", async () => {
-			await initMulchDir(tmpDir);
+			await initAtlasDir(tmpDir);
 
-			const customConfig: MulchConfig = {
+			const customConfig: AtlasConfig = {
 				...DEFAULT_CONFIG,
 				domains: { frontend: {}, backend: {} },
 				governance: { max_entries: 50, warn_entries: 75, hard_limit: 100 },
@@ -222,7 +222,7 @@ governance:
 		});
 
 		it("normalizes legacy array shape on read", async () => {
-			await initMulchDir(tmpDir);
+			await initAtlasDir(tmpDir);
 
 			// Pre-1.x configs persisted domains as a YAML array. readConfig must
 			// rewrite that to an object map without forcing user migration.

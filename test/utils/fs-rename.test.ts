@@ -8,7 +8,7 @@ describe("renameReplacing", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-fs-rename-test-"));
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-fs-rename-test-"));
 	});
 
 	afterEach(async () => {

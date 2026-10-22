@@ -86,7 +86,7 @@ export function registerQueryCommand(program: Command): void {
 						if (jsonMode) {
 							outputJson({ success: true, command: "query", domains: [] });
 						} else {
-							console.log("No domains configured. Run `ml add <domain>` to get started.");
+							console.log("No domains configured. Run `luuna-atlas add <domain>` to get started.");
 						}
 						return;
 					}
@@ -102,7 +102,7 @@ export function registerQueryCommand(program: Command): void {
 								`Error: Domain "${domain}" not found in config. Available domains: ${Object.keys(config.domains).join(", ") || "(none)"}`,
 							);
 							console.error(
-								`Hint: Run \`ml add ${domain}\` to create this domain, or check .mulch/mulch.config.yaml`,
+								`Hint: Run \`luuna-atlas add ${domain}\` to create this domain, or check .luuna/atlas/config.yaml`,
 							);
 						}
 						process.exitCode = 1;

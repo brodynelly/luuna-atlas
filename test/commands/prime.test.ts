@@ -17,7 +17,7 @@ import {
 	estimateTokens,
 	formatBudgetSummary,
 } from "../../src/utils/budget.ts";
-import { getExpertisePath, initMulchDir, readConfig, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, readConfig, writeConfig } from "../../src/utils/config.ts";
 import {
 	appendRecord,
 	createExpertiseFile,
@@ -42,8 +42,8 @@ describe("prime command", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-prime-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-prime-test-"));
+		await initAtlasDir(tmpDir);
 	});
 
 	afterEach(async () => {
@@ -52,9 +52,9 @@ describe("prime command", () => {
 
 	it("generates prime output with no domains", () => {
 		const output = formatPrimeOutput([]);
-		expect(output).toContain("# Project Expertise (via Mulch)");
+		expect(output).toContain("# Project Expertise (via Atlas)");
 		expect(output).toContain("No expertise recorded yet");
-		expect(output).toContain("ml add <domain>");
+		expect(output).toContain("luuna-atlas add <domain>");
 	});
 
 	it("generates prime output with a single domain", async () => {
@@ -74,7 +74,7 @@ describe("prime command", () => {
 		const section = formatDomainExpertise("testing", records, lastUpdated);
 		const output = formatPrimeOutput([section]);
 
-		expect(output).toContain("# Project Expertise (via Mulch)");
+		expect(output).toContain("# Project Expertise (via Atlas)");
 		expect(output).toContain("## testing");
 		expect(output).toContain("Use vitest for all tests");
 		expect(output).toContain("## Recording New Learnings");
@@ -121,7 +121,7 @@ describe("prime command", () => {
 	it("prime output includes recording instructions", () => {
 		const output = formatPrimeOutput([]);
 		expect(output).toContain("## Recording New Learnings");
-		expect(output).toContain("ml record <domain>");
+		expect(output).toContain("luuna-atlas record <domain>");
 	});
 
 	it("prime output includes per-type required fields table", () => {
@@ -280,7 +280,7 @@ describe("prime command", () => {
 		const output = formatPrimeOutputPlain([section]);
 
 		// Spawn-injection contract: no decorative document title, no underline.
-		expect(output).not.toContain("Project Expertise (via Mulch)");
+		expect(output).not.toContain("Project Expertise (via Atlas)");
 		expect(output).not.toMatch(/^=+$/m);
 		expect(output).toContain("[testing]");
 		expect(output).toContain("Conventions:");
@@ -1026,7 +1026,7 @@ describe("prime command", () => {
 			expect(section).toContain(
 				"[pattern] fts5-external-content: External content FTS5 with triggers (src/db/fts.ts)",
 			);
-			// Index lines carry the description only; the body is behind `ml show`.
+			// Index lines carry the description only; the body is behind `luuna-atlas show`.
 			expect(section).toContain("[failure] FTS5 queries crash without escaping");
 			expect(section).not.toContain("escapeFts5Term");
 			expect(section).toContain("[decision] SQLite over PostgreSQL: Simpler deployment");
@@ -1060,7 +1060,7 @@ describe("prime command", () => {
 
 		it("compact wrapper omits verbose recording instructions", () => {
 			const output = formatPrimeOutputCompact([]);
-			expect(output).toContain("# Project Expertise (via Mulch)");
+			expect(output).toContain("# Project Expertise (via Atlas)");
 			expect(output).toContain("No expertise recorded yet");
 			expect(output).not.toContain("## Recording New Learnings");
 		});
@@ -1068,11 +1068,11 @@ describe("prime command", () => {
 		it("compact wrapper includes quick reference section", () => {
 			const output = formatPrimeOutputCompact([]);
 			expect(output).toContain("## Quick Reference");
-			expect(output).toContain("ml show <id>");
-			expect(output).toContain('ml search "query"');
-			expect(output).toContain("ml prime --files");
-			expect(output).toContain("ml prime --full");
-			expect(output).toContain("ml record <domain>");
+			expect(output).toContain("luuna-atlas show <id>");
+			expect(output).toContain('luuna-atlas search "query"');
+			expect(output).toContain("luuna-atlas prime --files");
+			expect(output).toContain("luuna-atlas prime --full");
+			expect(output).toContain("luuna-atlas record <domain>");
 			expect(output).toContain("--relates-to");
 		});
 
@@ -1589,7 +1589,7 @@ describe("prime command", () => {
 			expect(output).toContain("supersedes: mx-bbb222");
 		});
 
-		it("compact index omits links (ml show carries them)", async () => {
+		it("compact index omits links (luuna-atlas show carries them)", async () => {
 			await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {} } }, tmpDir);
 			const filePath = getExpertisePath("testing", tmpDir);
 			await createExpertiseFile(filePath);
@@ -1673,9 +1673,9 @@ describe("prime command", () => {
 			const reminder = getSessionEndReminder("markdown");
 			// The reminder is appended by prime.ts, but verify the function itself
 			expect(reminder).toContain("SESSION CLOSE");
-			expect(reminder).toContain("ml record");
-			expect(reminder).toContain("ml sync");
-			expect(reminder).toContain("ml learn");
+			expect(reminder).toContain("luuna-atlas record");
+			expect(reminder).toContain("luuna-atlas sync");
+			expect(reminder).toContain("luuna-atlas learn");
 			expect(reminder).toContain("Record only what a future agent would get wrong without it");
 		});
 
@@ -1684,9 +1684,9 @@ describe("prime command", () => {
 			expect(reminder).toContain("# ");
 			expect(reminder).not.toContain("\u{1F6A8}");
 			expect(reminder).toContain("**Record only what a future agent would get wrong without it");
-			expect(reminder).toContain("ml record <domain>");
-			expect(reminder).toContain("ml sync");
-			expect(reminder).toContain("ml learn");
+			expect(reminder).toContain("luuna-atlas record <domain>");
+			expect(reminder).toContain("luuna-atlas sync");
+			expect(reminder).toContain("luuna-atlas learn");
 		});
 
 		it("xml reminder uses XML tags", () => {
@@ -1694,9 +1694,9 @@ describe("prime command", () => {
 			expect(reminder).toContain("<session_close>");
 			expect(reminder).toContain("</session_close>");
 			expect(reminder).toContain("<commands>");
-			expect(reminder).toContain("ml record");
-			expect(reminder).toContain("ml sync");
-			expect(reminder).toContain("ml learn");
+			expect(reminder).toContain("luuna-atlas record");
+			expect(reminder).toContain("luuna-atlas sync");
+			expect(reminder).toContain("luuna-atlas learn");
 			expect(reminder).toContain("Record only what a future agent would get wrong without it");
 		});
 
@@ -1708,9 +1708,9 @@ describe("prime command", () => {
 			expect(reminder).not.toContain("##");
 			// No XML tags (but <domain> and <type> placeholders are fine)
 			expect(reminder).not.toContain("</");
-			expect(reminder).toContain("ml record");
-			expect(reminder).toContain("ml sync");
-			expect(reminder).toContain("ml learn");
+			expect(reminder).toContain("luuna-atlas record");
+			expect(reminder).toContain("luuna-atlas sync");
+			expect(reminder).toContain("luuna-atlas learn");
 			expect(reminder).toContain("Record only what a future agent would get wrong without it");
 		});
 
@@ -1718,9 +1718,9 @@ describe("prime command", () => {
 			const reminder = getSessionEndReminder("embedded");
 			expect(reminder).toContain("### Before You Finish");
 			expect(reminder).toContain("Record only what a future agent would get wrong without it");
-			expect(reminder).toContain("ml learn");
-			expect(reminder).toContain("ml record");
-			expect(reminder).toContain("ml sync");
+			expect(reminder).toContain("luuna-atlas learn");
+			expect(reminder).toContain("luuna-atlas record");
+			expect(reminder).toContain("luuna-atlas sync");
 			// Embedded variant has no 🚨 banner — it lives inside a containing markdown
 			// section, not at the end of a long, edit-saturated context window.
 			expect(reminder).not.toContain("\u{1F6A8}");
@@ -1756,9 +1756,9 @@ describe("prime command", () => {
 		it("reminder contains key action items", () => {
 			for (const format of ["markdown", "xml", "plain", "embedded"] as const) {
 				const reminder = getSessionEndReminder(format);
-				expect(reminder).toContain("ml record");
-				expect(reminder).toContain("ml sync");
-				expect(reminder).toContain("ml learn");
+				expect(reminder).toContain("luuna-atlas record");
+				expect(reminder).toContain("luuna-atlas sync");
+				expect(reminder).toContain("luuna-atlas learn");
 			}
 		});
 
@@ -1783,9 +1783,9 @@ describe("prime command", () => {
 			it("minimal style emits a single short line per format", () => {
 				for (const format of ["markdown", "plain", "embedded"] as const) {
 					const reminder = getSessionEndReminder(format, { style: "minimal" });
-					expect(reminder).toContain("ml learn");
-					expect(reminder).toContain("ml record");
-					expect(reminder).toContain("ml sync");
+					expect(reminder).toContain("luuna-atlas learn");
+					expect(reminder).toContain("luuna-atlas record");
+					expect(reminder).toContain("luuna-atlas sync");
 					// One line, no bullet list, no 🚨 banner.
 					expect(reminder.split("\n").length).toBe(1);
 					expect(reminder).not.toContain("\u{1F6A8}");
@@ -1802,9 +1802,9 @@ describe("prime command", () => {
 				for (const format of ["markdown", "plain", "xml", "embedded"] as const) {
 					const reminder = getSessionEndReminder(format, { style: "directive" });
 					// numbered imperative steps
-					expect(reminder).toContain("ml learn");
-					expect(reminder).toContain("ml record");
-					expect(reminder).toContain("ml sync");
+					expect(reminder).toContain("luuna-atlas learn");
+					expect(reminder).toContain("luuna-atlas record");
+					expect(reminder).toContain("luuna-atlas sync");
 					// type glossary
 					expect(reminder).toContain("convention");
 					expect(reminder).toContain("pattern");
@@ -1837,7 +1837,7 @@ describe("prime command", () => {
 					const reminder = getSessionEndReminder(format);
 					expect(reminder).toContain("failure");
 					expect(reminder).toContain("root cause");
-					expect(reminder).toContain("ml outcome");
+					expect(reminder).toContain("luuna-atlas outcome");
 				}
 			});
 
@@ -2242,7 +2242,7 @@ describe("prime command", () => {
 			);
 			const output = formatPrimeOutputCompact([section]);
 
-			expect(output).toContain("# Project Expertise (via Mulch)");
+			expect(output).toContain("# Project Expertise (via Atlas)");
 			expect(output).toContain("## testing");
 		});
 
@@ -2377,7 +2377,7 @@ describe("prime command", () => {
 
 		function makeProgram(): Command {
 			const program = new Command();
-			program.name("mulch").option("--json", "output as structured JSON").exitOverride();
+			program.name("luuna-atlas").option("--json", "output as structured JSON").exitOverride();
 			registerPrimeCommand(program);
 			return program;
 		}
@@ -2388,12 +2388,12 @@ describe("prime command", () => {
 			const errorSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "nonexistent"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "nonexistent"]);
 
 				expect(errorSpy).toHaveBeenCalledTimes(2);
 				expect(errorSpy.mock.calls[0]?.[0]).toContain("nonexistent");
-				expect(errorSpy.mock.calls[1]?.[0]).toContain("ml add nonexistent");
-				expect(errorSpy.mock.calls[1]?.[0]).toContain(".mulch/mulch.config.yaml");
+				expect(errorSpy.mock.calls[1]?.[0]).toContain("luuna-atlas add nonexistent");
+				expect(errorSpy.mock.calls[1]?.[0]).toContain(".luuna/atlas/config.yaml");
 			} finally {
 				errorSpy.mockRestore();
 			}
@@ -2405,12 +2405,18 @@ describe("prime command", () => {
 			const errorSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--exclude-domain", "nonexistent"]);
+				await program.parseAsync([
+					"node",
+					"luuna-atlas",
+					"prime",
+					"--exclude-domain",
+					"nonexistent",
+				]);
 
 				expect(errorSpy).toHaveBeenCalledTimes(2);
 				expect(errorSpy.mock.calls[0]?.[0]).toContain("nonexistent");
-				expect(errorSpy.mock.calls[1]?.[0]).toContain("ml add nonexistent");
-				expect(errorSpy.mock.calls[1]?.[0]).toContain(".mulch/mulch.config.yaml");
+				expect(errorSpy.mock.calls[1]?.[0]).toContain("luuna-atlas add nonexistent");
+				expect(errorSpy.mock.calls[1]?.[0]).toContain(".luuna/atlas/config.yaml");
 			} finally {
 				errorSpy.mockRestore();
 			}
@@ -2422,7 +2428,7 @@ describe("prime command", () => {
 			const errorSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--budget", "5000abc"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--budget", "5000abc"]);
 				expect(errorSpy.mock.calls[0]?.[0]).toContain("--budget must be a positive integer");
 				expect(errorSpy.mock.calls[0]?.[0]).toContain('"5000abc"');
 				expect(process.exitCode).toBe(1);
@@ -2437,7 +2443,7 @@ describe("prime command", () => {
 			const errorSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--budget", "3.7"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--budget", "3.7"]);
 				expect(errorSpy.mock.calls[0]?.[0]).toContain("--budget must be a positive integer");
 				expect(process.exitCode).toBe(1);
 			} finally {
@@ -2451,7 +2457,7 @@ describe("prime command", () => {
 			const errorSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--budget", "0"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--budget", "0"]);
 				expect(errorSpy.mock.calls[0]?.[0]).toContain("--budget must be a positive integer");
 				expect(process.exitCode).toBe(1);
 			} finally {
@@ -2469,7 +2475,7 @@ describe("prime command", () => {
 
 		it("compact quick reference frames --files as per-edit priming", () => {
 			const output = formatPrimeOutputCompact([]);
-			expect(output).toContain("ml prime --files");
+			expect(output).toContain("luuna-atlas prime --files");
 			expect(output).toContain("before");
 		});
 
@@ -2604,7 +2610,7 @@ describe("prime command", () => {
 
 		function makeProgram(): Command {
 			const program = new Command();
-			program.name("mulch").option("--json", "output as structured JSON").exitOverride();
+			program.name("luuna-atlas").option("--json", "output as structured JSON").exitOverride();
 			registerPrimeCommand(program);
 			return program;
 		}
@@ -2644,7 +2650,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain("Project Expertise Manifest");
 				expect(output).toContain("## Quick Reference");
@@ -2663,7 +2669,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--manifest"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--manifest"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain("Project Expertise Manifest");
 				expect(output).not.toContain("Use bun");
@@ -2680,7 +2686,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--full"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--full"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).not.toContain("Project Expertise Manifest");
 				expect(output).toContain("Use bun");
@@ -2695,7 +2701,7 @@ describe("prime command", () => {
 			const errorSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--manifest", "--full"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--manifest", "--full"]);
 				expect(process.exitCode).toBe(1);
 				const errors = errorSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(errors).toContain("Cannot combine --manifest with --full");
@@ -2710,11 +2716,11 @@ describe("prime command", () => {
 			const errorSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--manifest", "cli"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--manifest", "cli"]);
 				expect(process.exitCode).toBe(1);
 				const errors = errorSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(errors).toContain("--manifest cannot be combined with scoping arguments");
-				expect(errors).toContain("ml prime <domain>");
+				expect(errors).toContain("luuna-atlas prime <domain>");
 			} finally {
 				errorSpy.mockRestore();
 			}
@@ -2726,7 +2732,14 @@ describe("prime command", () => {
 			const errorSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--manifest", "--files", "src/x.ts"]);
+				await program.parseAsync([
+					"node",
+					"luuna-atlas",
+					"prime",
+					"--manifest",
+					"--files",
+					"src/x.ts",
+				]);
 				expect(process.exitCode).toBe(1);
 				const errors = errorSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(errors).toContain("--manifest cannot be combined with scoping arguments");
@@ -2743,7 +2756,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "cli"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "cli"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).not.toContain("Project Expertise Manifest");
 				expect(output).toContain("Use bun");
@@ -2759,7 +2772,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--manifest"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--manifest"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toMatch(/\*\*cli\*\*: 2 records \([^)]*1 pattern[^)]*1 convention[^)]*\)/);
 				const cliLine = output.split("\n").find((l) => l.includes("**cli**"));
@@ -2777,7 +2790,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "--json", "prime", "--manifest"]);
+				await program.parseAsync(["node", "luuna-atlas", "--json", "prime", "--manifest"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				const parsed = JSON.parse(output);
 				expect(parsed.type).toBe("manifest");
@@ -2800,12 +2813,12 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--manifest"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--manifest"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain("SESSION CLOSE");
-				expect(output).toContain("ml learn");
-				expect(output).toContain("ml record");
-				expect(output).toContain("ml sync");
+				expect(output).toContain("luuna-atlas learn");
+				expect(output).toContain("luuna-atlas record");
+				expect(output).toContain("luuna-atlas sync");
 			} finally {
 				logSpy.mockRestore();
 			}
@@ -2822,7 +2835,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain("SESSION CLOSE");
 				// Directive distinguishing markers:
@@ -2849,7 +2862,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).not.toContain("SESSION CLOSE");
 				expect(output).not.toContain("Before closing");
@@ -2864,7 +2877,7 @@ describe("prime command", () => {
 		it("prime.session_close.custom replaces the preset with verbatim prose", async () => {
 			await seedTwoDomains();
 			const config = await readConfig(tmpDir);
-			const customProse = "Custom close-of-session marker — record discoveries to .mulch/.";
+			const customProse = "Custom close-of-session marker — record discoveries to .luuna/atlas/.";
 			await writeConfig(
 				{
 					...config,
@@ -2876,7 +2889,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain(customProse);
 				// Custom wins over style — directive markers must NOT appear.
@@ -2903,7 +2916,7 @@ describe("prime command", () => {
 		function makeProgram(): Command {
 			const program = new Command();
 			program
-				.name("mulch")
+				.name("luuna-atlas")
 				.option("--json", "output as structured JSON")
 				.option("--format <format>", "global format")
 				.exitOverride();
@@ -2929,7 +2942,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "--format", "markdown", "prime"]);
+				await program.parseAsync(["node", "luuna-atlas", "--format", "markdown", "prime"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain("### Conventions");
 				expect(output).toContain("Use bun");
@@ -2944,7 +2957,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "--format", "compact", "prime"]);
+				await program.parseAsync(["node", "luuna-atlas", "--format", "compact", "prime"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain("[convention] Use bun");
 				expect(output).not.toContain("### Conventions");
@@ -2959,7 +2972,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "--format", "xml", "prime"]);
+				await program.parseAsync(["node", "luuna-atlas", "--format", "xml", "prime"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain("<expertise>");
 				expect(output).toContain('<domain name="cli"');
@@ -2974,11 +2987,11 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "--format", "plain", "prime"]);
+				await program.parseAsync(["node", "luuna-atlas", "--format", "plain", "prime"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				// Spawn-injection contract: no decorative title, no underline,
 				// no Session Close trailer (warren handles framing contextually).
-				expect(output).not.toContain("Project Expertise (via Mulch)");
+				expect(output).not.toContain("Project Expertise (via Atlas)");
 				expect(output).not.toMatch(/^=+$/m);
 				expect(output).not.toContain("SESSION CLOSE");
 				expect(output).toContain("[cli]");
@@ -2996,7 +3009,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--compact"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--compact"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain("[convention] Use bun");
 				expect(output).not.toContain("### Conventions");
@@ -3011,7 +3024,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--full"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--full"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain("### Conventions");
 				expect(output).toContain("Use bun");
@@ -3026,7 +3039,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "--format", "xml", "prime", "--full"]);
+				await program.parseAsync(["node", "luuna-atlas", "--format", "xml", "prime", "--full"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain("<expertise>");
 				expect(output).not.toContain("### Conventions");
@@ -3051,7 +3064,7 @@ describe("prime command", () => {
 		function makeProgram(): Command {
 			const program = new Command();
 			program
-				.name("mulch")
+				.name("luuna-atlas")
 				.option("--json", "output as structured JSON")
 				.option("--format <format>", "global format")
 				.exitOverride();
@@ -3104,7 +3117,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--dry-run"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--dry-run"]);
 				const payload = parseDryRun(logSpy);
 				expect(payload.wouldPrime).toHaveLength(3);
 				for (const r of payload.wouldPrime) {
@@ -3128,7 +3141,7 @@ describe("prime command", () => {
 			try {
 				const program = makeProgram();
 				// Tiny budget — only the cheapest top-priority record should fit.
-				await program.parseAsync(["node", "mulch", "prime", "--dry-run", "--budget", "5"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--dry-run", "--budget", "5"]);
 				const payload = parseDryRun(logSpy);
 				expect(payload.budgetTotal).toBe(5);
 				expect(payload.wouldPrime.length).toBeLessThan(3);
@@ -3144,7 +3157,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--dry-run", "--no-limit"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--dry-run", "--no-limit"]);
 				const payload = parseDryRun(logSpy);
 				expect(payload.budgetTotal).toBeNull();
 				expect(payload.budgetUsed).toBeNull();
@@ -3160,7 +3173,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--dry-run", "cli"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--dry-run", "cli"]);
 				const payload = parseDryRun(logSpy);
 				expect(payload.wouldPrime.every((r) => r.domain === "cli")).toBe(true);
 				expect(payload.wouldPrime).toHaveLength(2);
@@ -3177,7 +3190,7 @@ describe("prime command", () => {
 				const program = makeProgram();
 				await program.parseAsync([
 					"node",
-					"mulch",
+					"luuna-atlas",
 					"prime",
 					"--dry-run",
 					"--exclude-domain",
@@ -3215,7 +3228,14 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--dry-run", "--files", "src/init.ts"]);
+				await program.parseAsync([
+					"node",
+					"luuna-atlas",
+					"prime",
+					"--dry-run",
+					"--files",
+					"src/init.ts",
+				]);
 				const payload = parseDryRun(logSpy);
 				expect(payload.wouldPrime).toHaveLength(1);
 				expect(payload.wouldPrime[0]?.type).toBe("pattern");
@@ -3230,7 +3250,14 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "--format", "plain", "prime", "--dry-run"]);
+				await program.parseAsync([
+					"node",
+					"luuna-atlas",
+					"--format",
+					"plain",
+					"prime",
+					"--dry-run",
+				]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				// Output is JSON, not plain text.
 				expect(() => JSON.parse(output)).not.toThrow();
@@ -3250,7 +3277,7 @@ describe("prime command", () => {
 			const errorSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--dry-run", "--manifest"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--dry-run", "--manifest"]);
 				expect(process.exitCode).toBe(1);
 				const errors = errorSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(errors).toContain("Cannot combine --dry-run with --manifest");
@@ -3281,7 +3308,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--dry-run"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--dry-run"]);
 				const payload = parseDryRun(logSpy);
 				expect(payload.totalTokens).toBe(expectedTokens);
 			} finally {
@@ -3307,7 +3334,7 @@ describe("prime command", () => {
 		function makeProgram(): Command {
 			const program = new Command();
 			program
-				.name("mulch")
+				.name("luuna-atlas")
 				.option("--json", "output as structured JSON")
 				.option("--format <format>", "global format")
 				.exitOverride();
@@ -3353,7 +3380,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain("## Project Contract");
 				expect(output).toContain("**Custom types**");
@@ -3377,7 +3404,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--full"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--full"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain("## Project Contract");
 				const contractIdx = output.indexOf("## Project Contract");
@@ -3394,7 +3421,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--manifest"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--manifest"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain("## Project Contract");
 				const contractIdx = output.indexOf("## Project Contract");
@@ -3420,7 +3447,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).not.toContain("## Project Contract");
 				expect(output).toContain("# Project Expertise");
@@ -3435,7 +3462,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "--json", "prime"]);
+				await program.parseAsync(["node", "luuna-atlas", "--json", "prime"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).not.toContain("Project Contract");
 				const parsed = JSON.parse(output);
@@ -3451,7 +3478,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--dry-run"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--dry-run"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).not.toContain("Project Contract");
 				const parsed = JSON.parse(output);
@@ -3467,7 +3494,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "--format", "xml", "prime"]);
+				await program.parseAsync(["node", "luuna-atlas", "--format", "xml", "prime"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain("<contract>");
 				expect(output).toContain("<custom_types>");
@@ -3483,7 +3510,7 @@ describe("prime command", () => {
 		});
 	});
 
-	describe("default mode (auto-flip to manifest retired in mulch-bffe)", () => {
+	describe("default mode (auto-flip to manifest retired in atlas-bffe)", () => {
 		let originalCwd: string;
 
 		beforeEach(() => {
@@ -3497,7 +3524,7 @@ describe("prime command", () => {
 
 		function makeProgram(): Command {
 			const program = new Command();
-			program.name("mulch").option("--json", "output as structured JSON").exitOverride();
+			program.name("luuna-atlas").option("--json", "output as structured JSON").exitOverride();
 			registerPrimeCommand(program);
 			return program;
 		}
@@ -3528,10 +3555,10 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).not.toContain("Project Expertise Manifest");
-				expect(output).toContain("# Project Expertise (via Mulch)");
+				expect(output).toContain("# Project Expertise (via Atlas)");
 			} finally {
 				logSpy.mockRestore();
 			}
@@ -3543,10 +3570,10 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--budget", "200"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--budget", "200"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).not.toContain("Project Expertise Manifest");
-				expect(output).toContain("# Project Expertise (via Mulch)");
+				expect(output).toContain("# Project Expertise (via Atlas)");
 				expect(output).toMatch(/\.\.\. and \d+ more records/);
 			} finally {
 				logSpy.mockRestore();
@@ -3559,10 +3586,10 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--full"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--full"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).not.toContain("Project Expertise Manifest");
-				expect(output).toContain("# Project Expertise (via Mulch)");
+				expect(output).toContain("# Project Expertise (via Atlas)");
 			} finally {
 				logSpy.mockRestore();
 			}
@@ -3576,7 +3603,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).not.toContain("Project Expertise Manifest");
 			} finally {
@@ -3592,7 +3619,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain("Project Expertise Manifest");
 			} finally {
@@ -3606,7 +3633,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--dry-run"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--dry-run"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				const parsed = JSON.parse(output);
 				expect(parsed).toHaveProperty("wouldPrime");
@@ -3622,10 +3649,10 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "d0"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "d0"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).not.toContain("Project Expertise Manifest");
-				expect(output).toContain("# Project Expertise (via Mulch)");
+				expect(output).toContain("# Project Expertise (via Atlas)");
 			} finally {
 				logSpy.mockRestore();
 			}
@@ -3640,15 +3667,15 @@ describe("prime command", () => {
 			originalCwd = process.cwd();
 			// realpath() needed because macOS /var → /private/var; --git-common-dir
 			// returns the resolved path so isInsideWorktree comparisons need parity.
-			gitDir = await realpath(await mkdtemp(join(tmpdir(), "mulch-prime-slice2-")));
+			gitDir = await realpath(await mkdtemp(join(tmpdir(), "atlas-prime-slice2-")));
 			execFileSync("git", ["init", "-q", "-b", "main"], { cwd: gitDir, stdio: "pipe" });
 			execFileSync("git", ["config", "user.email", "test@test.com"], {
 				cwd: gitDir,
 				stdio: "pipe",
 			});
 			execFileSync("git", ["config", "user.name", "Test"], { cwd: gitDir, stdio: "pipe" });
-			await mkdir(join(gitDir, ".mulch"), { recursive: true });
-			await mkdir(join(gitDir, ".mulch", "expertise"), { recursive: true });
+			await mkdir(join(gitDir, ".luuna/atlas"), { recursive: true });
+			await mkdir(join(gitDir, ".luuna/atlas", "expertise"), { recursive: true });
 		});
 
 		afterEach(async () => {
@@ -3659,7 +3686,7 @@ describe("prime command", () => {
 
 		function makeProgram(): Command {
 			const program = new Command();
-			program.name("mulch").option("--json", "output as structured JSON").exitOverride();
+			program.name("luuna-atlas").option("--json", "output as structured JSON").exitOverride();
 			registerPrimeCommand(program);
 			return program;
 		}
@@ -3707,7 +3734,7 @@ describe("prime command", () => {
 			const errSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--full"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--full"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain("Universal convention");
 				expect(output).toContain("cli-entry");
@@ -3730,7 +3757,7 @@ describe("prime command", () => {
 			const errSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--full", "--all"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--full", "--all"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain("Universal convention");
 				expect(output).toContain("cli-entry");
@@ -3743,18 +3770,18 @@ describe("prime command", () => {
 			}
 		});
 
-		it("active-work tracker match (seeds) keeps records that reference the in-progress id", async () => {
+		it("active-work tracker match (missions) keeps records that reference the in-progress id", async () => {
 			await writeConfig({ ...DEFAULT_CONFIG, domains: { cli: {} } }, gitDir);
 			const cliPath = getExpertisePath("cli", gitDir);
 			await createExpertiseFile(cliPath);
 			await appendRecord(cliPath, {
 				type: "pattern",
 				name: "matched-by-seed",
-				description: "Tracked by mulch-244c",
+				description: "Tracked by atlas-244c",
 				files: ["unrelated/path.ts"],
 				classification: "foundational",
 				recorded_at: new Date().toISOString(),
-				evidence: { seeds: "mulch-244c" },
+				evidence: { missions: "atlas-244c" },
 			});
 			await appendRecord(cliPath, {
 				type: "pattern",
@@ -3763,25 +3790,25 @@ describe("prime command", () => {
 				files: ["unrelated/path.ts"],
 				classification: "foundational",
 				recorded_at: new Date().toISOString(),
-				evidence: { seeds: "mulch-0000" },
+				evidence: { missions: "atlas-0000" },
 			});
-			await mkdir(join(gitDir, ".seeds"), { recursive: true });
+			await mkdir(join(gitDir, ".luuna/missions"), { recursive: true });
 			await writeFile(
-				join(gitDir, ".seeds", "issues.jsonl"),
-				`${JSON.stringify({ id: "mulch-244c", status: "in_progress" })}\n`,
+				join(gitDir, ".luuna/missions", "issues.jsonl"),
+				`${JSON.stringify({ id: "atlas-244c", status: "in_progress" })}\n`,
 			);
 			process.chdir(gitDir);
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			const errSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--full"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--full"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain("matched-by-seed");
 				expect(output).not.toContain("matched-by-other-seed");
 				const errs = errSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(errs).toContain("active-work");
-				expect(errs).toContain("seeds:mulch-244c");
+				expect(errs).toContain("missions:atlas-244c");
 			} finally {
 				logSpy.mockRestore();
 				errSpy.mockRestore();
@@ -3790,7 +3817,7 @@ describe("prime command", () => {
 
 		it("no signals (clean repo, no in-progress work) skips auto-scope", async () => {
 			await seedMixedDomain();
-			// Commit the config so there are no changed/untracked files outside .mulch
+			// Commit the config so there are no changed/untracked files outside .luuna/atlas
 			execFileSync("git", ["add", "-A"], { cwd: gitDir, stdio: "pipe" });
 			execFileSync("git", ["commit", "-q", "-m", "seed", "--allow-empty"], {
 				cwd: gitDir,
@@ -3801,7 +3828,7 @@ describe("prime command", () => {
 			const errSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--full"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--full"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				// With no signals, all anchored records are emitted (no auto-scope).
 				expect(output).toContain("cli-entry");
@@ -3821,7 +3848,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "--json", "prime", "--full"]);
+				await program.parseAsync(["node", "luuna-atlas", "--json", "prime", "--full"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				const parsed = JSON.parse(output);
 				const cli = parsed.domains.find((d: { domain: string }) => d.domain === "cli");
@@ -3839,7 +3866,7 @@ describe("prime command", () => {
 			const errSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--manifest"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--manifest"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain("Project Expertise Manifest");
 				expect(output).toContain("**cli**: 3 records");
@@ -3861,7 +3888,7 @@ describe("prime command", () => {
 				const program = makeProgram();
 				await program.parseAsync([
 					"node",
-					"mulch",
+					"luuna-atlas",
 					"prime",
 					"--full",
 					"--files",
@@ -3886,7 +3913,7 @@ describe("prime command", () => {
 			const errSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "cli"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "cli"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain("cli-entry");
 				expect(output).toContain("db-schema");
@@ -3906,7 +3933,7 @@ describe("prime command", () => {
 			const errSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--dry-run", "--full"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--dry-run", "--full"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				const parsed = JSON.parse(output);
 				const types = parsed.wouldPrime.map((r: { type: string }) => r.type);
@@ -3929,15 +3956,15 @@ describe("prime command", () => {
 
 		beforeEach(async () => {
 			originalCwd = process.cwd();
-			gitDir = await realpath(await mkdtemp(join(tmpdir(), "mulch-prime-slice3-")));
+			gitDir = await realpath(await mkdtemp(join(tmpdir(), "atlas-prime-slice3-")));
 			execFileSync("git", ["init", "-q", "-b", "main"], { cwd: gitDir, stdio: "pipe" });
 			execFileSync("git", ["config", "user.email", "test@test.com"], {
 				cwd: gitDir,
 				stdio: "pipe",
 			});
 			execFileSync("git", ["config", "user.name", "Test"], { cwd: gitDir, stdio: "pipe" });
-			await mkdir(join(gitDir, ".mulch"), { recursive: true });
-			await mkdir(join(gitDir, ".mulch", "expertise"), { recursive: true });
+			await mkdir(join(gitDir, ".luuna/atlas"), { recursive: true });
+			await mkdir(join(gitDir, ".luuna/atlas", "expertise"), { recursive: true });
 		});
 
 		afterEach(async () => {
@@ -3948,7 +3975,7 @@ describe("prime command", () => {
 
 		function makeProgram(): Command {
 			const program = new Command();
-			program.name("mulch").option("--json", "output as structured JSON").exitOverride();
+			program.name("luuna-atlas").option("--json", "output as structured JSON").exitOverride();
 			registerPrimeCommand(program);
 			return program;
 		}
@@ -3994,7 +4021,7 @@ describe("prime command", () => {
 			const errSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--full", "--all"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--full", "--all"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				const starIdx = output.indexOf("Star-confirmed insight");
 				const foundIdx = output.indexOf("Foundational rule");
@@ -4053,7 +4080,7 @@ describe("prime command", () => {
 			const errSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--full", "--all"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--full", "--all"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				const obsIdx = output.indexOf("Observational baseline");
 				const tactIdx = output.indexOf("Tactical fact");
@@ -4067,7 +4094,7 @@ describe("prime command", () => {
 			}
 		});
 
-		async function seedSurfaceFixture(): Promise<void> {
+		async function setUpSurfaceFixture(): Promise<void> {
 			await writeConfig({ ...DEFAULT_CONFIG, domains: { cli: {} } }, gitDir);
 			const cliPath = getExpertisePath("cli", gitDir);
 			await createExpertiseFile(cliPath);
@@ -4085,12 +4112,12 @@ describe("prime command", () => {
 			await appendRecord(cliPath, {
 				type: "pattern",
 				name: "tracker-anchored",
-				description: "Pattern with seeds evidence only",
+				description: "Pattern with missions evidence only",
 				files: ["unrelated/path.ts"],
 				classification: "tactical",
 				recorded_at: old,
 				id: "mx-2002",
-				evidence: { seeds: "mulch-1234" },
+				evidence: { missions: "atlas-1234" },
 			});
 			await appendRecord(cliPath, {
 				type: "convention",
@@ -4117,24 +4144,24 @@ describe("prime command", () => {
 		}
 
 		it("compact index lines stay terse: no 'why surfaced' suffix", async () => {
-			await seedSurfaceFixture();
+			await setUpSurfaceFixture();
 			// Stage a file change so the file-anchored pattern matches and the
 			// tracker resolver picks up the in-progress seed. Auto-context-scope
 			// supplies the ActiveContext; omitting --all lets it kick in.
 			await mkdir(join(gitDir, "src"), { recursive: true });
 			await writeFile(join(gitDir, "src", "cli.ts"), "// stub\n");
 			execFileSync("git", ["add", "src/cli.ts"], { cwd: gitDir, stdio: "pipe" });
-			await mkdir(join(gitDir, ".seeds"), { recursive: true });
+			await mkdir(join(gitDir, ".luuna/missions"), { recursive: true });
 			await writeFile(
-				join(gitDir, ".seeds", "issues.jsonl"),
-				`${JSON.stringify({ id: "mulch-1234", status: "in_progress" })}\n`,
+				join(gitDir, ".luuna/missions", "issues.jsonl"),
+				`${JSON.stringify({ id: "atlas-1234", status: "in_progress" })}\n`,
 			);
 			process.chdir(gitDir);
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			const errSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--compact"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--compact"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				// The index is one short line per record; why-surfaced suffixes
 				// belong to --full / xml / plain.
@@ -4149,13 +4176,13 @@ describe("prime command", () => {
 		});
 
 		it("markdown (--full) format appends suffixes to bullets", async () => {
-			await seedSurfaceFixture();
+			await setUpSurfaceFixture();
 			process.chdir(gitDir);
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			const errSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--full", "--all"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--full", "--all"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toMatch(/\[mx-2003\].*— why: ★1 confirmations/);
 				expect(output).toMatch(/\[mx-2005\].*— why: recorded today/);
@@ -4167,19 +4194,27 @@ describe("prime command", () => {
 		});
 
 		it("xml format carries a why='...' attribute on each record element", async () => {
-			await seedSurfaceFixture();
+			await setUpSurfaceFixture();
 			process.chdir(gitDir);
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			const errSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = new Command();
 				program
-					.name("mulch")
+					.name("luuna-atlas")
 					.option("--json", "output as structured JSON")
 					.option("--format <fmt>", "output format")
 					.exitOverride();
 				registerPrimeCommand(program);
-				await program.parseAsync(["node", "mulch", "--format", "xml", "prime", "--full", "--all"]);
+				await program.parseAsync([
+					"node",
+					"luuna-atlas",
+					"--format",
+					"xml",
+					"prime",
+					"--full",
+					"--all",
+				]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain('id="mx-2003"');
 				expect(output).toMatch(/id="mx-2003"[^>]*why="why: /);
@@ -4190,13 +4225,20 @@ describe("prime command", () => {
 		});
 
 		it("--files index surfaces the anchored record with its anchor", async () => {
-			await seedSurfaceFixture();
+			await setUpSurfaceFixture();
 			process.chdir(gitDir);
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			const errSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--compact", "--files", "src/cli.ts"]);
+				await program.parseAsync([
+					"node",
+					"luuna-atlas",
+					"prime",
+					"--compact",
+					"--files",
+					"src/cli.ts",
+				]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toMatch(/file-anchored.*\(src\/cli\.ts\)/);
 			} finally {
@@ -4206,12 +4248,12 @@ describe("prime command", () => {
 		});
 
 		it("--json mode emits records without why-surfaced annotations", async () => {
-			await seedSurfaceFixture();
+			await setUpSurfaceFixture();
 			process.chdir(gitDir);
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "--json", "prime", "--full", "--all"]);
+				await program.parseAsync(["node", "luuna-atlas", "--json", "prime", "--full", "--all"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				const parsed = JSON.parse(output);
 				const cli = parsed.domains.find((d: { domain: string }) => d.domain === "cli");
@@ -4228,12 +4270,12 @@ describe("prime command", () => {
 		});
 
 		it("manifest mode is unaffected by trust ranking (lists domains, not records)", async () => {
-			await seedSurfaceFixture();
+			await setUpSurfaceFixture();
 			process.chdir(gitDir);
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--manifest"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--manifest"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				expect(output).toContain("Project Expertise Manifest");
 				expect(output).not.toMatch(/why: /);
@@ -4265,7 +4307,7 @@ describe("prime command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "prime", "--dry-run", "--full", "--all"]);
+				await program.parseAsync(["node", "luuna-atlas", "prime", "--dry-run", "--full", "--all"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				const parsed = JSON.parse(output);
 				const ids = parsed.wouldPrime.map((r: { id: string }) => r.id);

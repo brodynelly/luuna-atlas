@@ -10,7 +10,7 @@ import { registerSearchCommand } from "../../src/commands/search.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
 import type { ExpertiseRecord } from "../../src/schemas/record.ts";
 import { getArchivePath, readArchiveFile } from "../../src/utils/archive.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../src/utils/expertise.ts";
 
 function daysAgo(days: number): string {
@@ -50,7 +50,7 @@ async function runCommand(
 		program.option("--json", "output JSON");
 		program.exitOverride();
 		register(program);
-		await program.parseAsync(["node", "mulch", ...args]);
+		await program.parseAsync(["node", "luuna-atlas", ...args]);
 	} catch {
 		// commander exitOverride throws on errors; the inner action sets process.exitCode.
 	} finally {
@@ -80,12 +80,12 @@ async function seedDomain(
 	}
 }
 
-describe("ml prune soft-archive flow", () => {
+describe("luuna-atlas prune soft-archive flow", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-prune-archive-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-prune-archive-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {} } }, tmpDir);
 	});
 
@@ -93,7 +93,7 @@ describe("ml prune soft-archive flow", () => {
 		await rm(tmpDir, { recursive: true, force: true });
 	});
 
-	it("default behaviour moves stale records to .mulch/archive/<domain>.jsonl with status + archived_at", async () => {
+	it("default behaviour moves stale records to .luuna/atlas/archive/<domain>.jsonl with status + archived_at", async () => {
 		await seedDomain(tmpDir, "testing", [
 			{
 				type: "convention",
@@ -125,7 +125,7 @@ describe("ml prune soft-archive flow", () => {
 		expect(typeof archived[0]?.archived_at).toBe("string");
 	});
 
-	it("--hard deletes stale records without writing to .mulch/archive/", async () => {
+	it("--hard deletes stale records without writing to .luuna/atlas/archive/", async () => {
 		await seedDomain(tmpDir, "testing", [
 			{
 				type: "convention",
@@ -166,12 +166,12 @@ describe("ml prune soft-archive flow", () => {
 	});
 });
 
-describe("ml restore", () => {
+describe("luuna-atlas restore", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-restore-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-restore-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {} } }, tmpDir);
 	});
 
@@ -254,19 +254,19 @@ describe("ml restore", () => {
 		expect(liveAfter.filter((r) => r.id === "mx-dup001")).toHaveLength(1);
 		expect(liveAfter[0]).toMatchObject({ content: "Replacement live record with same id" });
 
-		// Archive untouched: the original is still there for `ml search --archived`.
+		// Archive untouched: the original is still there for `luuna-atlas search --archived`.
 		const archivedAfter = await readArchiveFile(getArchivePath("testing", tmpDir));
 		expect(archivedAfter).toHaveLength(1);
 		expect(archivedAfter[0]?.id).toBe("mx-dup001");
 	});
 });
 
-describe("ml search --archived", () => {
+describe("luuna-atlas search --archived", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-search-archived-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-search-archived-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {} } }, tmpDir);
 		await seedDomain(tmpDir, "testing", [
 			{

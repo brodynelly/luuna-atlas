@@ -1,8 +1,8 @@
 /**
- * Structured logger for mulch's diagnostic / operational channel.
+ * Structured logger for luuna-atlas's diagnostic / operational channel.
  *
- * IMPORTANT: this is NOT the product-output channel. Mulch's user-facing
- * output (the markdown `ml prime` emits, status tables, `--json` results,
+ * IMPORTANT: this is NOT the product-output channel. Atlas's user-facing
+ * output (the markdown `luuna-atlas prime` emits, status tables, `--json` results,
  * hints) intentionally goes straight to stdout via `console.log` /
  * `outputJson`. Routing that through pino would wrap the product output in
  * log envelopes and corrupt machine-readable `--json` consumers.
@@ -11,9 +11,9 @@
  * errors, anything an operator (not the end user) wants when debugging.
  * For that reason it writes to **stderr** (fd 2), never stdout, so it can
  * never collide with the CLI result on stdout. It is silent at `info` for
- * routine internals (those log at `debug`, gated behind `MULCH_DEBUG`).
+ * routine internals (those log at `debug`, gated behind `LUUNA_ATLAS_DEBUG`).
  *
- * Level: `MULCH_LOG_LEVEL` wins; otherwise `debug` when `MULCH_DEBUG` is
+ * Level: `LUUNA_ATLAS_LOG_LEVEL` wins; otherwise `debug` when `LUUNA_ATLAS_DEBUG` is
  * set, else `info`. In a dev TTY we render with `pino-pretty` (a devDep);
  * in CI / non-TTY / production we emit newline-delimited JSON. `pino-pretty`
  * is intentionally not a runtime dependency — published consumers of
@@ -44,11 +44,11 @@ export function isPinoPrettyAvailable(): boolean {
 }
 
 /**
- * Resolve the effective log level from the environment. `MULCH_LOG_LEVEL`
- * is authoritative; `MULCH_DEBUG` is the ergonomic shortcut to `debug`.
+ * Resolve the effective log level from the environment. `LUUNA_ATLAS_LOG_LEVEL`
+ * is authoritative; `LUUNA_ATLAS_DEBUG` is the ergonomic shortcut to `debug`.
  */
 export function resolveLogLevel(env: NodeJS.ProcessEnv = process.env): string {
-	return env.MULCH_LOG_LEVEL ?? (env.MULCH_DEBUG ? "debug" : "info");
+	return env.LUUNA_ATLAS_LOG_LEVEL ?? (env.LUUNA_ATLAS_DEBUG ? "debug" : "info");
 }
 
 /**
@@ -84,7 +84,7 @@ export const REDACT_PATHS = [
 /**
  * Build a pino logger. Exposed (in addition to the default `log` instance)
  * so tests can inject a capturing destination and a fixed env without
- * mutating `process.env` — mirrors mulch's no-mocks, real-stream testing
+ * mutating `process.env` — mirrors luuna-atlas's no-mocks, real-stream testing
  * convention.
  */
 export function createLogger(
@@ -103,11 +103,11 @@ export function createLogger(
 	// destination we always take the plain-JSON path so output is captured
 	// verbatim.
 	if (opts.destination) {
-		return pino({ name: "mulch", level, redact }, opts.destination);
+		return pino({ name: "luuna-atlas", level, redact }, opts.destination);
 	}
 
 	const wantsPretty =
-		opts.pretty ?? (process.stderr.isTTY === true && process.env.MULCH_LOG_JSON !== "1");
+		opts.pretty ?? (process.stderr.isTTY === true && process.env.LUUNA_ATLAS_LOG_JSON !== "1");
 
 	// Only take the pretty path when `pino-pretty` is actually resolvable.
 	// Published consumers run in an interactive TTY without the devDependency;
@@ -116,7 +116,7 @@ export function createLogger(
 
 	if (usePretty) {
 		return pino({
-			name: "mulch",
+			name: "luuna-atlas",
 			level,
 			redact,
 			transport: {
@@ -127,7 +127,7 @@ export function createLogger(
 	}
 
 	// CI / non-TTY / production: newline-delimited JSON straight to stderr.
-	return pino({ name: "mulch", level, redact }, pino.destination(2));
+	return pino({ name: "luuna-atlas", level, redact }, pino.destination(2));
 }
 
 /**

@@ -1,4 +1,4 @@
-import type { MulchConfig } from "../schemas/config.ts";
+import type { AtlasConfig } from "../schemas/config.ts";
 import { readConfig } from "../utils/config.ts";
 import { BUILTIN_DEFS, SHARED_DEFINITIONS } from "./builtins.ts";
 import { buildCustomTypeDefinitions } from "./custom.ts";
@@ -8,7 +8,7 @@ import {
 	TypeRegistry as TypeRegistryCtor,
 } from "./type-registry.ts";
 
-function buildRegistryWithCustomTypes(config: MulchConfig | null): TypeRegistry {
+function buildRegistryWithCustomTypes(config: AtlasConfig | null): TypeRegistry {
 	const disabled = config?.disabled_types ?? [];
 	if (config?.custom_types && disabled.length > 0) {
 		const disabledSet = new Set(disabled);
@@ -37,13 +37,13 @@ function buildRegistryWithCustomTypes(config: MulchConfig | null): TypeRegistry 
 }
 
 // Called once at CLI startup. Falls back to built-ins-only if no config exists
-// (e.g., before `ml init`) so commands like `ml init` still work.
+// (e.g., before `luuna-atlas init`) so commands like `luuna-atlas init` still work.
 export async function initRegistryFromConfig(cwd?: string): Promise<TypeRegistry> {
-	let config: MulchConfig | null = null;
+	let config: AtlasConfig | null = null;
 	try {
 		config = await readConfig(cwd);
 	} catch {
-		// No .mulch/ directory or unreadable config — built-ins only.
+		// No .luuna/atlas/ directory or unreadable config — built-ins only.
 		config = null;
 	}
 	const registry = buildRegistryWithCustomTypes(config);

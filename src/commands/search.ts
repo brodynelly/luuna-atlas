@@ -30,7 +30,7 @@ function formatArchivedSection(domain: string, records: ExpertiseRecord[]): stri
 	for (const r of records) {
 		const date = (r.archived_at ?? "").slice(0, 10) || "unknown";
 		const id = r.id ? `${r.id} ` : "";
-		// Archives written before mulch-b41a have no reason on disk; omit the
+		// Archives written before atlas-b41a have no reason on disk; omit the
 		// suffix gracefully so back-compat output stays readable.
 		const reason = r.archive_reason ? ` ${r.archive_reason}` : "";
 		lines.push(`- [ARCHIVED ${date}${reason}] ${id}[${r.type}] ${getRecordSummary(r)}`);
@@ -89,7 +89,7 @@ export function registerSearchCommand(program: Command): void {
 		.option("--no-boost", "disable confirmation-frequency boost on BM25 ranking (pure BM25)")
 		.option(
 			"--archived",
-			"include soft-archived records from .mulch/archive/ (excluded by default)",
+			"include soft-archived records from .luuna/atlas/archive/ (excluded by default)",
 		)
 		.addOption(
 			new Option("--format <format>", "output format for records").choices([
@@ -161,7 +161,7 @@ export function registerSearchCommand(program: Command): void {
 									`Error: Domain "${options.domain}" not found in config. Available domains: ${Object.keys(config.domains).join(", ")}`,
 								);
 								console.error(
-									`Hint: Run \`mulch add ${options.domain}\` to create this domain, or check .mulch/mulch.config.yaml`,
+									`Hint: Run \`luuna-atlas add ${options.domain}\` to create this domain, or check .luuna/atlas/config.yaml`,
 								);
 							}
 							process.exitCode = 1;

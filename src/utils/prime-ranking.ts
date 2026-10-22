@@ -6,7 +6,7 @@ import type { ActiveContext } from "./git.ts";
 import { fileMatchesAny } from "./git.ts";
 import { computeConfirmationScore } from "./scoring.ts";
 
-// Trust-tier ranking for `ml prime` output (v0.10 slice 3 of the prime
+// Trust-tier ranking for `luuna-atlas prime` output (v0.10 slice 3 of the prime
 // overhaul). Failures lead; the rest is ordered so the most trustworthy records
 // surface first within the budget cap: star-confirmed > foundational >
 // tactical > observational. Within-tier ties preserve insertion order so a
@@ -37,7 +37,7 @@ export function sortByTrust<T extends ExpertiseRecord>(
 		score: computeTrustScore(r, weights),
 	}));
 	// Failures lead regardless of score: a known pitfall is the cheapest
-	// record to act on and the costliest to miss (mulch-bffe).
+	// record to act on and the costliest to miss (atlas-bffe).
 	const failureRank = (r: T): number => (r.type === "failure" ? 0 : 1);
 	decorated.sort((a, b) => failureRank(a.r) - failureRank(b.r) || b.score - a.score || a.i - b.i);
 	return decorated.map((d) => d.r);

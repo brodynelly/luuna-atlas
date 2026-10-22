@@ -8,8 +8,9 @@ import { dirname, join, resolve } from "node:path";
 const CLI_PATH = resolve(import.meta.dir, "..", "..", "src", "cli.ts");
 const SNAPSHOT_PATH = join(import.meta.dir, "__snapshots__", "config-schema.snapshot.json");
 
+// process.execPath, not "bun": on Windows an npm-installed bun resolves to a .cmd shim that rejects quoted args.
 function runCli(args: string[], cwd: string) {
-	return Bun.spawnSync(["bun", CLI_PATH, ...args], {
+	return Bun.spawnSync([process.execPath, CLI_PATH, ...args], {
 		cwd,
 		stdout: "pipe",
 		stderr: "pipe",
@@ -17,7 +18,7 @@ function runCli(args: string[], cwd: string) {
 }
 
 function runCliAsync(args: string[], cwd: string) {
-	const proc = Bun.spawn(["bun", CLI_PATH, ...args], {
+	const proc = Bun.spawn([process.execPath, CLI_PATH, ...args], {
 		cwd,
 		stdout: "pipe",
 		stderr: "pipe",
@@ -29,10 +30,10 @@ function runCliAsync(args: string[], cwd: string) {
 	]).then(([exitCode, stdout, stderr]) => ({ exitCode, stdout, stderr }));
 }
 
-async function initMulchProject(cwd: string, configYaml: string): Promise<void> {
-	const mulchDir = join(cwd, ".mulch");
-	await mkdir(join(mulchDir, "expertise"), { recursive: true });
-	await writeFile(join(mulchDir, "mulch.config.yaml"), configYaml, "utf-8");
+async function initAtlasProject(cwd: string, configYaml: string): Promise<void> {
+	const atlasDir = join(cwd, ".luuna/atlas");
+	await mkdir(join(atlasDir, "expertise"), { recursive: true });
+	await writeFile(join(atlasDir, "config.yaml"), configYaml, "utf-8");
 }
 
 function git(args: string[], cwd: string): void {
@@ -45,8 +46,8 @@ describe("config command", () => {
 	beforeEach(async () => {
 		// Run from a fresh temp dir so initRegistryFromConfig falls back to
 		// built-ins-only and the test is insensitive to this repo's dogfood
-		// .mulch/ config.
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-config-test-"));
+		// .luuna/atlas/ config.
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-config-test-"));
 	});
 
 	afterEach(async () => {
@@ -65,7 +66,7 @@ describe("config command", () => {
 				JSON.parse(stdout);
 			} catch (err) {
 				throw new Error(
-					`ml config schema did not emit valid JSON: ${(err as Error).message}\n` +
+					`luuna-atlas config schema did not emit valid JSON: ${(err as Error).message}\n` +
 						`stdout (first 500 chars): ${stdout.slice(0, 500)}`,
 				);
 			}
@@ -99,7 +100,7 @@ describe("config command", () => {
 			expect(b.stdout.toString()).toBe(a.stdout.toString());
 		});
 
-		it("emitted schema covers every top-level MulchConfig field", async () => {
+		it("emitted schema covers every top-level AtlasConfig field", async () => {
 			const result = runCli(["config", "schema"], tmpDir);
 			expect(result.exitCode).toBe(0);
 			const schema = JSON.parse(result.stdout.toString()) as {
@@ -107,7 +108,7 @@ describe("config command", () => {
 				required: string[];
 			};
 
-			// Top-level required fields match the MulchConfig non-optional set.
+			// Top-level required fields match the AtlasConfig non-optional set.
 			expect(schema.required.sort()).toEqual(
 				["version", "domains", "governance", "classification_defaults"].sort(),
 			);
@@ -136,11 +137,11 @@ describe("config command", () => {
 
 	describe("config show", () => {
 		it("emits the on-disk config (with applied defaults) as JSON", async () => {
-			await initMulchProject(
+			await initAtlasProject(
 				tmpDir,
 				[
 					"version: '1'",
-					"domains: { warren: {}, mulch: {} }",
+					"domains: { warren: {}, luuna-atlas: {} }",
 					"governance: { max_entries: 50, warn_entries: 75, hard_limit: 100 }",
 					"classification_defaults: { shelf_life: { tactical: 14, observational: 30 } }",
 					"search: { boost_factor: 0.25 }",
@@ -162,7 +163,7 @@ describe("config command", () => {
 		});
 
 		it("--path returns a single user-set knob", async () => {
-			await initMulchProject(
+			await initAtlasProject(
 				tmpDir,
 				[
 					"version: '1'",
@@ -179,7 +180,7 @@ describe("config command", () => {
 
 		it("--path falls back to the schema default when the knob is unset", async () => {
 			// search.boost_factor is omitted; schema default is 0.1.
-			await initMulchProject(
+			await initAtlasProject(
 				tmpDir,
 				[
 					"version: '1'",
@@ -197,7 +198,7 @@ describe("config command", () => {
 		it("--path on an unset section synthesizes an object from leaf defaults", async () => {
 			// `prime` (whole section) is unset; schema has defaults for both
 			// default_mode and tier_weights so the synthesized object includes both.
-			await initMulchProject(
+			await initAtlasProject(
 				tmpDir,
 				[
 					"version: '1'",
@@ -222,7 +223,7 @@ describe("config command", () => {
 		});
 
 		it("returns a nested user-set value", async () => {
-			await initMulchProject(
+			await initAtlasProject(
 				tmpDir,
 				[
 					"version: '1'",
@@ -241,7 +242,7 @@ describe("config command", () => {
 		});
 
 		it("errors when --path targets an unknown closed-shape knob", async () => {
-			await initMulchProject(
+			await initAtlasProject(
 				tmpDir,
 				[
 					"version: '1'",
@@ -257,7 +258,7 @@ describe("config command", () => {
 		});
 
 		it("errors when --path is empty", async () => {
-			await initMulchProject(
+			await initAtlasProject(
 				tmpDir,
 				[
 					"version: '1'",
@@ -272,14 +273,14 @@ describe("config command", () => {
 			expect(result.stderr.toString()).toContain("must not be empty");
 		});
 
-		it("errors with the standard 'No .mulch/' message when run outside a project", () => {
+		it("errors with the standard 'No .luuna/atlas/' message when run outside a project", () => {
 			const result = runCli(["config", "show"], tmpDir);
 			expect(result.exitCode).not.toBe(0);
-			expect(result.stderr.toString()).toContain("No .mulch/ directory");
+			expect(result.stderr.toString()).toContain("No .luuna/atlas/ directory");
 		});
 
 		it("global --json flag is accepted as a no-op (output is unconditionally JSON)", async () => {
-			await initMulchProject(
+			await initAtlasProject(
 				tmpDir,
 				[
 					"version: '1'",
@@ -306,8 +307,8 @@ describe("config command", () => {
 			"",
 		].join("\n");
 
-		it("sets a numeric leaf and round-trips through `ml config show`", async () => {
-			await initMulchProject(tmpDir, baseConfig);
+		it("sets a numeric leaf and round-trips through `luuna-atlas config show`", async () => {
+			await initAtlasProject(tmpDir, baseConfig);
 			const set = runCli(["config", "set", "governance.max_entries", "50"], tmpDir);
 			expect(set.exitCode).toBe(0);
 			const show = runCli(["config", "show", "--path", "governance.max_entries"], tmpDir);
@@ -316,7 +317,7 @@ describe("config command", () => {
 		});
 
 		it("YAML-parses the value (boolean, list, object)", async () => {
-			await initMulchProject(tmpDir, baseConfig);
+			await initAtlasProject(tmpDir, baseConfig);
 
 			// list
 			const list = runCli(
@@ -336,7 +337,7 @@ describe("config command", () => {
 		});
 
 		it("rejects unknown closed-shape paths with a list of known keys", async () => {
-			await initMulchProject(tmpDir, baseConfig);
+			await initAtlasProject(tmpDir, baseConfig);
 			const result = runCli(["config", "set", "governance.typo", "5"], tmpDir);
 			expect(result.exitCode).not.toBe(0);
 			const stderr = result.stderr.toString();
@@ -345,7 +346,7 @@ describe("config command", () => {
 		});
 
 		it("rejects values that fail schema validation with a schema-titled error", async () => {
-			await initMulchProject(tmpDir, baseConfig);
+			await initAtlasProject(tmpDir, baseConfig);
 			const result = runCli(["config", "set", "governance.max_entries", '"oops"'], tmpDir);
 			expect(result.exitCode).not.toBe(0);
 			const stderr = result.stderr.toString();
@@ -355,27 +356,27 @@ describe("config command", () => {
 		});
 
 		it("rejects empty <path>", async () => {
-			await initMulchProject(tmpDir, baseConfig);
+			await initAtlasProject(tmpDir, baseConfig);
 			const result = runCli(["config", "set", ".", "5"], tmpDir);
 			expect(result.exitCode).not.toBe(0);
 			expect(result.stderr.toString()).toContain("must not be empty");
 		});
 
 		it("rejects invalid YAML for <value>", async () => {
-			await initMulchProject(tmpDir, baseConfig);
+			await initAtlasProject(tmpDir, baseConfig);
 			const result = runCli(["config", "set", "governance.max_entries", "{unbalanced: ["], tmpDir);
 			expect(result.exitCode).not.toBe(0);
 			expect(result.stderr.toString()).toContain("Invalid YAML");
 		});
 
-		it("errors with the standard 'No .mulch/' message when run outside a project", () => {
+		it("errors with the standard 'No .luuna/atlas/' message when run outside a project", () => {
 			const result = runCli(["config", "set", "governance.max_entries", "50"], tmpDir);
 			expect(result.exitCode).not.toBe(0);
-			expect(result.stderr.toString()).toContain("No .mulch/ directory");
+			expect(result.stderr.toString()).toContain("No .luuna/atlas/ directory");
 		});
 
 		it("creates intermediate objects through open maps (domains.<name>)", async () => {
-			await initMulchProject(tmpDir, baseConfig);
+			await initAtlasProject(tmpDir, baseConfig);
 			const result = runCli(
 				["config", "set", "domains.brand-new.required_fields", "[owner]"],
 				tmpDir,
@@ -390,11 +391,11 @@ describe("config command", () => {
 		});
 
 		it("does not leave the .tmp file behind on success", async () => {
-			await initMulchProject(tmpDir, baseConfig);
+			await initAtlasProject(tmpDir, baseConfig);
 			const result = runCli(["config", "set", "governance.max_entries", "75"], tmpDir);
 			expect(result.exitCode).toBe(0);
 			const { readdir } = await import("node:fs/promises");
-			const files = await readdir(join(tmpDir, ".mulch"));
+			const files = await readdir(join(tmpDir, ".luuna/atlas"));
 			const stragglers = files.filter((f) => f.includes(".tmp.") || f.endsWith(".lock"));
 			expect(stragglers).toEqual([]);
 		});
@@ -402,7 +403,7 @@ describe("config command", () => {
 		it("rejects a closed-shape replacement that violates required fields", async () => {
 			// Replacing the whole governance section with an object missing required
 			// fields must fail schema validation, not silently strip required keys.
-			await initMulchProject(tmpDir, baseConfig);
+			await initAtlasProject(tmpDir, baseConfig);
 			const result = runCli(["config", "set", "governance", "{ max_entries: 50 }"], tmpDir);
 			expect(result.exitCode).not.toBe(0);
 			expect(result.stderr.toString()).toContain("Invalid config after set");
@@ -420,7 +421,7 @@ describe("config command", () => {
 		].join("\n");
 
 		it("removes an optional knob and `show --path` falls back to the schema default", async () => {
-			await initMulchProject(tmpDir, baseConfig);
+			await initAtlasProject(tmpDir, baseConfig);
 			const unset = runCli(["config", "unset", "search.boost_factor"], tmpDir);
 			expect(unset.exitCode).toBe(0);
 
@@ -431,12 +432,12 @@ describe("config command", () => {
 			// Empty parent (`search: {}`) is pruned so the YAML stays minimal
 			// AND the schema's `required: [boost_factor]` under `search` doesn't
 			// reject the next read.
-			const configYaml = await readFile(join(tmpDir, ".mulch", "mulch.config.yaml"), "utf-8");
+			const configYaml = await readFile(join(tmpDir, ".luuna/atlas", "config.yaml"), "utf-8");
 			expect(configYaml).not.toContain("search:");
 		});
 
 		it("removes an entry from an open map (domains.<name>)", async () => {
-			await initMulchProject(tmpDir, baseConfig);
+			await initAtlasProject(tmpDir, baseConfig);
 			const unset = runCli(["config", "unset", "domains.warren"], tmpDir);
 			expect(unset.exitCode).toBe(0);
 
@@ -446,22 +447,22 @@ describe("config command", () => {
 		});
 
 		it("is idempotent — unsetting a never-set path succeeds silently and does not rewrite the file", async () => {
-			await initMulchProject(tmpDir, baseConfig);
-			const before = await readFile(join(tmpDir, ".mulch", "mulch.config.yaml"), "utf-8");
+			await initAtlasProject(tmpDir, baseConfig);
+			const before = await readFile(join(tmpDir, ".luuna/atlas", "config.yaml"), "utf-8");
 			const unset = runCli(["config", "unset", "prime.default_mode"], tmpDir);
 			expect(unset.exitCode).toBe(0);
-			const after = await readFile(join(tmpDir, ".mulch", "mulch.config.yaml"), "utf-8");
+			const after = await readFile(join(tmpDir, ".luuna/atlas", "config.yaml"), "utf-8");
 			expect(after).toBe(before);
 		});
 
 		it("is idempotent — unsetting through a missing parent succeeds silently", async () => {
-			await initMulchProject(tmpDir, baseConfig);
+			await initAtlasProject(tmpDir, baseConfig);
 			const unset = runCli(["config", "unset", "hooks.pre-record"], tmpDir);
 			expect(unset.exitCode).toBe(0);
 		});
 
 		it("rejects removal of a required field with a schema-titled error", async () => {
-			await initMulchProject(tmpDir, baseConfig);
+			await initAtlasProject(tmpDir, baseConfig);
 			const result = runCli(["config", "unset", "governance.max_entries"], tmpDir);
 			expect(result.exitCode).not.toBe(0);
 			const stderr = result.stderr.toString();
@@ -473,7 +474,7 @@ describe("config command", () => {
 		});
 
 		it("rejects unknown closed-shape paths", async () => {
-			await initMulchProject(tmpDir, baseConfig);
+			await initAtlasProject(tmpDir, baseConfig);
 			const result = runCli(["config", "unset", "governance.typo"], tmpDir);
 			expect(result.exitCode).not.toBe(0);
 			const stderr = result.stderr.toString();
@@ -482,30 +483,30 @@ describe("config command", () => {
 		});
 
 		it("rejects empty <path>", async () => {
-			await initMulchProject(tmpDir, baseConfig);
+			await initAtlasProject(tmpDir, baseConfig);
 			const result = runCli(["config", "unset", "."], tmpDir);
 			expect(result.exitCode).not.toBe(0);
 			expect(result.stderr.toString()).toContain("must not be empty");
 		});
 
-		it("errors with the standard 'No .mulch/' message when run outside a project", () => {
+		it("errors with the standard 'No .luuna/atlas/' message when run outside a project", () => {
 			const result = runCli(["config", "unset", "search.boost_factor"], tmpDir);
 			expect(result.exitCode).not.toBe(0);
-			expect(result.stderr.toString()).toContain("No .mulch/ directory");
+			expect(result.stderr.toString()).toContain("No .luuna/atlas/ directory");
 		});
 
 		it("does not leave the .tmp file behind on success", async () => {
-			await initMulchProject(tmpDir, baseConfig);
+			await initAtlasProject(tmpDir, baseConfig);
 			const result = runCli(["config", "unset", "search.boost_factor"], tmpDir);
 			expect(result.exitCode).toBe(0);
 			const { readdir } = await import("node:fs/promises");
-			const files = await readdir(join(tmpDir, ".mulch"));
+			const files = await readdir(join(tmpDir, ".luuna/atlas"));
 			const stragglers = files.filter((f) => f.includes(".tmp.") || f.endsWith(".lock"));
 			expect(stragglers).toEqual([]);
 		});
 
-		it("round-trips with `ml config set` — set then unset reverts to the schema default", async () => {
-			await initMulchProject(
+		it("round-trips with `luuna-atlas config set` — set then unset reverts to the schema default", async () => {
+			await initAtlasProject(
 				tmpDir,
 				[
 					"version: '1'",
@@ -544,10 +545,10 @@ describe("config command — worktree integration", () => {
 
 	beforeEach(async () => {
 		// realpath needed on macOS where /tmp is a symlink to /private/tmp.
-		// getMulchDir resolves the worktree's main root via `git rev-parse
+		// getAtlasDir resolves the worktree's main root via `git rev-parse
 		// --git-common-dir`, which returns the resolved path; comparing with
 		// the unresolved tmpDir would silently fail.
-		tmpDir = await realpath(await mkdtemp(join(tmpdir(), "mulch-config-wt-test-")));
+		tmpDir = await realpath(await mkdtemp(join(tmpdir(), "atlas-config-wt-test-")));
 		mainRepo = join(tmpDir, "main");
 		worktreeDir = join(tmpDir, "worktree");
 
@@ -559,9 +560,9 @@ describe("config command — worktree integration", () => {
 		git(["add", "."], mainRepo);
 		git(["commit", "-q", "-m", "init"], mainRepo);
 
-		await initMulchProject(mainRepo, baseConfig);
+		await initAtlasProject(mainRepo, baseConfig);
 		git(["add", "."], mainRepo);
-		git(["commit", "-q", "-m", "add mulch"], mainRepo);
+		git(["commit", "-q", "-m", "add luuna-atlas"], mainRepo);
 
 		git(["worktree", "add", "-q", worktreeDir, "-b", "test-branch"], mainRepo);
 	});
@@ -592,24 +593,24 @@ describe("config command — worktree integration", () => {
 	});
 
 	it("`config set` from a worktree writes to the main repo's config (not the worktree's checkout)", async () => {
-		// The worktree contains its own checkout of .mulch/mulch.config.yaml
+		// The worktree contains its own checkout of .luuna/atlas/config.yaml
 		// (a copy from the source branch). Snapshot it so we can confirm it
 		// stays untouched while the write lands in the main repo's copy —
 		// that's what makes config writes survive `git worktree remove`.
 		const worktreeConfigBefore = await readFile(
-			join(worktreeDir, ".mulch", "mulch.config.yaml"),
+			join(worktreeDir, ".luuna/atlas", "config.yaml"),
 			"utf-8",
 		);
 
 		const result = runCli(["config", "set", "governance.max_entries", "55"], worktreeDir);
 		expect(result.exitCode).toBe(0);
 
-		const mainConfigYaml = await readFile(join(mainRepo, ".mulch", "mulch.config.yaml"), "utf-8");
+		const mainConfigYaml = await readFile(join(mainRepo, ".luuna/atlas", "config.yaml"), "utf-8");
 		expect(mainConfigYaml).toContain("max_entries: 55");
 
 		// The worktree's checkout copy must NOT have been written through.
 		const worktreeConfigAfter = await readFile(
-			join(worktreeDir, ".mulch", "mulch.config.yaml"),
+			join(worktreeDir, ".luuna/atlas", "config.yaml"),
 			"utf-8",
 		);
 		expect(worktreeConfigAfter).toBe(worktreeConfigBefore);
@@ -621,37 +622,37 @@ describe("config command — worktree integration", () => {
 
 	it("`config unset` from a worktree updates the main repo's config (not the worktree's checkout)", async () => {
 		const worktreeConfigBefore = await readFile(
-			join(worktreeDir, ".mulch", "mulch.config.yaml"),
+			join(worktreeDir, ".luuna/atlas", "config.yaml"),
 			"utf-8",
 		);
 
 		const result = runCli(["config", "unset", "search.boost_factor"], worktreeDir);
 		expect(result.exitCode).toBe(0);
 
-		const mainConfigYaml = await readFile(join(mainRepo, ".mulch", "mulch.config.yaml"), "utf-8");
+		const mainConfigYaml = await readFile(join(mainRepo, ".luuna/atlas", "config.yaml"), "utf-8");
 		// `search.boost_factor` was the only key under `search`, so the empty
 		// parent should have been pruned by unsetAtPath.
 		expect(mainConfigYaml).not.toContain("search:");
 
 		const worktreeConfigAfter = await readFile(
-			join(worktreeDir, ".mulch", "mulch.config.yaml"),
+			join(worktreeDir, ".luuna/atlas", "config.yaml"),
 			"utf-8",
 		);
 		expect(worktreeConfigAfter).toBe(worktreeConfigBefore);
 	});
 
-	it("set/unset stragglers (.tmp, .lock) land in main .mulch/ and are cleaned up", async () => {
+	it("set/unset stragglers (.tmp, .lock) land in main .luuna/atlas/ and are cleaned up", async () => {
 		const set = runCli(["config", "set", "governance.max_entries", "77"], worktreeDir);
 		expect(set.exitCode).toBe(0);
 		const unset = runCli(["config", "unset", "search.boost_factor"], worktreeDir);
 		expect(unset.exitCode).toBe(0);
 
-		const mainFiles = await readdir(join(mainRepo, ".mulch"));
+		const mainFiles = await readdir(join(mainRepo, ".luuna/atlas"));
 		const mainStragglers = mainFiles.filter((f) => f.includes(".tmp.") || f.endsWith(".lock"));
 		expect(mainStragglers).toEqual([]);
 
-		// And no straggler files in the worktree's checkout copy of .mulch/ either.
-		const worktreeFiles = await readdir(join(worktreeDir, ".mulch"));
+		// And no straggler files in the worktree's checkout copy of .luuna/atlas/ either.
+		const worktreeFiles = await readdir(join(worktreeDir, ".luuna/atlas"));
 		const worktreeStragglers = worktreeFiles.filter(
 			(f) => f.includes(".tmp.") || f.endsWith(".lock"),
 		);
@@ -686,7 +687,7 @@ describe("config command — concurrency", () => {
 	].join("\n");
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-config-conc-test-"));
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-config-conc-test-"));
 	});
 
 	afterEach(async () => {
@@ -694,7 +695,7 @@ describe("config command — concurrency", () => {
 	});
 
 	it("concurrent set on disjoint keys: every value lands (no lost writes)", async () => {
-		await initMulchProject(tmpDir, baseConfig);
+		await initAtlasProject(tmpDir, baseConfig);
 
 		// 8 disjoint domain entries written concurrently. The advisory file
 		// lock serializes the read-modify-write cycle, so each process sees
@@ -716,7 +717,7 @@ describe("config command — concurrency", () => {
 	});
 
 	it("concurrent set on the same key: last-writer-wins, value is one of the inputs", async () => {
-		await initMulchProject(tmpDir, baseConfig);
+		await initAtlasProject(tmpDir, baseConfig);
 
 		const candidates = [10, 20, 30, 40, 50, 60, 70, 80];
 		const writes = candidates.map((v) =>
@@ -745,7 +746,7 @@ describe("config command — concurrency", () => {
 			"search: { boost_factor: 0.25 }",
 			"",
 		].join("\n");
-		await initMulchProject(tmpDir, seeded);
+		await initAtlasProject(tmpDir, seeded);
 
 		const [set, unset] = await Promise.all([
 			runCliAsync(["config", "set", "governance.max_entries", "42"], tmpDir),
@@ -763,7 +764,7 @@ describe("config command — concurrency", () => {
 	});
 
 	it("concurrent invalid + valid set: invalid is rejected, valid is preserved", async () => {
-		await initMulchProject(tmpDir, baseConfig);
+		await initAtlasProject(tmpDir, baseConfig);
 
 		const [bad, good] = await Promise.all([
 			runCliAsync(["config", "set", "governance.max_entries", '"not-a-number"'], tmpDir),
@@ -782,20 +783,20 @@ describe("config command — concurrency", () => {
 	});
 
 	it("after concurrent writes: no .lock or .tmp stragglers", async () => {
-		await initMulchProject(tmpDir, baseConfig);
+		await initAtlasProject(tmpDir, baseConfig);
 
 		const writes = Array.from({ length: 6 }, (_, i) =>
 			runCliAsync(["config", "set", "governance.max_entries", String(50 + i)], tmpDir),
 		);
 		await Promise.all(writes);
 
-		const files = await readdir(join(tmpDir, ".mulch"));
+		const files = await readdir(join(tmpDir, ".luuna/atlas"));
 		const stragglers = files.filter((f) => f.includes(".tmp.") || f.endsWith(".lock"));
 		expect(stragglers).toEqual([]);
 	});
 
 	it("YAML on disk stays parseable and schema-valid after concurrent writes", async () => {
-		await initMulchProject(tmpDir, baseConfig);
+		await initAtlasProject(tmpDir, baseConfig);
 
 		const writes: Promise<unknown>[] = [];
 		for (let i = 0; i < 5; i++) {
@@ -806,7 +807,7 @@ describe("config command — concurrency", () => {
 		}
 		await Promise.all(writes);
 
-		// Final on-disk config must round-trip through `ml config show` (which
+		// Final on-disk config must round-trip through `luuna-atlas config show` (which
 		// re-reads + re-validates via readConfig + applyConfigDefaults).
 		const result = runCli(["config", "show"], tmpDir);
 		expect(result.exitCode).toBe(0);

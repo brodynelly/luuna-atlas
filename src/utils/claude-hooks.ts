@@ -1,17 +1,20 @@
-// `ml setup claude`: the mulch handlers in <project>/.claude/settings.json.
+// `luuna-atlas setup claude`: the luuna-atlas handlers in <project>/.claude/settings.json.
 //
-//   SessionStart  ml prime   compact record index at startup/resume/compact
-//   PreToolUse    ml hook    Read|Edit|Write|MultiEdit|NotebookEdit|Bash:
+//   SessionStart  luuna-atlas prime   compact record index at startup/resume/compact
+//   PreToolUse    luuna-atlas hook    Read|Edit|Write|MultiEdit|NotebookEdit|Bash:
 //                            inject records anchored to the file, deny hand
-//                            edits of .mulch/expertise/*.jsonl
+//                            edits of .luuna/atlas/expertise/*.jsonl
 //
 // Claude Code nests handlers in matcher groups:
 //   {"hooks": {"<Event>": [{"matcher": "...", "hooks": [{"type": "command", "command": "..."}]}]}}
-// Mulch owns exactly the handlers whose command is `ml|mulch prime|hook`;
+// Atlas owns exactly the handlers whose command is `luuna-atlas prime|hook` (or the
+// pre-Luuna command names, which are upgraded in place);
 // install strips those and appends one fresh group per event, leaving every
-// other hook as it was. Re-running is a no-op. Remove strips mulch handlers
+// other hook as it was. Re-running is a no-op. Remove strips luuna-atlas handlers
 // from every event (including the legacy PreCompact entry) and drops groups
-// and events they leave empty. Mirrors seeds' `sd setup claude`.
+// and events they leave empty. Mirrors `luuna-missions setup claude`.
+
+import { LEGACY_HOOK_COMMAND_RE } from "./legacy-layout.ts";
 
 type Json = Record<string, unknown>;
 
@@ -22,22 +25,26 @@ interface HookSpec {
 }
 
 export const CLAUDE_HOOKS: readonly HookSpec[] = [
-	{ event: "SessionStart", matcher: "", command: "ml prime" },
+	{ event: "SessionStart", matcher: "", command: "luuna-atlas prime" },
 	{
 		event: "PreToolUse",
 		matcher: "Read|Edit|Write|MultiEdit|NotebookEdit|Bash",
-		command: "ml hook",
+		command: "luuna-atlas hook",
 	},
 ];
 
-const MULCH_COMMAND_RE = /^\s*(ml|mulch)\s+(prime|hook)(\s|$)/;
+const ATLAS_COMMAND_RE = /^\s*luuna-atlas\s+(prime|hook)(\s|$)/;
 
 function isObject(v: unknown): v is Json {
 	return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
-function isMulchHandler(h: unknown): boolean {
-	return isObject(h) && typeof h.command === "string" && MULCH_COMMAND_RE.test(h.command);
+function isAtlasHandler(h: unknown): boolean {
+	return (
+		isObject(h) &&
+		typeof h.command === "string" &&
+		(ATLAS_COMMAND_RE.test(h.command) || LEGACY_HOOK_COMMAND_RE.test(h.command))
+	);
 }
 
 function groupHooks(g: unknown): unknown[] {
@@ -48,11 +55,11 @@ function makeGroup(spec: HookSpec): Json {
 	return { matcher: spec.matcher, hooks: [{ type: "command", command: spec.command }] };
 }
 
-function stripMulch(groups: readonly unknown[]): unknown[] {
+function stripAtlas(groups: readonly unknown[]): unknown[] {
 	const out: unknown[] = [];
 	for (const g of groups) {
 		const hooks = groupHooks(g);
-		const kept = hooks.filter((h) => !isMulchHandler(h));
+		const kept = hooks.filter((h) => !isAtlasHandler(h));
 		if (kept.length === hooks.length) out.push(g);
 		else if (kept.length > 0) out.push({ ...(g as Json), hooks: kept });
 	}
@@ -76,22 +83,22 @@ function hooksObject(settings: Json): Json {
 	return settings.hooks;
 }
 
-/** The event holds exactly one mulch handler, in a group shaped as we write it. */
+/** The event holds exactly one luuna-atlas handler, in a group shaped as we write it. */
 function isInstalled(groups: readonly unknown[], spec: HookSpec): boolean {
-	const ours = groups.filter((g) => groupHooks(g).some(isMulchHandler));
+	const ours = groups.filter((g) => groupHooks(g).some(isAtlasHandler));
 	return ours.length === 1 && JSON.stringify(ours[0]) === JSON.stringify(makeGroup(spec));
 }
 
-/** Events whose mulch handler is missing or out of date. */
-export function missingMulchHooks(settings: Json): string[] {
+/** Events whose luuna-atlas handler is missing or out of date. */
+export function missingAtlasHooks(settings: Json): string[] {
 	const hooks = hooksObject(settings);
 	return CLAUDE_HOOKS.filter((s) => !isInstalled(eventGroups(hooks, s.event), s)).map(
 		(s) => s.event,
 	);
 }
 
-/** Install (or with `remove`, strip) the mulch hooks. Does not mutate `settings`. */
-export function syncMulchHooks(
+/** Install (or with `remove`, strip) the luuna-atlas hooks. Does not mutate `settings`. */
+export function syncAtlasHooks(
 	settings: Json,
 	remove: boolean,
 ): { settings: Json; changed: boolean } {
@@ -102,7 +109,7 @@ export function syncMulchHooks(
 		const groups = eventGroups(hooks, event);
 		const spec = CLAUDE_HOOKS.find((s) => s.event === event);
 		if (!remove && spec && isInstalled(groups, spec)) continue;
-		const updated = stripMulch(groups);
+		const updated = stripAtlas(groups);
 		if (!remove && spec) updated.push(makeGroup(spec));
 		if (JSON.stringify(updated) === JSON.stringify(groups)) continue;
 		changed = true;

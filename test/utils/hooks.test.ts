@@ -2,8 +2,8 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { chmod, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { DEFAULT_CONFIG, type MulchConfig } from "../../src/schemas/config.ts";
-import { initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { type AtlasConfig, DEFAULT_CONFIG } from "../../src/schemas/config.ts";
+import { initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import { runHooks } from "../../src/utils/hooks.ts";
 
 async function writeScript(dir: string, name: string, body: string): Promise<string> {
@@ -15,7 +15,7 @@ async function writeScript(dir: string, name: string, body: string): Promise<str
 	return path.replaceAll("\\", "/");
 }
 
-async function setHooks(cwd: string, hooks: MulchConfig["hooks"]): Promise<void> {
+async function setHooks(cwd: string, hooks: AtlasConfig["hooks"]): Promise<void> {
 	await writeConfig({ ...DEFAULT_CONFIG, hooks }, cwd);
 }
 
@@ -23,16 +23,16 @@ describe("runHooks", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-hooks-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-hooks-test-"));
+		await initAtlasDir(tmpDir);
 	});
 
 	afterEach(async () => {
 		await rm(tmpDir, { recursive: true, force: true });
 	});
 
-	it("noop when no .mulch config exists", async () => {
-		const fresh = await mkdtemp(join(tmpdir(), "mulch-no-config-"));
+	it("noop when no .luuna/atlas config exists", async () => {
+		const fresh = await mkdtemp(join(tmpdir(), "atlas-no-config-"));
 		try {
 			const res = await runHooks(
 				"pre-record",
@@ -235,7 +235,7 @@ echo '{"value":99}'`,
 	it.skipIf(process.platform === "win32")(
 		"times out cleanly even when the hook backgrounds a forked exec that holds stdout open",
 		async () => {
-			// Regression for mulch-9c81 (PR #21 stress finding): `sleep` is a forked
+			// Regression for atlas-9c81 (PR #21 stress finding): `sleep` is a forked
 			// exec, not a shell builtin. Bun.spawn's `timeout` only signals the
 			// direct `sh` child, leaving the orphaned `sleep` to keep the inherited
 			// stdout fd open — which made `Promise.all([Response.text(), …])` hang

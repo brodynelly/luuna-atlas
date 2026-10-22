@@ -8,6 +8,7 @@ import type {
 	ReferenceRecord,
 } from "../schemas/record.ts";
 import { formatRecordMeta, idTag, truncate, xmlEscape } from "../utils/format-helpers.ts";
+import { LEGACY_EVIDENCE_KEY } from "../utils/legacy-layout.ts";
 import type { SharedDefinitions, TypeDefinition } from "./type-registry.ts";
 
 const linkArray = {
@@ -28,7 +29,8 @@ export const SHARED_DEFINITIONS: SharedDefinitions = {
 			issue: { type: "string" },
 			file: { type: "string" },
 			bead: { type: "string" },
-			seeds: { type: "string" },
+			missions: { type: "string" },
+			[LEGACY_EVIDENCE_KEY]: { type: "string" },
 			gh: { type: "string" },
 			linear: { type: "string" },
 		},
@@ -63,7 +65,7 @@ const baseSchemaProps = {
 	anchor_decay_demoted_at: { type: "string" },
 	owner: { type: "string" },
 	// "archived" is intentionally absent — soft-archived records bypass AJV
-	// (they live under .mulch/archive/) and live records may not carry it.
+	// (they live under .luuna/atlas/archive/) and live records may not carry it.
 	status: { type: "string", enum: ["draft", "active", "deprecated"] },
 } as const;
 

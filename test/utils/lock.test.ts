@@ -8,7 +8,7 @@ describe("withFileLock", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-lock-test-"));
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-lock-test-"));
 	});
 
 	afterEach(async () => {

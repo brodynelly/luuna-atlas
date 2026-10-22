@@ -4,15 +4,15 @@
 
 import type { ErrorObject } from "ajv";
 import type { TypeRegistry } from "../registry/type-registry.ts";
-import type { MulchConfig } from "../schemas/config.ts";
+import type { AtlasConfig } from "../schemas/config.ts";
 
-export function getAllowedTypes(config: MulchConfig, domain: string): string[] | null {
+export function getAllowedTypes(config: AtlasConfig, domain: string): string[] | null {
 	const list = config.domains[domain]?.allowed_types;
 	if (!list || list.length === 0) return null;
 	return list;
 }
 
-export function getRequiredFields(config: MulchConfig, domain: string): string[] | null {
+export function getRequiredFields(config: AtlasConfig, domain: string): string[] | null {
 	const list = config.domains[domain]?.required_fields;
 	if (!list || list.length === 0) return null;
 	return list;
@@ -66,7 +66,7 @@ const BASE_RECORD_FIELDS: ReadonlySet<string> = new Set([
 // one entry per offending field with the resolved allowed-type names so
 // callers can render a fix-it hint.
 export function findIncompatibleRequiredFields(
-	config: MulchConfig,
+	config: AtlasConfig,
 	domain: string,
 	registry: TypeRegistry,
 ): Array<{ field: string; allowedTypes: string[] }> {

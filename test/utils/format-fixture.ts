@@ -29,7 +29,7 @@ export const FIXTURE_RECORDS: ExpertiseRecord[] = [
 		files: ["src/utils/expertise.ts", "src/utils/lock.ts"],
 		classification: "foundational",
 		recorded_at: "2026-01-02T00:00:00.000Z",
-		evidence: { commit: "def5678", date: "2026-01-02", issue: "mulch-100" },
+		evidence: { commit: "def5678", date: "2026-01-02", issue: "atlas-100" },
 		tags: ["concurrency"],
 	},
 	{
@@ -66,7 +66,7 @@ export const FIXTURE_RECORDS: ExpertiseRecord[] = [
 		id: "mx-gui666",
 		type: "guide",
 		name: "How to add a custom record type",
-		description: "Phase 2 step-by-step for declaring custom_types in mulch.config.yaml.",
+		description: "Phase 2 step-by-step for declaring custom_types in config.yaml.",
 		classification: "tactical",
 		recorded_at: "2026-01-06T00:00:00.000Z",
 		evidence: { commit: "gui0001" },

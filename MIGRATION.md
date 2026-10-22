@@ -13,3 +13,11 @@ Maintainer and release owner: brodynelly. Destination: https://github.com/brodyn
 Visibility: public, explicitly authorized by the owner on October 21, 2026. Luuna remains private. No private authoring records or credential files are included in the extracted history.
 
 The owner requested the explicit luuna-* repository names on October 21, 2026. GitHub repository identity, history and CI are preserved by rename; the canonical destination is brodynelly/luuna-atlas.
+
+# Layout move to .luuna/, October 22, 2026
+
+- Project data: `.mulch/` becomes `.luuna/atlas/`; `.mulch/mulch.config.yaml` becomes `.luuna/atlas/config.yaml`. Expertise, archive, recipes, state and the JSONL record format are unchanged.
+- Automatic: the first command that needs the store (including `init`) renames a legacy `.mulch/` into place and prints one notice on stderr. It refuses when `.luuna` or `.mulch` is a symlink, and fails with an explanatory error when both `.mulch/` and `.luuna/atlas/` exist. Matching `.gitattributes`/`.gitignore` lines are rewritten. Commit the move.
+- Sibling data: Missions is read from `.luuna/missions/` (legacy `.seeds/` read-only fallback).
+- Removed aliases `ml` and `mulch`; environment variables `MULCH_*` are `LUUNA_ATLAS_*`.
+- Re-run `luuna-atlas setup claude` to replace old hook commands; re-run `luuna-atlas onboard` to refresh instruction snippets (old marker sections are replaced in place).

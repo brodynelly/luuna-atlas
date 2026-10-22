@@ -29,7 +29,7 @@ describe("check-ci-parity", () => {
 		expect(extractBunRunTargets("bun run scripts/foo.ts")).toEqual([]);
 	});
 
-	test("computeReachable seeds from the gate manifest and walks transitively", () => {
+	test("computeReachable missions from the gate manifest and walks transitively", () => {
 		const scripts = {
 			"check:all": "bun scripts/check-all.ts",
 			verify: "bun run check:all",

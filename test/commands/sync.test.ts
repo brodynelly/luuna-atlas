@@ -8,12 +8,12 @@ import { registerSyncCommand } from "../../src/commands/sync.ts";
 import { initRegistryFromConfig } from "../../src/registry/init.ts";
 import { resetRegistry } from "../../src/registry/type-registry.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import { appendRecord, createExpertiseFile } from "../../src/utils/expertise.ts";
 
 function makeProgram(): Command {
 	const program = new Command();
-	program.name("mulch").option("--json", "output as structured JSON").exitOverride();
+	program.name("luuna-atlas").option("--json", "output as structured JSON").exitOverride();
 	registerSyncCommand(program);
 	return program;
 }
@@ -41,7 +41,7 @@ function getGitLog(dir: string): string {
 }
 
 function isGitClean(dir: string): boolean {
-	const status = execFileSync("git", ["status", "--porcelain", ".mulch/"], {
+	const status = execFileSync("git", ["status", "--porcelain", ".luuna/atlas/"], {
 		cwd: dir,
 		encoding: "utf-8",
 		stdio: ["pipe", "pipe", "pipe"],
@@ -55,8 +55,8 @@ describe("sync command", () => {
 
 	beforeEach(async () => {
 		originalCwd = process.cwd();
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-sync-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-sync-test-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {} } }, tmpDir);
 		const expertisePath = getExpertisePath("testing", tmpDir);
 		await createExpertiseFile(expertisePath);
@@ -71,20 +71,20 @@ describe("sync command", () => {
 		await rm(tmpDir, { recursive: true, force: true });
 	});
 
-	it("reports no changes when .mulch/ is clean", async () => {
+	it("reports no changes when .luuna/atlas/ is clean", async () => {
 		const logSpy = spyOn(console, "log").mockImplementation(() => {});
 		try {
 			const program = makeProgram();
-			await program.parseAsync(["node", "mulch", "sync"]);
+			await program.parseAsync(["node", "luuna-atlas", "sync"]);
 			expect(process.exitCode).toBeFalsy();
 			const allLogs = logSpy.mock.calls.map((c) => c.join(" ")).join("\n");
-			expect(allLogs).toContain("No .mulch/ changes to commit");
+			expect(allLogs).toContain("No .luuna/atlas/ changes to commit");
 		} finally {
 			logSpy.mockRestore();
 		}
 	});
 
-	it("validates, stages, and commits .mulch/ changes", async () => {
+	it("validates, stages, and commits .luuna/atlas/ changes", async () => {
 		await appendRecord(getExpertisePath("testing", tmpDir), {
 			type: "convention",
 			content: "Use real filesystems in tests",
@@ -95,11 +95,11 @@ describe("sync command", () => {
 		const logSpy = spyOn(console, "log").mockImplementation(() => {});
 		try {
 			const program = makeProgram();
-			await program.parseAsync(["node", "mulch", "sync"]);
+			await program.parseAsync(["node", "luuna-atlas", "sync"]);
 			expect(process.exitCode).toBeFalsy();
 			expect(isGitClean(tmpDir)).toBe(true);
 			const log = getGitLog(tmpDir);
-			expect(log).toContain("mulch: update expertise");
+			expect(log).toContain("luuna-atlas: update expertise");
 		} finally {
 			logSpy.mockRestore();
 		}
@@ -118,7 +118,7 @@ describe("sync command", () => {
 			const program = makeProgram();
 			await program.parseAsync([
 				"node",
-				"mulch",
+				"luuna-atlas",
 				"sync",
 				"--message",
 				"chore: record session insights",
@@ -142,14 +142,14 @@ describe("sync command", () => {
 		const logSpy = spyOn(console, "log").mockImplementation(() => {});
 		try {
 			const program1 = makeProgram();
-			await program1.parseAsync(["node", "mulch", "sync"]);
+			await program1.parseAsync(["node", "luuna-atlas", "sync"]);
 			expect(process.exitCode).toBeFalsy();
 
 			const program2 = makeProgram();
-			await program2.parseAsync(["node", "mulch", "sync"]);
+			await program2.parseAsync(["node", "luuna-atlas", "sync"]);
 			expect(process.exitCode).toBeFalsy();
 			const allLogs = logSpy.mock.calls.map((c) => c.join(" ")).join("\n");
-			expect(allLogs).toContain("No .mulch/ changes to commit");
+			expect(allLogs).toContain("No .luuna/atlas/ changes to commit");
 		} finally {
 			logSpy.mockRestore();
 		}
@@ -162,7 +162,7 @@ describe("sync command", () => {
 		const logSpy = spyOn(console, "log").mockImplementation(() => {});
 		try {
 			const program = makeProgram();
-			await program.parseAsync(["node", "mulch", "sync", "--no-validate"]);
+			await program.parseAsync(["node", "luuna-atlas", "sync", "--no-validate"]);
 			expect(process.exitCode).toBeFalsy();
 			expect(isGitClean(tmpDir)).toBe(true);
 		} finally {
@@ -178,7 +178,7 @@ describe("sync command", () => {
 		const logSpy = spyOn(console, "log").mockImplementation(() => {});
 		try {
 			const program = makeProgram();
-			await program.parseAsync(["node", "mulch", "sync"]);
+			await program.parseAsync(["node", "luuna-atlas", "sync"]);
 			expect(process.exitCode).toBe(1);
 			const allErrors = errorSpy.mock.calls.map((c) => c.join(" ")).join("\n");
 			expect(allErrors).toContain("Validation failed");
@@ -196,7 +196,7 @@ describe("sync command", () => {
 		const logSpy = spyOn(console, "log").mockImplementation(() => {});
 		try {
 			const program = makeProgram();
-			await program.parseAsync(["node", "mulch", "sync"]);
+			await program.parseAsync(["node", "luuna-atlas", "sync"]);
 			expect(process.exitCode).toBe(1);
 			const allErrors = errorSpy.mock.calls.map((c) => c.join(" ")).join("\n");
 			expect(allErrors).toContain("Validation failed");
@@ -210,8 +210,8 @@ describe("sync command", () => {
 		let nonGitDir: string;
 
 		beforeEach(async () => {
-			nonGitDir = await mkdtemp(join(tmpdir(), "mulch-sync-nogit-"));
-			await initMulchDir(nonGitDir);
+			nonGitDir = await mkdtemp(join(tmpdir(), "atlas-sync-nogit-"));
+			await initAtlasDir(nonGitDir);
 			process.chdir(nonGitDir);
 		});
 
@@ -225,7 +225,7 @@ describe("sync command", () => {
 			const errorSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "sync"]);
+				await program.parseAsync(["node", "luuna-atlas", "sync"]);
 				expect(process.exitCode).toBe(1);
 				const allErrors = errorSpy.mock.calls.map((c) => c.join(" ")).join("\n");
 				expect(allErrors).toContain("not in a git repository");
@@ -240,7 +240,7 @@ describe("sync command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "--json", "sync"]);
+				await program.parseAsync(["node", "luuna-atlas", "--json", "sync"]);
 				expect(process.exitCode).toBeFalsy();
 				const output = logSpy.mock.calls.map((c) => c.join(" ")).join("\n");
 				const parsed = JSON.parse(output);
@@ -263,28 +263,28 @@ describe("sync command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "--json", "sync"]);
+				await program.parseAsync(["node", "luuna-atlas", "--json", "sync"]);
 				expect(process.exitCode).toBeFalsy();
 				const output = logSpy.mock.calls.map((c) => c.join(" ")).join("\n");
 				const parsed = JSON.parse(output);
 				expect(parsed.success).toBe(true);
 				expect(parsed.committed).toBe(true);
 				expect(parsed.validated).toBe(true);
-				expect(parsed.message).toBe("mulch: update expertise");
+				expect(parsed.message).toBe("luuna-atlas: update expertise");
 			} finally {
 				logSpy.mockRestore();
 			}
 		});
 
 		it("returns error JSON when not in a git repo", async () => {
-			const nonGitDir = await mkdtemp(join(tmpdir(), "mulch-sync-json-nogit-"));
+			const nonGitDir = await mkdtemp(join(tmpdir(), "atlas-sync-json-nogit-"));
 			try {
-				await initMulchDir(nonGitDir);
+				await initAtlasDir(nonGitDir);
 				process.chdir(nonGitDir);
 				const errorSpy = spyOn(console, "error").mockImplementation(() => {});
 				try {
 					const program = makeProgram();
-					await program.parseAsync(["node", "mulch", "--json", "sync"]);
+					await program.parseAsync(["node", "luuna-atlas", "--json", "sync"]);
 					expect(process.exitCode).toBe(1);
 					const output = errorSpy.mock.calls.map((c) => c.join(" ")).join("\n");
 					const parsed = JSON.parse(output);
@@ -306,7 +306,7 @@ describe("sync command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "--json", "sync"]);
+				await program.parseAsync(["node", "luuna-atlas", "--json", "sync"]);
 				expect(process.exitCode).toBe(1);
 				const output = logSpy.mock.calls.map((c) => c.join(" ")).join("\n");
 				const parsed = JSON.parse(output);
@@ -330,7 +330,7 @@ describe("sync command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "--json", "sync", "--no-validate"]);
+				await program.parseAsync(["node", "luuna-atlas", "--json", "sync", "--no-validate"]);
 				expect(process.exitCode).toBeFalsy();
 				const output = logSpy.mock.calls.map((c) => c.join(" ")).join("\n");
 				const parsed = JSON.parse(output);
@@ -387,12 +387,12 @@ describe("sync command", () => {
 			const errSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "sync", "--no-validate"]);
+				await program.parseAsync(["node", "luuna-atlas", "sync", "--no-validate"]);
 				// --no-validate skips the validate step but the registry re-init
 				// must still happen for any subsequent code path. With validate:
 				process.exitCode = 0;
 				const program2 = makeProgram();
-				await program2.parseAsync(["node", "mulch", "sync"]);
+				await program2.parseAsync(["node", "luuna-atlas", "sync"]);
 				expect(process.exitCode).toBeFalsy();
 				const errOut = errSpy.mock.calls.map((c) => c.join(" ")).join("\n");
 				expect(errOut).not.toMatch(/Unknown record type/);
@@ -434,7 +434,7 @@ describe("sync command", () => {
 			const errSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "sync"]);
+				await program.parseAsync(["node", "luuna-atlas", "sync"]);
 				expect(process.exitCode).toBe(1);
 				const errOut = errSpy.mock.calls.map((c) => c.join(" ")).join("\n");
 				expect(errOut).toMatch(/Validation failed/);
@@ -474,7 +474,7 @@ describe("sync command", () => {
 			const errSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "sync"]);
+				await program.parseAsync(["node", "luuna-atlas", "sync"]);
 				expect(process.exitCode).toBe(1);
 				const errOut = errSpy.mock.calls.map((c) => c.join(" ")).join("\n");
 				expect(errOut).toMatch(/missing required field\(s\) "oncall_owner"/);
@@ -508,7 +508,7 @@ describe("sync command", () => {
 			const logSpy1 = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "sync"]);
+				await program.parseAsync(["node", "luuna-atlas", "sync"]);
 				expect(process.exitCode).toBeFalsy();
 			} finally {
 				logSpy1.mockRestore();
@@ -528,7 +528,7 @@ describe("sync command", () => {
 			const errSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "sync"]);
+				await program.parseAsync(["node", "luuna-atlas", "sync"]);
 				expect(process.exitCode).toBe(1);
 				const errOut = errSpy.mock.calls.map((c) => c.join(" ")).join("\n");
 				expect(errOut).toMatch(/not allowed in domain "backend"/);
@@ -572,7 +572,7 @@ describe("sync command", () => {
 			const errSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "sync"]);
+				await program.parseAsync(["node", "luuna-atlas", "sync"]);
 				expect(process.exitCode).toBe(1);
 				const errOut = errSpy.mock.calls.map((c) => c.join(" ")).join("\n");
 				expect(errOut).toMatch(/not allowed in domain "backend"/);
@@ -604,7 +604,7 @@ describe("sync command", () => {
 			const errSpy = spyOn(console, "error").mockImplementation(() => {});
 			try {
 				const program = makeProgram();
-				await program.parseAsync(["node", "mulch", "sync"]);
+				await program.parseAsync(["node", "luuna-atlas", "sync"]);
 				expect(process.exitCode).toBe(1);
 				const errOut = errSpy.mock.calls.map((c) => c.join(" ")).join("\n");
 				expect(errOut).toMatch(/Unknown record type "ghost"/);

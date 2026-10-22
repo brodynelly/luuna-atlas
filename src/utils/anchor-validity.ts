@@ -71,7 +71,7 @@ export function computeAnchorValidity(
 /**
  * True when the record is older than the configured grace period, so we
  * shouldn't punish anchor decay on a record that was just written (e.g., a
- * file moved/created between `ml record` and the next `ml prune`).
+ * file moved/created between `luuna-atlas record` and the next `luuna-atlas prune`).
  */
 export function passedAnchorGrace(record: ExpertiseRecord, now: Date, graceDays: number): boolean {
 	const recordedAt = new Date(record.recorded_at);

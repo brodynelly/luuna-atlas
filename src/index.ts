@@ -22,6 +22,7 @@ export {
 // Schema exports
 export { configSchema } from "./schemas/config-schema.ts";
 export type {
+	AtlasConfig,
 	Classification,
 	ConventionRecord,
 	DecisionRecord,
@@ -29,7 +30,6 @@ export type {
 	ExpertiseRecord,
 	FailureRecord,
 	GuideRecord,
-	MulchConfig,
 	Outcome,
 	PatternRecord,
 	RecordType,

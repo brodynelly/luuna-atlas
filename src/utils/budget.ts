@@ -66,7 +66,7 @@ export function estimateTokens(text: string): number {
  * observational), then recency (newest first). When `isAnchored` is given,
  * failures it matches are always kept (even past the budget) and other
  * matching records rank ahead of every unmatched record. When `isStale` is
- * given, records it matches rank last within their tier (mulch-094a).
+ * given, records it matches rank last within their tier (atlas-094a).
  *
  * The formatRecord callback is used to estimate per-record token cost.
  */

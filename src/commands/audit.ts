@@ -8,7 +8,7 @@ import {
 	type SuggestPayload,
 	type Verdict,
 } from "../utils/audit.ts";
-import { getMulchDir, readConfig } from "../utils/config.ts";
+import { getAtlasDir, readConfig } from "../utils/config.ts";
 import { outputJson, outputJsonError } from "../utils/json-output.ts";
 import { brand, muted } from "../utils/palette.ts";
 
@@ -31,7 +31,7 @@ function pct(n: number): string {
 
 function formatHuman(report: AuditReport): string {
 	const lines: string[] = [];
-	lines.push(`${brand.bold(`=== mulch-audit: ${report.repo} ===`)}`);
+	lines.push(`${brand.bold(`=== atlas-audit: ${report.repo} ===`)}`);
 	lines.push("");
 	lines.push(`total records: ${report.total_records}`);
 	if (report.ignored_domains.length > 0) {
@@ -55,7 +55,7 @@ function formatHuman(report: AuditReport): string {
 	const total = report.total_records;
 	const p = (n: number) => `${Math.floor((100 * n) / total)}%`;
 	lines.push(`  with any tracker: ${ev.with_any_tracker} (${p(ev.with_any_tracker)})`);
-	for (const tracker of ["seeds", "gh", "linear", "bead"] as const) {
+	for (const tracker of ["missions", "gh", "linear", "bead"] as const) {
 		const n = ev.with_tracker[tracker];
 		if (n > 0) lines.push(`  - ${tracker}: ${n} (${p(n)})`);
 	}
@@ -71,7 +71,7 @@ function formatHuman(report: AuditReport): string {
 			lines.push(`  ${status}: ${count}`);
 		}
 		if (refs.missing_in_index > 0) {
-			lines.push(`  not-found-in-seeds.jsonl: ${refs.missing_in_index}`);
+			lines.push(`  not-found-in-missions.jsonl: ${refs.missing_in_index}`);
 		}
 		const closed = refs.status_counts.closed ?? 0;
 		lines.push(`  closed-citation rate: ${Math.floor((100 * closed) / refs.unique)}%`);
@@ -201,9 +201,9 @@ export function registerAuditCommand(program: Command): void {
 		)
 		.action(async (opts: AuditCommandOptions) => {
 			const jsonMode = program.opts().json === true;
-			const mulchDir = getMulchDir();
-			if (!existsSync(mulchDir)) {
-				const msg = "No .mulch/ directory found. Run `mulch init` first.";
+			const atlasDir = getAtlasDir();
+			if (!existsSync(atlasDir)) {
+				const msg = "No .luuna/atlas/ directory found. Run `luuna-atlas init` first.";
 				if (jsonMode || opts.ci) {
 					outputJsonError("audit", msg);
 				} else {

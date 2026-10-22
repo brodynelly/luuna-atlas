@@ -45,7 +45,7 @@ export function registerArchiveCommand(program: Command): void {
 		.argument("<domain>", "expertise domain")
 		.argument("[id]", "record ID (e.g. mx-abc123, abc123, or abc)")
 		.description(
-			"Soft-archive one or more live records (symmetric to `ml restore`; pairs with `ml prune` for bulk decay)",
+			"Soft-archive one or more live records (symmetric to `luuna-atlas restore`; pairs with `luuna-atlas prune` for bulk decay)",
 		)
 		.option("--records <ids>", "comma-separated list of record IDs to archive")
 		.requiredOption("--reason <text>", "why this record is being archived (required, free-text)")
@@ -127,7 +127,7 @@ export function registerArchiveCommand(program: Command): void {
 
 					// Resolve + remove from live under the live-file lock so concurrent
 					// writers don't lose data between read and write. Archive write
-					// happens after the live write (mirrors `ml prune` phase 3).
+					// happens after the live write (mirrors `luuna-atlas prune` phase 3).
 					const lockResult = await withFileLock(filePath, async () => {
 						const records = await readExpertiseFile(filePath);
 						const toArchiveIndices = new Set<number>();

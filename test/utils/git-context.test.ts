@@ -15,7 +15,7 @@ describe("git-context", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-git-ctx-test-"));
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-git-ctx-test-"));
 	});
 
 	afterEach(async () => {

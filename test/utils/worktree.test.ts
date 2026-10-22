@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { getMulchDir, initMulchDir, isInsideWorktree, readConfig } from "../../src/utils/config.ts";
+import { getAtlasDir, initAtlasDir, isInsideWorktree, readConfig } from "../../src/utils/config.ts";
 
 function git(args: string[], cwd: string): string {
 	return execFileSync("git", args, {
@@ -20,7 +20,7 @@ describe("worktree resolution", () => {
 	let worktreeDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await realpath(await mkdtemp(join(tmpdir(), "mulch-wt-test-")));
+		tmpDir = await realpath(await mkdtemp(join(tmpdir(), "atlas-wt-test-")));
 		mainRepo = join(tmpDir, "main");
 		worktreeDir = join(tmpDir, "worktree");
 
@@ -33,10 +33,10 @@ describe("worktree resolution", () => {
 		git(["add", "."], mainRepo);
 		git(["commit", "-m", "init"], mainRepo);
 
-		// Initialize mulch in main repo
-		await initMulchDir(mainRepo);
+		// Initialize luuna-atlas in main repo
+		await initAtlasDir(mainRepo);
 		git(["add", "."], mainRepo);
-		git(["commit", "-m", "add mulch"], mainRepo);
+		git(["commit", "-m", "add luuna-atlas"], mainRepo);
 
 		// Create a worktree
 		git(["worktree", "add", worktreeDir, "-b", "test-branch"], mainRepo);
@@ -91,20 +91,20 @@ describe("worktree resolution", () => {
 		});
 	});
 
-	describe("getMulchDir", () => {
-		it("returns main repo .mulch/ when called from worktree", () => {
-			const mulchDir = getMulchDir(worktreeDir);
-			expect(mulchDir).toBe(join(mainRepo, ".mulch"));
+	describe("getAtlasDir", () => {
+		it("returns main repo .luuna/atlas/ when called from worktree", () => {
+			const atlasDir = getAtlasDir(worktreeDir);
+			expect(atlasDir).toBe(join(mainRepo, ".luuna/atlas"));
 		});
 
-		it("returns main repo .mulch/ when called from main repo", () => {
-			const mulchDir = getMulchDir(mainRepo);
-			expect(mulchDir).toBe(join(mainRepo, ".mulch"));
+		it("returns main repo .luuna/atlas/ when called from main repo", () => {
+			const atlasDir = getAtlasDir(mainRepo);
+			expect(atlasDir).toBe(join(mainRepo, ".luuna/atlas"));
 		});
 
-		it("returns local .mulch/ for non-git directory", () => {
-			const mulchDir = getMulchDir(tmpDir);
-			expect(mulchDir).toBe(join(tmpDir, ".mulch"));
+		it("returns local .luuna/atlas/ for non-git directory", () => {
+			const atlasDir = getAtlasDir(tmpDir);
+			expect(atlasDir).toBe(join(tmpDir, ".luuna/atlas"));
 		});
 	});
 
@@ -115,7 +115,7 @@ describe("worktree resolution", () => {
 		});
 	});
 
-	describe("worktree without main .mulch/", () => {
+	describe("worktree without main .luuna/atlas/", () => {
 		let bareRepo: string;
 		let bareWorktree: string;
 
@@ -131,7 +131,7 @@ describe("worktree resolution", () => {
 			git(["add", "."], bareRepo);
 			git(["commit", "-m", "init"], bareRepo);
 
-			// No mulch init — main repo has no .mulch/
+			// No luuna-atlas init — main repo has no .luuna/atlas/
 			git(["worktree", "add", bareWorktree, "-b", "bare-branch"], bareRepo);
 		});
 
@@ -143,9 +143,9 @@ describe("worktree resolution", () => {
 			}
 		});
 
-		it("falls back to worktree-local path when main has no .mulch/", () => {
-			const mulchDir = getMulchDir(bareWorktree);
-			expect(mulchDir).toBe(join(bareWorktree, ".mulch"));
+		it("falls back to worktree-local path when main has no .luuna/atlas/", () => {
+			const atlasDir = getAtlasDir(bareWorktree);
+			expect(atlasDir).toBe(join(bareWorktree, ".luuna/atlas"));
 		});
 	});
 });

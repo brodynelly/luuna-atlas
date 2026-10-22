@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { Command } from "commander";
 import { registerDeleteCommand } from "../../src/commands/delete.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import {
 	appendRecord,
 	createExpertiseFile,
@@ -17,8 +17,8 @@ describe("delete command", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-delete-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-delete-test-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {} } }, tmpDir);
 		const filePath = getExpertisePath("testing", tmpDir);
 		await createExpertiseFile(filePath);
@@ -200,7 +200,7 @@ async function runDelete(
 		program.option("--json", "output JSON");
 		program.exitOverride();
 		registerDeleteCommand(program);
-		await program.parseAsync(["node", "mulch", "delete", ...args]);
+		await program.parseAsync(["node", "luuna-atlas", "delete", ...args]);
 	} catch {
 		// commander exitOverride throws on --help, ignore
 	} finally {
@@ -244,7 +244,7 @@ async function runDeleteJson(
 		program.option("--json", "output JSON");
 		program.exitOverride();
 		registerDeleteCommand(program);
-		await program.parseAsync(["node", "mulch", "--json", "delete", ...args]);
+		await program.parseAsync(["node", "luuna-atlas", "--json", "delete", ...args]);
 	} catch {
 		// ignore
 	} finally {
@@ -273,8 +273,8 @@ describe("delete command -- bulk flags", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-delete-bulk-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-delete-bulk-test-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {} } }, tmpDir);
 		const filePath = getExpertisePath("testing", tmpDir);
 		await createExpertiseFile(filePath);
@@ -549,7 +549,7 @@ describe("delete command -- bulk flags", () => {
 			program.option("--json", "output JSON");
 			program.exitOverride();
 			registerDeleteCommand(program);
-			await program.parseAsync(["node", "mulch", "delete", "testing"]);
+			await program.parseAsync(["node", "luuna-atlas", "delete", "testing"]);
 		} catch {
 			// ignore
 		} finally {
@@ -588,7 +588,7 @@ describe("delete command -- bulk flags", () => {
 			program.option("--json", "output JSON");
 			program.exitOverride();
 			registerDeleteCommand(program);
-			await program.parseAsync(["node", "mulch", "delete", "testing", id0, "--records", id0]);
+			await program.parseAsync(["node", "luuna-atlas", "delete", "testing", id0, "--records", id0]);
 		} catch {
 			// ignore
 		} finally {

@@ -8,7 +8,7 @@ describe("completions command", () => {
 			timeout: 15000,
 		});
 		expect(result).toContain("complete");
-		expect(result).toContain("mulch");
+		expect(result).toContain("luuna-atlas");
 		expect(result).toContain("record");
 		expect(result).toContain("prime");
 	});
@@ -19,7 +19,7 @@ describe("completions command", () => {
 			timeout: 15000,
 		});
 		expect(result).toContain("compdef");
-		expect(result).toContain("mulch");
+		expect(result).toContain("luuna-atlas");
 		expect(result).toContain("record");
 		expect(result).toContain("prime");
 	});
@@ -29,17 +29,17 @@ describe("completions command", () => {
 			encoding: "utf-8",
 			timeout: 15000,
 		});
-		expect(result).toContain("complete -c mulch");
+		expect(result).toContain("complete -c luuna-atlas");
 		expect(result).toContain("record");
 		expect(result).toContain("prime");
 	});
 
-	it("includes ml alias in bash completions", () => {
+	it("includes luuna-atlas alias in bash completions", () => {
 		const result = execFileSync("bun", ["src/cli.ts", "completions", "bash"], {
 			encoding: "utf-8",
 			timeout: 15000,
 		});
-		expect(result).toContain("ml");
+		expect(result).toContain("luuna-atlas");
 	});
 
 	it("errors on unsupported shell", () => {

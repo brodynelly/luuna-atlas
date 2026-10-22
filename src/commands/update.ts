@@ -10,9 +10,12 @@ export function registerUpdateCommand(program: Command): void {
 		.action(async () => {
 			const jsonMode = program.opts().json === true;
 			if (jsonMode) {
-				outputJsonError("update", "'mulch update' is deprecated. Use 'mulch upgrade' instead.");
+				outputJsonError(
+					"update",
+					"'luuna-atlas update' is deprecated. Use 'luuna-atlas upgrade' instead.",
+				);
 			} else {
-				printWarning("'mulch update' is deprecated. Use 'mulch upgrade' instead.");
+				printWarning("'luuna-atlas update' is deprecated. Use 'luuna-atlas upgrade' instead.");
 			}
 			process.exitCode = 1;
 		});

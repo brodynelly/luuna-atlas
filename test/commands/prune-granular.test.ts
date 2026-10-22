@@ -6,7 +6,7 @@ import { Command } from "commander";
 import { registerPruneCommand } from "../../src/commands/prune.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
 import type { ExpertiseRecord } from "../../src/schemas/record.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import { appendRecord, createExpertiseFile } from "../../src/utils/expertise.ts";
 import { setQuiet } from "../../src/utils/palette.ts";
 
@@ -48,7 +48,7 @@ async function runPrune(
 		program.option("--json", "output JSON");
 		program.exitOverride();
 		registerPruneCommand(program);
-		await program.parseAsync(["node", "mulch", "prune", ...args]);
+		await program.parseAsync(["node", "luuna-atlas", "prune", ...args]);
 	} catch {
 		// commander exitOverride throws; the inner action sets process.exitCode.
 	} finally {
@@ -91,12 +91,12 @@ function plain(s: string): string {
 	return s.replace(/\[[0-9;]*m/g, "");
 }
 
-describe("ml prune --dry-run — granular per-record output (mulch-5ce3)", () => {
+describe("luuna-atlas prune --dry-run — granular per-record output (atlas-5ce3)", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-prune-granular-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-prune-granular-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {} } }, tmpDir);
 	});
 

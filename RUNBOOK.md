@@ -1,11 +1,11 @@
-# Mulch Operations Runbook
+# Atlas Operations Runbook
 
-This runbook covers mulch's operational procedures only:
+This runbook covers luuna-atlas's operational procedures only:
 
-1. Cutting a release of `@os-eco/mulch-cli` to npm.
+1. Cutting a release of `@luuna/atlas-cli` to npm.
 2. Triaging a failed publish.
 3. Rolling back a bad release.
-4. Debugging a broken `ml prime` invocation.
+4. Debugging a broken `luuna-atlas prime` invocation.
 
 For day-to-day development conventions, see `AGENTS.md` and `CLAUDE.md`.
 For configuration reference, see `CONFIG.md`.
@@ -15,11 +15,11 @@ For configuration reference, see `CONFIG.md`.
 - `bun --version` ≥ the version in `package.json` `engines.bun` (≥ 1.0).
 - `gh auth status` → authenticated, with `repo` + `workflow` scopes.
 - `git remote -v` shows the canonical origin
-  (`github.com/jayminwest/mulch`).
+  (`github.com/jayminwest/luuna-atlas`).
 - For npm publish: `npm whoami` → `jayminwest`; 2FA enabled.
 - Local working tree on `main`, fully up to date, `git status` clean.
 
-Mulch is a no-build Bun CLI — there is **no** compile/`dist` step. The
+Atlas is a no-build Bun CLI — there is **no** compile/`dist` step. The
 publish flow is fully automated via `.github/workflows/publish.yml`; you
 should not need to invoke `npm publish` manually for a normal release.
 
@@ -31,19 +31,19 @@ Cut releases from `main` only. Never tag a feature branch.
 
 Follow [SemVer](https://semver.org). Pick:
 
-- **MAJOR** for any backward-incompatible change to the `ml` public CLI
+- **MAJOR** for any backward-incompatible change to the `luuna-atlas` public CLI
   surface or the on-disk JSONL / config schema.
 - **MINOR** for new features or non-breaking additions (new subcommand,
   new optional flag, new record type).
 - **PATCH** for bug fixes, doc-only changes, internal refactors, or
-  dependency bumps that don't change mulch's surface.
+  dependency bumps that don't change luuna-atlas's surface.
 
-While mulch is pre-1.0 (`package.json` `"version"` starts with `0.`),
+While luuna-atlas is pre-1.0 (`package.json` `"version"` starts with `0.`),
 breaking changes go in MINOR; additive changes go in PATCH.
 
 ### 1.2 Bump the version in every source of truth
 
-Mulch's version lives in **two** places, kept in sync manually. The
+Atlas's version lives in **two** places, kept in sync manually. The
 publish workflow asserts they agree before pushing to npm:
 
 - `package.json` — the `"version"` field.
@@ -67,7 +67,7 @@ body, so the heading format matters.
 
 Group changes under standard Keep-a-Changelog headings (Added /
 Changed / Fixed / Deprecated / Removed / Security). Link each entry to
-its tracker id (`mulch-XXXX`, `mx-XXXX`), `#NNN` GitHub issue, or a URL.
+its tracker id (`atlas-XXXX`, `mx-XXXX`), `#NNN` GitHub issue, or a URL.
 
 ### 1.4 Final gate check
 
@@ -86,7 +86,7 @@ continuing.
 
 ```bash
 git add package.json src/cli.ts CHANGELOG.md
-git commit -m "release: mulch X.Y.Z"
+git commit -m "release: luuna-atlas X.Y.Z"
 git push origin main
 ```
 
@@ -94,10 +94,10 @@ Pushing triggers `.github/workflows/publish.yml`, which:
 
 1. Re-runs `bun run lint`, `bun run typecheck`, and `bun test` in CI.
 2. Compares `package.json` `"version"` against the npm registry's
-   current `@os-eco/mulch-cli` version. If they match, the workflow is a
+   current `@luuna/atlas-cli` version. If they match, the workflow is a
    no-op (`publish=false`); otherwise it proceeds.
 3. Asserts `package.json` and `src/cli.ts` agree on `X.Y.Z`.
-4. Publishes `@os-eco/mulch-cli@X.Y.Z` to npm with
+4. Publishes `@luuna/atlas-cli@X.Y.Z` to npm with
    `--access public --provenance`.
 5. Tags `vX.Y.Z` and pushes the tag to origin.
 6. Extracts the matching `CHANGELOG.md` section and uses it as the
@@ -114,15 +114,15 @@ gh run watch
 ```bash
 git pull --tags
 gh release view vX.Y.Z                       # confirm release page renders
-npm view @os-eco/mulch-cli version           # confirm published version
+npm view @luuna/atlas-cli version           # confirm published version
 ```
 
 Smoke-install in a clean dir:
 
 ```bash
-mkdir /tmp/mulch-smoke && cd /tmp/mulch-smoke
-bunx @os-eco/mulch-cli --version             # should print X.Y.Z
-bunx @os-eco/mulch-cli --help                # should list all subcommands
+mkdir /tmp/atlas-smoke && cd /tmp/atlas-smoke
+bunx @luuna/atlas-cli --version             # should print X.Y.Z
+bunx @luuna/atlas-cli --help                # should list all subcommands
 ```
 
 ## 2. Triage of a failed publish
@@ -172,7 +172,7 @@ versa), **do not unpublish**. Recover the missing half manually:
   git push origin vX.Y.Z
   ```
 
-Record the deviation in a `mulch-XXXX` tracker so future operators know
+Record the deviation in a `atlas-XXXX` tracker so future operators know
 the half-step happened.
 
 ## 3. Rollback
@@ -184,7 +184,7 @@ immutable. Rollback means **publishing a corrective version**.
 
 - **Critical** (data loss, JSONL corruption on write, total CLI
   breakage): cut a patch reverting the change within 30 minutes.
-- **High** (regression on a common path: `ml record` or `ml prime`
+- **High** (regression on a common path: `luuna-atlas record` or `luuna-atlas prime`
   breaks): cut a patch within the day.
 - **Medium / Low**: fix forward on the next planned release.
 
@@ -206,10 +206,10 @@ Follow §1.2–§1.5. In `CHANGELOG.md`, note the rollback explicitly under
 
 ### 3.4 Deprecate the bad version on npm
 
-If `@os-eco/mulch-cli@X.Y.Z` is dangerous to install:
+If `@luuna/atlas-cli@X.Y.Z` is dangerous to install:
 
 ```bash
-npm deprecate @os-eco/mulch-cli@X.Y.Z \
+npm deprecate @luuna/atlas-cli@X.Y.Z \
   "Critical bug; install X.Y.(Z+1) or later. See CHANGELOG.md."
 ```
 
@@ -221,62 +221,61 @@ publish the patch with the previous behavior restored (§3.2–§3.3).
 
 - Edit the GitHub release notes for `vX.Y.Z` with a banner:
   `> ⚠️ This release contains a regression. Use vX.Y.(Z+1) or later.`
-- File / update `mulch-XXXX` with root cause + remediation links.
+- File / update `atlas-XXXX` with root cause + remediation links.
 - If a downstream consumer (warren, overstory, sapling) pinned the bad
   version, open an issue against that repo recommending the upgrade.
 
-## 4. Debugging a broken `ml prime`
+## 4. Debugging a broken `luuna-atlas prime`
 
-`ml prime` is read-only — it never mutates `.mulch/`. When it errors,
+`luuna-atlas prime` is read-only — it never mutates `.luuna/atlas/`. When it errors,
 prints nothing, or prints the wrong records, the problem is almost
 always the on-disk store, not the command.
 
 ### 4.1 Confirm which store is being read
 
-Mulch resolves its data dir via `getMulchDir()` (worktree-aware: a
-worktree resolves to the **main** repo's `.mulch/`). Override or inspect
-with the `MULCH_DIR` environment variable:
+Atlas resolves its data dir via `getAtlasDir()` (worktree-aware: a
+worktree resolves to the **main** repo's `.luuna/atlas/`). Inspect the
+resolved store with:
 
 ```bash
-echo "$MULCH_DIR"                 # empty = default resolution
-MULCH_DIR=/path/to/repo/.mulch ml prime
+luuna-atlas doctor
 ```
 
 If you are inside a `git worktree` and expected local edits, remember
-they are read from the main checkout's `.mulch/expertise/`, not the
+they are read from the main checkout's `.luuna/atlas/expertise/`, not the
 worktree copy.
 
 ### 4.2 Run the integrity check
 
 ```bash
-ml doctor                         # reports record-integrity problems
-ml validate                       # re-validates every record against its schema
+luuna-atlas doctor                         # reports record-integrity problems
+luuna-atlas validate                       # re-validates every record against its schema
 ```
 
-`ml doctor` surfaces the failing checks; common causes of a broken
-`ml prime`:
+`luuna-atlas doctor` surfaces the failing checks; common causes of a broken
+`luuna-atlas prime`:
 
 - **JSONL corruption** — a hand-edited or partially-written line in
-  `.mulch/expertise/<domain>.jsonl` that isn't valid JSON. Never
-  hand-edit these files; use `ml record` / `ml edit` so the advisory
+  `.luuna/atlas/expertise/<domain>.jsonl` that isn't valid JSON. Never
+  hand-edit these files; use `luuna-atlas record` / `luuna-atlas edit` so the advisory
   lock and atomic write apply. Inspect the offending file and fix or
   remove the malformed line.
 - **Unknown record type** — a record whose `type` isn't registered
   throws `Unknown record type "X" at <file>:<line>`. The type was likely
-  added to `.mulch/mulch.config.yaml` `custom_types` on another branch
-  that hasn't merged yet. Pass `ml prime --allow-unknown-types` as a
+  added to `.luuna/atlas/config.yaml` `custom_types` on another branch
+  that hasn't merged yet. Pass `luuna-atlas prime --allow-unknown-types` as a
   temporary escape hatch until config catches up.
 - **Broken file anchors** — records anchored to files that no longer
   exist. Strip them with:
   ```bash
-  ml doctor --fix
+  luuna-atlas doctor --fix
   ```
 
 ### 4.3 Narrow the failure to one domain
 
-`ml prime <domain>` loads a single domain; `ml prime --files <path>`
+`luuna-atlas prime <domain>` loads a single domain; `luuna-atlas prime --files <path>`
 loads only records anchored to a path. Use them to isolate which domain
-file is at fault, then `ml status` to confirm record counts per domain
+file is at fault, then `luuna-atlas status` to confirm record counts per domain
 look sane.
 
 ## Appendix — Common commands
@@ -292,6 +291,6 @@ gh run view <run-id> --log-failed
 gh run rerun <run-id> --failed
 
 # Inspect what npm has published
-npm view @os-eco/mulch-cli versions --json
-npm view @os-eco/mulch-cli dist-tags
+npm view @luuna/atlas-cli versions --json
+npm view @luuna/atlas-cli dist-tags
 ```

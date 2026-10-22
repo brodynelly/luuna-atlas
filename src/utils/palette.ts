@@ -1,6 +1,6 @@
 import chalk from "chalk";
 
-// Mulch brand color: brown / soil
+// Atlas brand color: brown / soil
 export const brand = chalk.rgb(139, 90, 43);
 
 // Shared semantic colors

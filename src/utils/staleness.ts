@@ -5,11 +5,11 @@ import { fileLivesUnderDir } from "./dir-anchors.ts";
 import { isRecordStale } from "./expertise.ts";
 import { computeConfirmationScore } from "./scoring.ts";
 
-// Git-based staleness (mulch-094a). A record is "stale?" when the code it
+// Git-based staleness (atlas-094a). A record is "stale?" when the code it
 // describes has moved on: its anchored files changed in several commits
 // since its evidence commit, some anchors no longer exist, or it is a non-foundational record
-// past its shelf life that nobody ever confirmed. Advisory only — `ml prime`
-// demotes and marks stale records, `ml stale` lists them; nothing is deleted.
+// past its shelf life that nobody ever confirmed. Advisory only — `luuna-atlas prime`
+// demotes and marks stale records, `luuna-atlas stale` lists them; nothing is deleted.
 
 /**
  * Commits touching a record's anchors since its evidence commit that count as
@@ -184,9 +184,9 @@ export function findStaleRecords(
 }
 
 /**
- * Reasons `ml prime` (and the Claude hook) act on: git/anchor evidence only.
+ * Reasons `luuna-atlas prime` (and the Claude hook) act on: git/anchor evidence only.
  * `shelf_life` (old + never confirmed) flagged most real corpora wholesale, so
- * it is reported by `ml stale` but never demotes or marks a primed record.
+ * it is reported by `luuna-atlas stale` but never demotes or marks a primed record.
  */
 const PRIME_STALE_KINDS: ReadonlySet<StaleKind> = new Set(["anchors_changed", "anchors_missing"]);
 

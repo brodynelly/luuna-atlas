@@ -5,15 +5,15 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { appendOutcome } from "../../src/api.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../src/utils/expertise.ts";
 
 describe("outcome command", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-outcome-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-outcome-test-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {} } }, tmpDir);
 		const filePath = getExpertisePath("testing", tmpDir);
 		await createExpertiseFile(filePath);
@@ -210,14 +210,14 @@ describe("outcome command", () => {
 	});
 });
 
-describe("outcome --duration strict numeric parsing (mulch-5b9c)", () => {
+describe("outcome --duration strict numeric parsing (atlas-5b9c)", () => {
 	const cliPath = resolve(process.cwd(), "src/cli.ts");
 	let tmpDir: string;
 	let recordId: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-outcome-dur-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-outcome-dur-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {} } }, tmpDir);
 		const filePath = getExpertisePath("testing", tmpDir);
 		await createExpertiseFile(filePath);

@@ -1,3 +1,5 @@
+import { LEGACY_EVIDENCE_KEY } from "../utils/legacy-layout.ts";
+
 const linkArray = {
 	type: "array",
 	items: { type: "string", pattern: "^([a-z0-9-]+:)?mx-[0-9a-f]{4,8}$" },
@@ -10,8 +12,8 @@ const dirAnchorArray = {
 
 export const recordSchema = {
 	$schema: "http://json-schema.org/draft-07/schema#",
-	title: "Mulch Expertise Record",
-	description: "A single expertise record in a Mulch domain file",
+	title: "Atlas Expertise Record",
+	description: "A single expertise record in a Atlas domain file",
 	type: "object",
 	definitions: {
 		classification: {
@@ -26,7 +28,8 @@ export const recordSchema = {
 				issue: { type: "string" },
 				file: { type: "string" },
 				bead: { type: "string" },
-				seeds: { type: "string" },
+				missions: { type: "string" },
+				[LEGACY_EVIDENCE_KEY]: { type: "string" },
 				gh: { type: "string" },
 				linear: { type: "string" },
 			},
