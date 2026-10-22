@@ -1,4 +1,4 @@
-// Per-domain rule enforcement on `ml record` — allowed_types (R-01b),
+// Per-domain rule enforcement on `luuna-atlas record` — allowed_types (R-01b),
 // required_fields (R-01c), and the --allow-domain-mismatch escape hatch
 // (R-01d). Split out of record.test.ts to keep that file inside its
 // file-size budget (pl-237d).
@@ -11,7 +11,7 @@ import { processStdinRecords } from "../../src/commands/record.ts";
 import { initRegistryFromConfig } from "../../src/registry/init.ts";
 import { resetRegistry } from "../../src/registry/type-registry.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import { createExpertiseFile, readExpertiseFile } from "../../src/utils/expertise.ts";
 
 describe("per-domain allowed_types (R-01b)", () => {
@@ -19,8 +19,8 @@ describe("per-domain allowed_types (R-01b)", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-allowed-types-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-allowed-types-"));
+		await initAtlasDir(tmpDir);
 	});
 
 	afterEach(async () => {
@@ -65,7 +65,7 @@ describe("per-domain allowed_types (R-01b)", () => {
 		expect(r.status).toBe(1);
 		expect(r.stderr).toMatch(/type "pattern" is not allowed in domain "backend"/);
 		expect(r.stderr).toMatch(/Allowed types: convention/);
-		expect(r.stderr).toMatch(/Retry: ml record backend/);
+		expect(r.stderr).toMatch(/Retry: luuna-atlas record backend/);
 		expect(r.stderr).toMatch(/--type convention/);
 	});
 
@@ -152,8 +152,8 @@ describe("per-domain required_fields (R-01c)", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-required-fields-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-required-fields-"));
+		await initAtlasDir(tmpDir);
 	});
 
 	afterEach(async () => {
@@ -228,7 +228,7 @@ describe("per-domain required_fields (R-01c)", () => {
 		);
 		expect(r.status).toBe(1);
 		expect(r.stderr).toMatch(/domain "backend" requires field\(s\) "oncall_owner"/);
-		expect(r.stderr).toMatch(/Retry: ml record backend/);
+		expect(r.stderr).toMatch(/Retry: luuna-atlas record backend/);
 		expect(r.stderr).toMatch(/--oncall-owner "<oncall_owner>"/);
 	});
 
@@ -304,7 +304,7 @@ describe("per-domain required_fields (R-01c)", () => {
 		expect(r.stdout).toMatch(/Recorded decision/);
 	});
 
-	it("targeted hint when required_field is rejected by closed schema (mulch-cc51)", async () => {
+	it("targeted hint when required_field is rejected by closed schema (atlas-cc51)", async () => {
 		// Domain demands a field that no allowed type holds (built-in convention
 		// has additionalProperties: false). Without the hint, AJV emits a
 		// confusing oneOf/additionalProperties soup. With the hint, the user
@@ -394,8 +394,8 @@ describe("--allow-domain-mismatch escape hatch (R-01d)", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-domain-mismatch-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-domain-mismatch-"));
+		await initAtlasDir(tmpDir);
 	});
 
 	afterEach(async () => {

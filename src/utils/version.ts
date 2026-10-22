@@ -12,7 +12,7 @@ export function getCurrentVersion(): string {
 }
 
 /**
- * Fetch the latest published version of mulch-cli from npm.
+ * Fetch the latest published version of atlas-cli from npm.
  * Returns null if the registry is unreachable.
  */
 export function getLatestVersion(): string | null {

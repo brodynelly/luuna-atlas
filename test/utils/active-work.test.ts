@@ -7,10 +7,10 @@ import {
 	beadResolver,
 	ghResolver,
 	linearResolver,
+	missionsResolver,
 	type Resolver,
 	type ResolverHit,
 	resolveActiveWork,
-	seedsResolver,
 	TRACKERS,
 } from "../../src/utils/active-work.ts";
 
@@ -27,13 +27,13 @@ async function commitOnBranch(dir: string, branch: string): Promise<void> {
 	execFileSync("git", ["commit", "-q", "-m", "stamp"], { cwd: dir, stdio: "pipe" });
 }
 
-async function writeSeedsIssues(
+async function writeMissionsIssues(
 	dir: string,
 	issues: Array<Record<string, unknown>>,
 ): Promise<void> {
-	await mkdir(join(dir, ".seeds"), { recursive: true });
+	await mkdir(join(dir, ".luuna/missions"), { recursive: true });
 	const lines = issues.map((i) => JSON.stringify(i)).join("\n");
-	await writeFile(join(dir, ".seeds", "issues.jsonl"), `${lines}\n`);
+	await writeFile(join(dir, ".luuna/missions", "issues.jsonl"), `${lines}\n`);
 }
 
 async function writeBeadIssues(dir: string, issues: Array<Record<string, unknown>>): Promise<void> {
@@ -46,7 +46,7 @@ describe("active-work", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-active-work-"));
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-active-work-"));
 		initGitRepo(tmpDir);
 	});
 
@@ -54,56 +54,56 @@ describe("active-work", () => {
 		await rm(tmpDir, { recursive: true, force: true });
 	});
 
-	describe("seedsResolver", () => {
+	describe("missionsResolver", () => {
 		it("returns empty when no signals", () => {
-			const hit = seedsResolver(tmpDir);
-			expect(hit).toEqual({ tracker: "seeds", matches: [], source: "none" });
+			const hit = missionsResolver(tmpDir);
+			expect(hit).toEqual({ tracker: "missions", matches: [], source: "none" });
 		});
 
 		it("prefers in-progress issues over branch match", async () => {
-			await writeSeedsIssues(tmpDir, [
-				{ id: "mulch-aaaa", status: "open" },
-				{ id: "mulch-bbbb", status: "in_progress" },
-				{ id: "mulch-cccc", status: "closed" },
+			await writeMissionsIssues(tmpDir, [
+				{ id: "atlas-aaaa", status: "open" },
+				{ id: "atlas-bbbb", status: "in_progress" },
+				{ id: "atlas-cccc", status: "closed" },
 			]);
-			await commitOnBranch(tmpDir, "mulch-dddd");
+			await commitOnBranch(tmpDir, "atlas-dddd");
 
-			const hit = seedsResolver(tmpDir);
-			expect(hit.tracker).toBe("seeds");
+			const hit = missionsResolver(tmpDir);
+			expect(hit.tracker).toBe("missions");
 			expect(hit.source).toBe("in_progress");
-			expect(hit.matches).toEqual(["mulch-bbbb"]);
+			expect(hit.matches).toEqual(["atlas-bbbb"]);
 		});
 
 		it("returns multiple in-progress matches sorted", async () => {
-			await writeSeedsIssues(tmpDir, [
-				{ id: "mulch-cccc", status: "in_progress" },
-				{ id: "mulch-aaaa", status: "in_progress" },
-				{ id: "mulch-bbbb", status: "in_progress" },
+			await writeMissionsIssues(tmpDir, [
+				{ id: "atlas-cccc", status: "in_progress" },
+				{ id: "atlas-aaaa", status: "in_progress" },
+				{ id: "atlas-bbbb", status: "in_progress" },
 			]);
-			const hit = seedsResolver(tmpDir);
-			expect(hit.matches).toEqual(["mulch-aaaa", "mulch-bbbb", "mulch-cccc"]);
+			const hit = missionsResolver(tmpDir);
+			expect(hit.matches).toEqual(["atlas-aaaa", "atlas-bbbb", "atlas-cccc"]);
 		});
 
 		it("falls back to branch name when no in-progress issues", async () => {
-			await commitOnBranch(tmpDir, "feat/mulch-f3d0-resolver");
-			const hit = seedsResolver(tmpDir);
+			await commitOnBranch(tmpDir, "feat/atlas-f3d0-resolver");
+			const hit = missionsResolver(tmpDir);
 			expect(hit.source).toBe("branch");
-			expect(hit.matches).toEqual(["mulch-f3d0"]);
+			expect(hit.matches).toEqual(["atlas-f3d0"]);
 		});
 
 		it("ignores malformed jsonl rows but keeps valid ones", async () => {
-			await mkdir(join(tmpDir, ".seeds"), { recursive: true });
+			await mkdir(join(tmpDir, ".luuna/missions"), { recursive: true });
 			await writeFile(
-				join(tmpDir, ".seeds", "issues.jsonl"),
-				`{"id":"mulch-aaaa","status":"in_progress"}\nnot-json\n# comment\n{"id":"mulch-bbbb","status":"in_progress"}\n`,
+				join(tmpDir, ".luuna/missions", "issues.jsonl"),
+				`{"id":"atlas-aaaa","status":"in_progress"}\nnot-json\n# comment\n{"id":"atlas-bbbb","status":"in_progress"}\n`,
 			);
-			const hit = seedsResolver(tmpDir);
-			expect(hit.matches).toEqual(["mulch-aaaa", "mulch-bbbb"]);
+			const hit = missionsResolver(tmpDir);
+			expect(hit.matches).toEqual(["atlas-aaaa", "atlas-bbbb"]);
 		});
 
-		it("returns empty when no .seeds/ and branch has no match", async () => {
+		it("returns empty when no .luuna/missions/ and branch has no match", async () => {
 			await commitOnBranch(tmpDir, "random-feature");
-			const hit = seedsResolver(tmpDir);
+			const hit = missionsResolver(tmpDir);
 			expect(hit.matches).toEqual([]);
 		});
 	});
@@ -117,8 +117,8 @@ describe("active-work", () => {
 			expect(hit.matches).toEqual(["WEB-123"]);
 		});
 
-		it("does not match lowercase prefixes (avoids seeds-id collision)", async () => {
-			await commitOnBranch(tmpDir, "mulch-f3d0");
+		it("does not match lowercase prefixes (avoids missions-id collision)", async () => {
+			await commitOnBranch(tmpDir, "atlas-f3d0");
 			const hit = linearResolver(tmpDir);
 			expect(hit.matches).toEqual([]);
 		});
@@ -184,64 +184,64 @@ describe("active-work", () => {
 
 	describe("resolveActiveWork", () => {
 		it("returns auto-link suggestions for single-match trackers", async () => {
-			await writeSeedsIssues(tmpDir, [{ id: "mulch-bbbb", status: "in_progress" }]);
+			await writeMissionsIssues(tmpDir, [{ id: "atlas-bbbb", status: "in_progress" }]);
 			await commitOnBranch(tmpDir, "WEB-42-feature");
 
 			const result = resolveActiveWork({ cwd: tmpDir });
-			expect(result.seeds).toBe("mulch-bbbb");
+			expect(result.missions).toBe("atlas-bbbb");
 			expect(result.linear).toBe("WEB-42");
 			expect(result.warnings).toEqual([]);
 		});
 
 		it("warns on multi-match and skips the auto-link", async () => {
-			await writeSeedsIssues(tmpDir, [
-				{ id: "mulch-aaaa", status: "in_progress" },
-				{ id: "mulch-bbbb", status: "in_progress" },
+			await writeMissionsIssues(tmpDir, [
+				{ id: "atlas-aaaa", status: "in_progress" },
+				{ id: "atlas-bbbb", status: "in_progress" },
 			]);
 
 			const result = resolveActiveWork({ cwd: tmpDir });
-			expect(result.seeds).toBeUndefined();
+			expect(result.missions).toBeUndefined();
 			expect(result.warnings).toHaveLength(1);
-			expect(result.warnings[0]).toContain("multiple seeds candidates");
-			expect(result.warnings[0]).toContain("mulch-aaaa");
-			expect(result.warnings[0]).toContain("mulch-bbbb");
-			expect(result.warnings[0]).toContain("--evidence-seeds");
+			expect(result.warnings[0]).toContain("multiple missions candidates");
+			expect(result.warnings[0]).toContain("atlas-aaaa");
+			expect(result.warnings[0]).toContain("atlas-bbbb");
+			expect(result.warnings[0]).toContain("--evidence-missions");
 		});
 
 		it("overrides win even when resolver finds a single match", async () => {
-			await writeSeedsIssues(tmpDir, [{ id: "mulch-aaaa", status: "in_progress" }]);
+			await writeMissionsIssues(tmpDir, [{ id: "atlas-aaaa", status: "in_progress" }]);
 			const result = resolveActiveWork({
 				cwd: tmpDir,
-				overrides: { seeds: "mulch-zzzz" },
+				overrides: { missions: "atlas-zzzz" },
 			});
-			expect(result.seeds).toBe("mulch-zzzz");
+			expect(result.missions).toBe("atlas-zzzz");
 		});
 
 		it("overrides win and suppress the multi-match warning", async () => {
-			await writeSeedsIssues(tmpDir, [
-				{ id: "mulch-aaaa", status: "in_progress" },
-				{ id: "mulch-bbbb", status: "in_progress" },
+			await writeMissionsIssues(tmpDir, [
+				{ id: "atlas-aaaa", status: "in_progress" },
+				{ id: "atlas-bbbb", status: "in_progress" },
 			]);
 			const result = resolveActiveWork({
 				cwd: tmpDir,
-				overrides: { seeds: "mulch-zzzz" },
+				overrides: { missions: "atlas-zzzz" },
 			});
-			expect(result.seeds).toBe("mulch-zzzz");
+			expect(result.missions).toBe("atlas-zzzz");
 			expect(result.warnings).toEqual([]);
 		});
 
 		it("treats empty-string override as not-set (resolver still runs)", async () => {
-			await writeSeedsIssues(tmpDir, [{ id: "mulch-aaaa", status: "in_progress" }]);
+			await writeMissionsIssues(tmpDir, [{ id: "atlas-aaaa", status: "in_progress" }]);
 			const result = resolveActiveWork({
 				cwd: tmpDir,
-				overrides: { seeds: "" },
+				overrides: { missions: "" },
 			});
-			expect(result.seeds).toBe("mulch-aaaa");
+			expect(result.missions).toBe("atlas-aaaa");
 		});
 
 		it("applies overrides for trackers no resolver claims", () => {
 			const noopResolver: Resolver = () => ({
-				tracker: "seeds",
+				tracker: "missions",
 				matches: [],
 				source: "none",
 			});
@@ -252,22 +252,22 @@ describe("active-work", () => {
 			});
 			expect(result.linear).toBe("WEB-1");
 			expect(result.bead).toBe("bd-9");
-			expect(result.seeds).toBeUndefined();
+			expect(result.missions).toBeUndefined();
 			expect(result.gh).toBeUndefined();
 		});
 
 		it("lets custom resolvers prepended to the chain win over defaults", async () => {
-			await writeSeedsIssues(tmpDir, [{ id: "mulch-aaaa", status: "in_progress" }]);
-			const stubSeeds: Resolver = (): ResolverHit => ({
-				tracker: "seeds",
-				matches: ["mulch-override"],
+			await writeMissionsIssues(tmpDir, [{ id: "atlas-aaaa", status: "in_progress" }]);
+			const stubMissions: Resolver = (): ResolverHit => ({
+				tracker: "missions",
+				matches: ["atlas-override"],
 				source: "stub",
 			});
 			const result = resolveActiveWork({
 				cwd: tmpDir,
-				resolvers: [stubSeeds, seedsResolver, ghResolver, linearResolver, beadResolver],
+				resolvers: [stubMissions, missionsResolver, ghResolver, linearResolver, beadResolver],
 			});
-			expect(result.seeds).toBe("mulch-override");
+			expect(result.missions).toBe("atlas-override");
 		});
 
 		it("emits no warnings and no auto-links on a clean repo", async () => {
@@ -278,7 +278,7 @@ describe("active-work", () => {
 		});
 
 		it("covers all four trackers symmetrically when each has one signal", async () => {
-			await writeSeedsIssues(tmpDir, [{ id: "mulch-aaaa", status: "in_progress" }]);
+			await writeMissionsIssues(tmpDir, [{ id: "atlas-aaaa", status: "in_progress" }]);
 			await writeBeadIssues(tmpDir, [{ id: "bd-1", status: "in_progress" }]);
 			await commitOnBranch(tmpDir, "WEB-7-foo");
 
@@ -286,7 +286,7 @@ describe("active-work", () => {
 				cwd: tmpDir,
 				overrides: { gh: "#123" },
 			});
-			expect(result.seeds).toBe("mulch-aaaa");
+			expect(result.missions).toBe("atlas-aaaa");
 			expect(result.bead).toBe("bd-1");
 			expect(result.linear).toBe("WEB-7");
 			expect(result.gh).toBe("#123");

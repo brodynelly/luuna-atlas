@@ -81,8 +81,8 @@ function compileValidator(
 ): ValidateFunction {
 	const schema = {
 		$schema: "http://json-schema.org/draft-07/schema#",
-		title: "Mulch Expertise Record",
-		description: "A single expertise record in a Mulch domain file",
+		title: "Atlas Expertise Record",
+		description: "A single expertise record in a Atlas domain file",
 		type: "object",
 		definitions,
 		oneOf: defs.map((d) => d.ajvSchema),

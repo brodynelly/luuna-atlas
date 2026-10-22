@@ -6,7 +6,7 @@ import { Command } from "commander";
 import { registerRankCommand } from "../../src/commands/rank.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
 import type { ExpertiseRecord, Outcome } from "../../src/schemas/record.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import { appendRecord, createExpertiseFile } from "../../src/utils/expertise.ts";
 
 function outcome(status: Outcome["status"], iso = new Date().toISOString()): Outcome {
@@ -15,7 +15,7 @@ function outcome(status: Outcome["status"], iso = new Date().toISOString()): Out
 
 function makeProgram(): Command {
 	const program = new Command();
-	program.name("mulch").option("--json", "output as structured JSON").exitOverride();
+	program.name("luuna-atlas").option("--json", "output as structured JSON").exitOverride();
 	registerRankCommand(program);
 	return program;
 }
@@ -25,8 +25,8 @@ describe("rank command", () => {
 	let originalCwd: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-rank-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-rank-test-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { api: {}, db: {} } }, tmpDir);
 		const apiPath = getExpertisePath("api", tmpDir);
 		const dbPath = getExpertisePath("db", tmpDir);
@@ -99,7 +99,7 @@ describe("rank command", () => {
 		const logSpy = spyOn(console, "log").mockImplementation(() => {});
 		try {
 			const program = makeProgram();
-			await program.parseAsync(["node", "mulch", "rank"]);
+			await program.parseAsync(["node", "luuna-atlas", "rank"]);
 
 			const lines = logSpy.mock.calls.map((c) => String(c[0] ?? ""));
 			const body = lines.join("\n");
@@ -126,7 +126,7 @@ describe("rank command", () => {
 		const logSpy = spyOn(console, "log").mockImplementation(() => {});
 		try {
 			const program = makeProgram();
-			await program.parseAsync(["node", "mulch", "rank", "api"]);
+			await program.parseAsync(["node", "luuna-atlas", "rank", "api"]);
 
 			const body = logSpy.mock.calls.map((c) => String(c[0] ?? "")).join("\n");
 			expect(body).toContain("(api)");
@@ -145,7 +145,7 @@ describe("rank command", () => {
 		const logSpy = spyOn(console, "log").mockImplementation(() => {});
 		try {
 			const program = makeProgram();
-			await program.parseAsync(["node", "mulch", "rank", "--limit", "2"]);
+			await program.parseAsync(["node", "luuna-atlas", "rank", "--limit", "2"]);
 
 			const body = logSpy.mock.calls.map((c) => String(c[0] ?? "")).join("\n");
 			expect(body).toContain("mx-top");
@@ -162,7 +162,7 @@ describe("rank command", () => {
 		const logSpy = spyOn(console, "log").mockImplementation(() => {});
 		try {
 			const program = makeProgram();
-			await program.parseAsync(["node", "mulch", "rank", "--min-score", "1"]);
+			await program.parseAsync(["node", "luuna-atlas", "rank", "--min-score", "1"]);
 
 			const body = logSpy.mock.calls.map((c) => String(c[0] ?? "")).join("\n");
 			expect(body).toContain("mx-top");
@@ -180,7 +180,7 @@ describe("rank command", () => {
 		const logSpy = spyOn(console, "log").mockImplementation(() => {});
 		try {
 			const program = makeProgram();
-			await program.parseAsync(["node", "mulch", "rank", "--type", "convention"]);
+			await program.parseAsync(["node", "luuna-atlas", "rank", "--type", "convention"]);
 
 			const body = logSpy.mock.calls.map((c) => String(c[0] ?? "")).join("\n");
 			expect(body).toContain("mx-mid");
@@ -198,7 +198,7 @@ describe("rank command", () => {
 		const logSpy = spyOn(console, "log").mockImplementation(() => {});
 		try {
 			const program = makeProgram();
-			await program.parseAsync(["node", "mulch", "--json", "rank", "--min-score", "1"]);
+			await program.parseAsync(["node", "luuna-atlas", "--json", "rank", "--min-score", "1"]);
 
 			expect(logSpy).toHaveBeenCalledTimes(1);
 			const payload = JSON.parse(String(logSpy.mock.calls[0]?.[0] ?? ""));
@@ -221,7 +221,7 @@ describe("rank command", () => {
 		const logSpy = spyOn(console, "log").mockImplementation(() => {});
 		try {
 			const program = makeProgram();
-			await program.parseAsync(["node", "mulch", "rank", "--min-score", "1000"]);
+			await program.parseAsync(["node", "luuna-atlas", "rank", "--min-score", "1000"]);
 			expect(logSpy.mock.calls[0]?.[0]).toContain("No records match the ranking criteria.");
 		} finally {
 			logSpy.mockRestore();
@@ -233,7 +233,7 @@ describe("rank command", () => {
 		const errSpy = spyOn(console, "error").mockImplementation(() => {});
 		try {
 			const program = makeProgram();
-			await program.parseAsync(["node", "mulch", "rank", "--limit", "0"]);
+			await program.parseAsync(["node", "luuna-atlas", "rank", "--limit", "0"]);
 			expect(errSpy.mock.calls[0]?.[0]).toContain("--limit must be a positive integer");
 			expect(process.exitCode).toBe(1);
 		} finally {
@@ -246,7 +246,7 @@ describe("rank command", () => {
 		const errSpy = spyOn(console, "error").mockImplementation(() => {});
 		try {
 			const program = makeProgram();
-			await program.parseAsync(["node", "mulch", "rank", "--min-score", "-1"]);
+			await program.parseAsync(["node", "luuna-atlas", "rank", "--min-score", "-1"]);
 			expect(errSpy.mock.calls[0]?.[0]).toContain("--min-score must be a non-negative number");
 			expect(process.exitCode).toBe(1);
 		} finally {
@@ -259,7 +259,7 @@ describe("rank command", () => {
 		const errSpy = spyOn(console, "error").mockImplementation(() => {});
 		try {
 			const program = makeProgram();
-			await program.parseAsync(["node", "mulch", "rank", "--limit", "10abc"]);
+			await program.parseAsync(["node", "luuna-atlas", "rank", "--limit", "10abc"]);
 			expect(errSpy.mock.calls[0]?.[0]).toContain("--limit must be a positive integer");
 			expect(errSpy.mock.calls[0]?.[0]).toContain('"10abc"');
 			expect(process.exitCode).toBe(1);
@@ -273,7 +273,7 @@ describe("rank command", () => {
 		const errSpy = spyOn(console, "error").mockImplementation(() => {});
 		try {
 			const program = makeProgram();
-			await program.parseAsync(["node", "mulch", "rank", "--limit", "3.7"]);
+			await program.parseAsync(["node", "luuna-atlas", "rank", "--limit", "3.7"]);
 			expect(errSpy.mock.calls[0]?.[0]).toContain("--limit must be a positive integer");
 			expect(process.exitCode).toBe(1);
 		} finally {
@@ -286,7 +286,7 @@ describe("rank command", () => {
 		const errSpy = spyOn(console, "error").mockImplementation(() => {});
 		try {
 			const program = makeProgram();
-			await program.parseAsync(["node", "mulch", "rank", "--min-score", "0.5xyz"]);
+			await program.parseAsync(["node", "luuna-atlas", "rank", "--min-score", "0.5xyz"]);
 			expect(errSpy.mock.calls[0]?.[0]).toContain("--min-score must be a non-negative number");
 			expect(process.exitCode).toBe(1);
 		} finally {
@@ -294,15 +294,15 @@ describe("rank command", () => {
 		}
 	});
 
-	it("hints at `ml add` when [domain] is unknown", async () => {
+	it("hints at `luuna-atlas add` when [domain] is unknown", async () => {
 		process.chdir(tmpDir);
 		const errSpy = spyOn(console, "error").mockImplementation(() => {});
 		try {
 			const program = makeProgram();
-			await program.parseAsync(["node", "mulch", "rank", "nonexistent"]);
+			await program.parseAsync(["node", "luuna-atlas", "rank", "nonexistent"]);
 			expect(errSpy.mock.calls.length).toBe(2);
 			expect(errSpy.mock.calls[0]?.[0]).toContain("nonexistent");
-			expect(errSpy.mock.calls[1]?.[0]).toContain("ml add nonexistent");
+			expect(errSpy.mock.calls[1]?.[0]).toContain("luuna-atlas add nonexistent");
 			expect(process.exitCode).toBe(1);
 		} finally {
 			errSpy.mockRestore();

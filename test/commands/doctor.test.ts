@@ -9,7 +9,7 @@ import type { ExpertiseRecord } from "../../src/schemas/record.ts";
 import {
 	getExpertiseDir,
 	getExpertisePath,
-	initMulchDir,
+	initAtlasDir,
 	writeConfig,
 } from "../../src/utils/config.ts";
 import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../src/utils/expertise.ts";
@@ -25,8 +25,8 @@ function daysAgo(days: number): string {
 }
 
 beforeEach(async () => {
-	tmpDir = await mkdtemp(join(tmpdir(), "mulch-doctor-test-"));
-	await initMulchDir(tmpDir);
+	tmpDir = await mkdtemp(join(tmpdir(), "atlas-doctor-test-"));
+	await initAtlasDir(tmpDir);
 	await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {}, api: {} } }, tmpDir);
 });
 
@@ -344,8 +344,8 @@ describe("doctor — Phase 3 type registry + unknown-types checks", () => {
 	let phase3Dir: string;
 
 	beforeEach(async () => {
-		phase3Dir = await mkdtemp(join(tmpdir(), "mulch-doctor-p3-"));
-		await initMulchDir(phase3Dir);
+		phase3Dir = await mkdtemp(join(tmpdir(), "atlas-doctor-p3-"));
+		await initAtlasDir(phase3Dir);
 		await writeConfig(
 			{
 				...DEFAULT_CONFIG,
@@ -439,8 +439,8 @@ describe("doctor — domain conformance (R-01d)", () => {
 	let conformDir: string;
 
 	beforeEach(async () => {
-		conformDir = await mkdtemp(join(tmpdir(), "mulch-doctor-conform-"));
-		await initMulchDir(conformDir);
+		conformDir = await mkdtemp(join(tmpdir(), "atlas-doctor-conform-"));
+		await initAtlasDir(conformDir);
 	});
 
 	afterEach(async () => {
@@ -626,12 +626,12 @@ describe("doctor — domain conformance (R-01d)", () => {
 	});
 });
 
-describe("doctor — domain-rules-compatibility (mulch-cc51)", () => {
+describe("doctor — domain-rules-compatibility (atlas-cc51)", () => {
 	let compatDir: string;
 
 	beforeEach(async () => {
-		compatDir = await mkdtemp(join(tmpdir(), "mulch-doctor-compat-"));
-		await initMulchDir(compatDir);
+		compatDir = await mkdtemp(join(tmpdir(), "atlas-doctor-compat-"));
+		await initAtlasDir(compatDir);
 	});
 
 	afterEach(async () => {

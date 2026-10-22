@@ -19,7 +19,7 @@ export interface Evidence {
 	issue?: string;
 	file?: string;
 	bead?: string;
-	seeds?: string;
+	missions?: string;
 	gh?: string;
 	linear?: string;
 }
@@ -44,25 +44,25 @@ interface BaseRecord {
 	outcomes?: Outcome[];
 	dir_anchors?: string[];
 	// R-06 ownership: opaque handle (e.g. "@user" or "@team"). Stamped by the
-	// owner-resolution chain at write time (mulch-41e1) and consumed by
-	// `ml review` (mulch-8cce). No internal validation in v1.
+	// owner-resolution chain at write time (atlas-41e1) and consumed by
+	// `luuna-atlas review` (atlas-8cce). No internal validation in v1.
 	owner?: string;
 	// Lifecycle status. "draft" / "active" / "deprecated" are author-set on
-	// live records; "archived" is set by `ml prune` soft-archive (lives only
-	// under .mulch/archive/<domain>.jsonl) and the live AJV schemas reject it.
+	// live records; "archived" is set by `luuna-atlas prune` soft-archive (lives only
+	// under .luuna/atlas/archive/<domain>.jsonl) and the live AJV schemas reject it.
 	status?: "draft" | "active" | "deprecated" | "archived";
 	archived_at?: string;
 	// Set by `archiveRecords` on every code path that moves a record to
-	// .mulch/archive/. Convention values: "stale" | "superseded" |
+	// .luuna/atlas/archive/. Convention values: "stale" | "superseded" |
 	// "anchor_decay" | "manual" | "compacted"; a free-text suffix is permitted
 	// (e.g. "manual: wrong domain"). Optional for back-compat with archives
-	// written before mulch-b41a landed; lives only on archived records.
+	// written before atlas-b41a landed; lives only on archived records.
 	archive_reason?: string;
-	// Set by `ml prune` when supersession decay (R-05e) demotes a record one
+	// Set by `luuna-atlas prune` when supersession decay (R-05e) demotes a record one
 	// classification tier. Lives on the record across the demotion until
 	// archive; bumped each pass that re-demotes.
 	supersession_demoted_at?: string;
-	// Set by `ml prune --check-anchors` when anchor-validity decay (R-05f)
+	// Set by `luuna-atlas prune --check-anchors` when anchor-validity decay (R-05f)
 	// demotes a record one tier because too many of its file/dir anchors no
 	// longer resolve. Bumped each pass that re-demotes.
 	anchor_decay_demoted_at?: string;

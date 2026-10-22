@@ -147,7 +147,7 @@ function buildRetryCommand(
 	options: Record<string, unknown>,
 	missingFlags: Array<{ flag: string; placeholder: string }>,
 ): string {
-	const parts = ["ml record", domain];
+	const parts = ["luuna-atlas record", domain];
 	if (content) parts.push(JSON.stringify(content));
 	if (options.type) parts.push(`--type ${options.type as string}`);
 	if (options.classification && options.classification !== "tactical") {
@@ -175,8 +175,8 @@ function buildRetryCommand(
 		parts.push(`--evidence-file ${JSON.stringify(options.evidenceFile as string)}`);
 	if (options.evidenceBead)
 		parts.push(`--evidence-bead ${JSON.stringify(options.evidenceBead as string)}`);
-	if (options.evidenceSeeds)
-		parts.push(`--evidence-seeds ${JSON.stringify(options.evidenceSeeds as string)}`);
+	if (options.evidenceMissions)
+		parts.push(`--evidence-missions ${JSON.stringify(options.evidenceMissions as string)}`);
 	if (options.evidenceGh)
 		parts.push(`--evidence-gh ${JSON.stringify(options.evidenceGh as string)}`);
 	if (options.evidenceLinear)
@@ -206,7 +206,7 @@ function formatNearDuplicates(domain: string, nearDups: NearDuplicate[]): string
 	}
 	const id = nearDups[0]?.record.id ?? "<id>";
 	lines.push(
-		`Replace it: add --supersedes ${id}. Update it: ml edit ${domain} ${id}. Confirm it helped: ml outcome ${domain} ${id} --status success. Record anyway: add --force.`,
+		`Replace it: add --supersedes ${id}. Update it: luuna-atlas edit ${domain} ${id}. Confirm it helped: luuna-atlas outcome ${domain} ${id} --status success. Record anyway: add --force.`,
 	);
 	return lines.join("\n");
 }
@@ -289,7 +289,7 @@ export async function processStdinRecords(
 							.map((f) => `"${f}"`)
 							.join(
 								", ",
-							)}, but type "${typeof recordType === "string" ? recordType : "?"}" does not declare them. Declare a custom_type that holds these fields, or remove them from required_fields in mulch.config.yaml.`
+							)}, but type "${typeof recordType === "string" ? recordType : "?"}" does not declare them. Declare a custom_type that holds these fields, or remove them from required_fields in config.yaml.`
 					: "";
 			errors.push(`Record ${i}: ${validationErrors}${typeHint}${domainHint}`);
 			continue;
@@ -599,7 +599,7 @@ export function registerRecordCommand(program: Command): void {
 		.option("--evidence-issue <issue>", "evidence: issue reference")
 		.option("--evidence-file <file>", "evidence: file path")
 		.option("--evidence-bead <bead>", "evidence: bead ID")
-		.option("--evidence-seeds <id>", "evidence: seeds issue ID")
+		.option("--evidence-missions <id>", "evidence: missions issue ID")
 		.option("--evidence-gh <ref>", "evidence: GitHub issue or PR reference")
 		.option("--evidence-linear <ticket>", "evidence: Linear ticket reference")
 		.option("--relates-to <ids>", "comma-separated record IDs this relates to")
@@ -634,9 +634,9 @@ it fills convention content, a derived pattern/reference/guide name, and a
 decision title (first sentence) + rationale. Explicit flags win.
 
 Batch recording examples:
-  ml record cli --batch records.json
-  ml record cli --batch records.json --dry-run
-  echo '[{"type":"convention","content":"test"}]' > batch.json && ml record cli --batch batch.json
+  luuna-atlas record cli --batch records.json
+  luuna-atlas record cli --batch records.json --dry-run
+  echo '[{"type":"convention","content":"test"}]' > batch.json && luuna-atlas record cli --batch batch.json
 `,
 		);
 
@@ -709,7 +709,7 @@ Batch recording examples:
 				options.evidenceIssue ||
 				options.evidenceFile ||
 				options.evidenceBead ||
-				options.evidenceSeeds ||
+				options.evidenceMissions ||
 				options.evidenceGh ||
 				options.evidenceLinear
 			) {
@@ -718,7 +718,7 @@ Batch recording examples:
 				if (options.evidenceIssue) evidence.issue = options.evidenceIssue as string;
 				if (options.evidenceFile) evidence.file = options.evidenceFile as string;
 				if (options.evidenceBead) evidence.bead = options.evidenceBead as string;
-				if (options.evidenceSeeds) evidence.seeds = options.evidenceSeeds as string;
+				if (options.evidenceMissions) evidence.missions = options.evidenceMissions as string;
 				if (options.evidenceGh) evidence.gh = options.evidenceGh as string;
 				if (options.evidenceLinear) evidence.linear = options.evidenceLinear as string;
 			}
@@ -888,7 +888,7 @@ Batch recording examples:
 								.map((f) => `"${f}"`)
 								.join(
 									", ",
-								)}, but type "${recordType}" does not declare them. Declare a custom_type that holds these fields, or remove them from required_fields in mulch.config.yaml.`
+								)}, but type "${recordType}" does not declare them. Declare a custom_type that holds these fields, or remove them from required_fields in config.yaml.`
 						: "";
 				if (jsonMode) {
 					const suffix = domainHint ? `. ${domainHint}` : "";
@@ -960,7 +960,7 @@ Batch recording examples:
 				reportCommandError(
 					"record",
 					jsonMode,
-					`duplicate ${recordType} already exists in ${domain} (${id}); not recorded. If it helped, confirm it instead: ml outcome ${domain} ${id} --status success`,
+					`duplicate ${recordType} already exists in ${domain} (${id}); not recorded. If it helped, confirm it instead: luuna-atlas outcome ${domain} ${id} --status success`,
 				);
 				return;
 			}

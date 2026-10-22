@@ -1,8 +1,8 @@
-// `ml hook`: the Claude Code PreToolUse handler installed by `ml setup claude`.
+// `luuna-atlas hook`: the Claude Code PreToolUse handler installed by `luuna-atlas setup claude`.
 //
 // Reads the hook JSON ({session_id, cwd, hook_event_name, tool_name,
 // tool_input}) on stdin and prints at most one line of hook JSON:
-//   deny    Write/Edit/MultiEdit/NotebookEdit/Bash writing .mulch/expertise/*.jsonl
+//   deny    Write/Edit/MultiEdit/NotebookEdit/Bash writing .luuna/atlas/expertise/*.jsonl
 //           {"hookSpecificOutput":{"hookEventName":"PreToolUse",
 //            "permissionDecision":"deny","permissionDecisionReason":"..."}}
 //   inject  Read/Edit/Write/MultiEdit/NotebookEdit on a file with anchored records
@@ -56,7 +56,7 @@ export function registerHookCommand(program: Command): void {
 	program
 		.command("hook")
 		.description(
-			"Claude Code PreToolUse handler (installed by `ml setup claude`): injects file-anchored records, denies hand edits of .mulch/expertise/*.jsonl; reads hook JSON on stdin",
+			"Claude Code PreToolUse handler (installed by `luuna-atlas setup claude`): injects file-anchored records, denies hand edits of .luuna/atlas/expertise/*.jsonl; reads hook JSON on stdin",
 		)
 		.action(async () => {
 			const raw = process.stdin.isTTY ? "" : await Bun.stdin.text();

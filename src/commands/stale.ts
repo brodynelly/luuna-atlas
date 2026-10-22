@@ -1,5 +1,5 @@
 import type { Command } from "commander";
-import type { MulchConfig } from "../schemas/config.ts";
+import type { AtlasConfig } from "../schemas/config.ts";
 import type { ExpertiseRecord } from "../schemas/record.ts";
 import { getExpertisePath, readConfig } from "../utils/config.ts";
 import { readExpertiseFile } from "../utils/expertise.ts";
@@ -16,7 +16,7 @@ interface StaleEntry {
 }
 
 /** Stale live records across `domains`, in domain + file order. */
-async function collectStaleEntries(config: MulchConfig, domains: string[]): Promise<StaleEntry[]> {
+async function collectStaleEntries(config: AtlasConfig, domains: string[]): Promise<StaleEntry[]> {
 	const loaded: Array<{ domain: string; records: ExpertiseRecord[] }> = [];
 	for (const domain of domains) {
 		loaded.push({ domain, records: await readExpertiseFile(getExpertisePath(domain)) });
@@ -73,7 +73,7 @@ export function registerStaleCommand(program: Command): void {
 					console.log(`${e.id} (${e.domain}, ${e.type}) ${reasons}`);
 				}
 				console.log(
-					`\n${entries.length} stale record(s). Check with \`ml show <id>\`; refresh via \`ml edit\`, confirm via \`ml outcome\`, or replace with \`ml record --supersedes <id>\`.`,
+					`\n${entries.length} stale record(s). Check with \`luuna-atlas show <id>\`; refresh via \`luuna-atlas edit\`, confirm via \`luuna-atlas outcome\`, or replace with \`luuna-atlas record --supersedes <id>\`.`,
 				);
 			} catch (err) {
 				reportCommandError("stale", jsonMode, err);

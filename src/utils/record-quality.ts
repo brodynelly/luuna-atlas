@@ -3,10 +3,11 @@ import type { ExpertiseRecord } from "../schemas/record.ts";
 import { hasRuleSignal } from "./audit.ts";
 import { searchBM25, tokenize } from "./bm25.ts";
 import { recordBodyText } from "./expertise.ts";
+import { evidenceMissionRef } from "./legacy-layout.ts";
 
-// Write-time quality gate for `ml record`. Deterministic, no LLM: near-dup
+// Write-time quality gate for `luuna-atlas record`. Deterministic, no LLM: near-dup
 // detection shortlists with BM25 then scores token-set Jaccard, and the
-// quality checks reuse `ml audit`'s rule-signal heuristic.
+// quality checks reuse `luuna-atlas audit`'s rule-signal heuristic.
 
 export const DEFAULT_QUALITY_LEVEL: QualityLevel = "warn";
 
@@ -79,7 +80,7 @@ function hasGrounding(record: ExpertiseRecord, opts: QualityOptions): boolean {
 	if (anchorsOf(record).length > 0) return true;
 	const ev = record.evidence;
 	if (!ev) return false;
-	if (ev.issue || ev.seeds || ev.gh || ev.linear || ev.bead) return true;
+	if (ev.issue || evidenceMissionRef(ev) || ev.gh || ev.linear || ev.bead) return true;
 	return Boolean(ev.commit) && !opts.autoCommit;
 }
 

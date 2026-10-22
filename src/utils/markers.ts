@@ -1,13 +1,31 @@
-const MARKER_START = "<!-- mulch:start -->";
-const MARKER_END = "<!-- mulch:end -->";
+import { LEGACY_MARKER_END, LEGACY_MARKER_START } from "./legacy-layout.ts";
+
+const MARKER_START = "<!-- luuna-atlas:start -->";
+const MARKER_END = "<!-- luuna-atlas:end -->";
 
 export { MARKER_START, MARKER_END };
 
+// Sections written by older versions are still recognised so they are
+// replaced or removed in place instead of being duplicated.
+const PAIRS: ReadonlyArray<readonly [string, string]> = [
+	[MARKER_START, MARKER_END],
+	[LEGACY_MARKER_START, LEGACY_MARKER_END],
+];
+
+function findPair(content: string): readonly [string, string, number, number] | null {
+	for (const [start, end] of PAIRS) {
+		const startIdx = content.indexOf(start);
+		const endIdx = content.indexOf(end);
+		if (startIdx !== -1 && endIdx !== -1) return [start, end, startIdx, endIdx];
+	}
+	return null;
+}
+
 /**
- * Check whether content contains the mulch marker section.
+ * Check whether content contains the luuna-atlas marker section.
  */
 export function hasMarkerSection(content: string): boolean {
-	return content.includes(MARKER_START);
+	return PAIRS.some(([start]) => content.includes(start));
 }
 
 /**
@@ -15,14 +33,10 @@ export function hasMarkerSection(content: string): boolean {
  * Returns null if no markers found.
  */
 export function replaceMarkerSection(content: string, newSection: string): string | null {
-	const startIdx = content.indexOf(MARKER_START);
-	const endIdx = content.indexOf(MARKER_END);
-	if (startIdx === -1 || endIdx === -1) return null;
-
-	const before = content.substring(0, startIdx);
-	const after = content.substring(endIdx + MARKER_END.length);
-
-	return before + newSection + after;
+	const pair = findPair(content);
+	if (!pair) return null;
+	const [, end, startIdx, endIdx] = pair;
+	return content.substring(0, startIdx) + newSection + content.substring(endIdx + end.length);
 }
 
 /**
@@ -30,18 +44,17 @@ export function replaceMarkerSection(content: string, newSection: string): strin
  * Cleans up extra newlines left behind.
  */
 export function removeMarkerSection(content: string): string {
-	const startIdx = content.indexOf(MARKER_START);
-	const endIdx = content.indexOf(MARKER_END);
-	if (startIdx === -1 || endIdx === -1) return content;
-
+	const pair = findPair(content);
+	if (!pair) return content;
+	const [, end, startIdx, endIdx] = pair;
 	const before = content.substring(0, startIdx);
-	const after = content.substring(endIdx + MARKER_END.length);
+	const after = content.substring(endIdx + end.length);
 
 	return `${(before + after).replace(/\n{3,}/g, "\n\n").trim()}\n`;
 }
 
 /**
- * Wrap a snippet in mulch markers.
+ * Wrap a snippet in luuna-atlas markers.
  */
 export function wrapInMarkers(snippet: string): string {
 	return `${MARKER_START}\n${snippet}${MARKER_END}`;

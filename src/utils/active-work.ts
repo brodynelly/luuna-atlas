@@ -1,10 +1,11 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { resolveMissionsDir } from "./legacy-layout.ts";
 
-export type TrackerName = "seeds" | "gh" | "linear" | "bead";
+export type TrackerName = "missions" | "gh" | "linear" | "bead";
 
-export const TRACKERS: readonly TrackerName[] = ["seeds", "gh", "linear", "bead"];
+export const TRACKERS: readonly TrackerName[] = ["missions", "gh", "linear", "bead"];
 
 export interface ResolverHit {
 	tracker: TrackerName;
@@ -15,7 +16,7 @@ export interface ResolverHit {
 export type Resolver = (cwd: string) => ResolverHit;
 
 export interface ActiveWorkResult {
-	seeds?: string;
+	missions?: string;
 	gh?: string;
 	linear?: string;
 	bead?: string;
@@ -25,7 +26,7 @@ export interface ActiveWorkResult {
 export interface ActiveWorkOptions {
 	cwd?: string;
 	resolvers?: Resolver[];
-	// Explicit overrides (e.g. from `--evidence-seeds`). When set, the resolver
+	// Explicit overrides (e.g. from `--evidence-missions`). When set, the resolver
 	// chain for that tracker is short-circuited and the override is used as-is.
 	// Empty string is treated as "not set".
 	overrides?: Partial<Record<TrackerName, string | undefined>>;
@@ -65,8 +66,8 @@ function readJsonl<T>(path: string): T[] {
 	return out;
 }
 
-// Seeds: <project>-<4–8 hex>. e.g. "mulch-f3d0", "seeds-a051".
-const SEEDS_ID_RE = /\b([a-z][a-z0-9]*-[a-f0-9]{4,8})\b/g;
+// Missions: <project>-<4–8 hex>. e.g. "atlas-f3d0", "missions-a051".
+const MISSIONS_ID_RE = /\b([a-z][a-z0-9]*-[a-f0-9]{4,8})\b/g;
 // Linear: <UPPER>-<digits>. e.g. "WEB-123", "ENG-4567". Two+ leading uppercase
 // chars so single-letter prefixes don't collide with branch nicknames.
 const LINEAR_ID_RE = /\b([A-Z]{2,}[A-Z0-9]*-\d+)\b/g;
@@ -95,17 +96,17 @@ function inProgressIssueIds(cwd: string, trackerDir: string): string[] {
 	return [...inProgress].sort();
 }
 
-export const seedsResolver: Resolver = (cwd) => {
-	const inProgress = inProgressIssueIds(cwd, ".seeds");
+export const missionsResolver: Resolver = (cwd) => {
+	const inProgress = inProgressIssueIds(cwd, resolveMissionsDir(cwd, ".luuna/missions"));
 	if (inProgress.length > 0) {
-		return { tracker: "seeds", matches: inProgress, source: "in_progress" };
+		return { tracker: "missions", matches: inProgress, source: "in_progress" };
 	}
 	const branch = getCurrentBranch(cwd);
-	const branchMatches = matchAll(SEEDS_ID_RE, branch);
+	const branchMatches = matchAll(MISSIONS_ID_RE, branch);
 	if (branchMatches.length > 0) {
-		return { tracker: "seeds", matches: branchMatches, source: "branch" };
+		return { tracker: "missions", matches: branchMatches, source: "branch" };
 	}
-	return { tracker: "seeds", matches: [], source: "none" };
+	return { tracker: "missions", matches: [], source: "none" };
 };
 
 export const ghResolver: Resolver = (cwd) => {
@@ -158,7 +159,7 @@ export const beadResolver: Resolver = (cwd) => {
 };
 
 export const DEFAULT_RESOLVERS: Resolver[] = [
-	seedsResolver,
+	missionsResolver,
 	ghResolver,
 	linearResolver,
 	beadResolver,

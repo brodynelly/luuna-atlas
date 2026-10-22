@@ -6,7 +6,7 @@ import { initRegistryFromConfig } from "../../src/registry/init.ts";
 import { resetRegistry } from "../../src/registry/type-registry.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
 import type { ExpertiseRecord } from "../../src/schemas/record.ts";
-import { initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import { findDuplicate, normalizeText, recordBodyText } from "../../src/utils/expertise.ts";
 import { checkRecordQuality, findNearDuplicates } from "../../src/utils/record-quality.ts";
 
@@ -63,8 +63,8 @@ describe("findDuplicate normalization", () => {
 		});
 
 		it("dedups on the normalized body instead of never matching", async () => {
-			tmpDir = await mkdtemp(join(tmpdir(), "mulch-quality-hash-"));
-			await initMulchDir(tmpDir);
+			tmpDir = await mkdtemp(join(tmpdir(), "atlas-quality-hash-"));
+			await initAtlasDir(tmpDir);
 			await writeConfig(
 				{
 					...DEFAULT_CONFIG,
@@ -161,7 +161,7 @@ describe("checkRecordQuality", () => {
 		expect(checkRecordQuality(r, { autoCommit: true })).toHaveLength(1);
 		expect(checkRecordQuality(r, { autoCommit: false })).toEqual([]);
 		const tracked = convention("Avoid sync fs calls because they block", {
-			evidence: { commit: "abc", seeds: "mulch-a378" },
+			evidence: { commit: "abc", missions: "atlas-a378" },
 		});
 		expect(checkRecordQuality(tracked, { autoCommit: true })).toEqual([]);
 	});

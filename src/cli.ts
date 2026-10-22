@@ -42,8 +42,8 @@ import { brand, muted, setQuiet } from "./utils/palette.ts";
 import { setAllowDomainMismatch, setAllowUnknownTypes } from "./utils/runtime-flags.ts";
 
 // Initialize the type registry from config so any custom_types declared in
-// mulch.config.yaml are first-class. Falls back to built-ins-only when no
-// .mulch/ directory exists yet (e.g., before `ml init`). Wrap any thrown
+// config.yaml are first-class. Falls back to built-ins-only when no
+// .luuna/atlas/ directory exists yet (e.g., before `luuna-atlas init`). Wrap any thrown
 // registry-init errors (bad custom_types config, disabled_types referencing
 // unknown types, etc.) so users see a formatted message instead of a Bun stack
 // trace from a top-level await failure.
@@ -58,12 +58,14 @@ try {
 		// structured log here and let the JSON error stand alone.
 		outputJsonError("init", `Config error: ${message}`);
 	} else {
-		// Structured diagnostic for operators, gated behind MULCH_DEBUG so it
+		// Structured diagnostic for operators, gated behind LUUNA_ATLAS_DEBUG so it
 		// never clutters the formatted human error below during normal use.
 		log.debug({ err: message }, "registry init from config failed");
 		process.stderr.write(`${chalk.red("Config error:")} ${message}\n`);
 		process.stderr.write(
-			chalk.dim("Edit .mulch/mulch.config.yaml to resolve, or run `mulch doctor` for details.\n"),
+			chalk.dim(
+				"Edit .luuna/atlas/config.yaml to resolve, or run `luuna-atlas doctor` for details.\n",
+			),
 		);
 	}
 	process.exit(1);
@@ -141,7 +143,7 @@ program
 		formatHelp(cmd, helper): string {
 			const lines: string[] = [];
 
-			// Header: "mulch v0.6.2 — Structured expertise management"
+			// Header: "luuna-atlas v0.6.2 — Structured expertise management"
 			lines.push(
 				`${brand.bold(cmd.parent ? cmd.name() : "Luuna Atlas")} ${muted(`v${VERSION}`)} — Structured expertise management`,
 			);
@@ -273,7 +275,7 @@ program.on("command:*", (operands: string[]) => {
 		if (suggestion) {
 			process.stderr.write(`Did you mean '${suggestion}'?\n`);
 		}
-		process.stderr.write("Run 'mulch --help' for usage.\n");
+		process.stderr.write("Run 'luuna-atlas --help' for usage.\n");
 	}
 	process.exitCode = 1;
 });

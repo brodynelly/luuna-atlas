@@ -36,7 +36,7 @@ describe("typo suggestions", () => {
 	test("unknown command shows help hint", async () => {
 		const { stderr, exitCode } = await run(["zzzznotacommand"]);
 		expect(exitCode).toBe(1);
-		expect(stderr).toContain("Run 'mulch --help' for usage.");
+		expect(stderr).toContain("Run 'luuna-atlas --help' for usage.");
 	});
 
 	test("--json mode outputs structured error", async () => {

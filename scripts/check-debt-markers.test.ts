@@ -28,7 +28,7 @@ function writeBudget(
 	writeFileSync(path, JSON.stringify({ trackerPatterns, allowlist }));
 }
 
-const DEFAULT_PATTERNS = ["\\b(?:mulch|mx)-[0-9a-f]+\\b", "#\\d+\\b", "https?://\\S+"];
+const DEFAULT_PATTERNS = ["\\b(?:luuna-atlas|mx)-[0-9a-f]+\\b", "#\\d+\\b", "https?://\\S+"];
 
 describe("loadBudget", () => {
 	test("parses tracker patterns into RegExp instances", () => {
@@ -38,7 +38,7 @@ describe("loadBudget", () => {
 			writeBudget(p, DEFAULT_PATTERNS);
 			const { trackerRegexes } = loadBudget(p);
 			expect(trackerRegexes).toHaveLength(3);
-			expect(trackerRegexes[0]?.test("// TODO(mulch-abc1): later")).toBe(true);
+			expect(trackerRegexes[0]?.test("// TODO(atlas-abc1): later")).toBe(true);
 			expect(trackerRegexes[1]?.test("// TODO #42")).toBe(true);
 			expect(trackerRegexes[2]?.test("// TODO https://x.example/")).toBe(true);
 		} finally {
@@ -77,7 +77,7 @@ describe("scan — synthetic pass", () => {
 		const { root, cleanup } = makeFixture();
 		try {
 			writeFileTree(root, {
-				"src/a.ts": "// TODO(mulch-7f2b): later\nexport const a = 1;\n",
+				"src/a.ts": "// TODO(atlas-7f2b): later\nexport const a = 1;\n",
 				"src/b.ts": "// FIXME #123 wire this up\nexport const b = 2;\n",
 				"src/c.ts": "// HACK https://example.com/x — temporary\nexport const c = 3;\n",
 			});
@@ -97,12 +97,12 @@ describe("scan — synthetic pass", () => {
 		}
 	});
 
-	test("placeholder strings like mulch-XXXX are not flagged as markers", () => {
+	test("placeholder strings like atlas-XXXX are not flagged as markers", () => {
 		const { root, cleanup } = makeFixture();
 		try {
 			writeFileTree(root, {
 				"src/a.ts":
-					"// example placeholder: mulch-XXXX or mx-XXXX (no real marker)\nexport const a = 1;\n",
+					"// example placeholder: atlas-XXXX or mx-XXXX (no real marker)\nexport const a = 1;\n",
 			});
 			const budgetPath = join(root, "budget.json");
 			writeBudget(budgetPath, DEFAULT_PATTERNS);
@@ -216,7 +216,7 @@ describe("CLI integration", () => {
 		const { root, cleanup } = makeFixture();
 		try {
 			writeFileTree(root, {
-				"src/a.ts": "// TODO(mulch-7f2b): later\nexport const a = 1;\n",
+				"src/a.ts": "// TODO(atlas-7f2b): later\nexport const a = 1;\n",
 			});
 			const budgetPath = join(root, "budget.json");
 			writeBudget(budgetPath, DEFAULT_PATTERNS);

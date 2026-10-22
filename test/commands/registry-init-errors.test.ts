@@ -24,9 +24,9 @@ describe("registry init error UX", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-init-error-"));
-		await mkdir(join(tmpDir, ".mulch", "expertise"), { recursive: true });
-		await writeFile(join(tmpDir, ".mulch", "expertise", "cli.jsonl"), "", "utf-8");
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-init-error-"));
+		await mkdir(join(tmpDir, ".luuna/atlas", "expertise"), { recursive: true });
+		await writeFile(join(tmpDir, ".luuna/atlas", "expertise", "cli.jsonl"), "", "utf-8");
 	});
 
 	afterEach(async () => {
@@ -43,7 +43,7 @@ custom_types:
     extends: decision
     required: [decision_status]
 `;
-		await writeFile(join(tmpDir, ".mulch", "mulch.config.yaml"), yaml, "utf-8");
+		await writeFile(join(tmpDir, ".luuna/atlas", "config.yaml"), yaml, "utf-8");
 
 		const { stderr, exitCode } = await runIn(tmpDir, ["doctor"]);
 		expect(exitCode).toBe(1);
@@ -61,7 +61,7 @@ custom_types:
 disabled_types:
   - nonexistent_type
 `;
-		await writeFile(join(tmpDir, ".mulch", "mulch.config.yaml"), yaml, "utf-8");
+		await writeFile(join(tmpDir, ".luuna/atlas", "config.yaml"), yaml, "utf-8");
 
 		const { stderr, exitCode } = await runIn(tmpDir, ["status"]);
 		expect(exitCode).toBe(1);
@@ -80,7 +80,7 @@ custom_types:
     extends: decision
     required: [decision_status]
 `;
-		await writeFile(join(tmpDir, ".mulch", "mulch.config.yaml"), yaml, "utf-8");
+		await writeFile(join(tmpDir, ".luuna/atlas", "config.yaml"), yaml, "utf-8");
 
 		const { stderr, exitCode } = await runIn(tmpDir, ["--json", "doctor"]);
 		expect(exitCode).toBe(1);
@@ -98,7 +98,7 @@ custom_types:
 		const yaml = `domains:
   cli: {}
 `;
-		await writeFile(join(tmpDir, ".mulch", "mulch.config.yaml"), yaml, "utf-8");
+		await writeFile(join(tmpDir, ".luuna/atlas", "config.yaml"), yaml, "utf-8");
 
 		const { stdout, stderr, exitCode } = await runIn(tmpDir, ["doctor"]);
 		expect(exitCode).toBe(0);
@@ -112,7 +112,7 @@ custom_types:
 		const yaml = `domains:
   cli: {}
 `;
-		await writeFile(join(tmpDir, ".mulch", "mulch.config.yaml"), yaml, "utf-8");
+		await writeFile(join(tmpDir, ".luuna/atlas", "config.yaml"), yaml, "utf-8");
 
 		const { stderr, exitCode } = await runIn(tmpDir, ["status"]);
 		expect(exitCode).toBe(0);

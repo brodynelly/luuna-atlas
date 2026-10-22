@@ -22,7 +22,7 @@ describe("normalizeDirAnchor", () => {
 	});
 
 	it("strips a leading ./ prefix", () => {
-		// Regression for mulch-c282: prior normalization left "./prefix" untouched
+		// Regression for atlas-c282: prior normalization left "./prefix" untouched
 		// so the same anchor stored from `--dir-anchor src/foo` and
 		// `--dir-anchor ./src/foo` lived in two different equivalence classes
 		// and missed each other in dedup / containment checks.

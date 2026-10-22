@@ -6,17 +6,17 @@ import { Command } from "commander";
 import { registerPrimeCommand } from "../../src/commands/prime.ts";
 import { registerStaleCommand } from "../../src/commands/stale.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import { appendRecord, createExpertiseFile } from "../../src/utils/expertise.ts";
 
-describe("stale command (mulch-094a)", () => {
+describe("stale command (atlas-094a)", () => {
 	let tmpDir: string;
 	let originalCwd: string;
 
 	beforeEach(async () => {
 		originalCwd = process.cwd();
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-stale-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-stale-test-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { cli: {}, db: {} } }, tmpDir);
 		const cliPath = getExpertisePath("cli", tmpDir);
 		await createExpertiseFile(cliPath);
@@ -66,13 +66,13 @@ describe("stale command (mulch-094a)", () => {
 
 	async function run(args: string[]): Promise<{ out: string; err: string }> {
 		const program = new Command();
-		program.name("mulch").option("--json", "output as structured JSON").exitOverride();
+		program.name("luuna-atlas").option("--json", "output as structured JSON").exitOverride();
 		registerStaleCommand(program);
 		registerPrimeCommand(program);
 		const logSpy = spyOn(console, "log").mockImplementation(() => {});
 		const errSpy = spyOn(console, "error").mockImplementation(() => {});
 		try {
-			await program.parseAsync(["node", "mulch", ...args]);
+			await program.parseAsync(["node", "luuna-atlas", ...args]);
 			return {
 				out: logSpy.mock.calls.map((c) => String(c[0])).join("\n"),
 				err: errSpy.mock.calls.map((c) => String(c[0])).join("\n"),
@@ -120,7 +120,7 @@ describe("stale command (mulch-094a)", () => {
 		expect(full.out).toContain("stale?");
 	});
 
-	it("prime does not mark shelf_life-only records (reported by ml stale only)", async () => {
+	it("prime does not mark shelf_life-only records (reported by luuna-atlas stale only)", async () => {
 		const old = new Date(Date.now() - 60 * 86_400_000).toISOString();
 		await appendRecord(getExpertisePath("db", tmpDir), {
 			type: "convention",

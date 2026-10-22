@@ -15,36 +15,42 @@ function getGlobalOptions(program: Command): string[] {
 
 function generateBash(commands: string[], globalOptions: string[]): string {
 	const allWords = [...commands, ...globalOptions].join(" ");
-	return `# mulch bash completions
-# Add to ~/.bashrc: eval "$(mulch completions bash)"
-_mulch() {
+	return `# luuna-atlas bash completions
+# Add to ~/.bashrc: eval "$(luuna-atlas completions bash)"
+_atlas() {
   local cur="\${COMP_WORDS[COMP_CWORD]}"
   COMPREPLY=( $(compgen -W "${allWords}" -- "$cur") )
 }
-complete -F _mulch mulch
-complete -F _mulch ml
+complete -F _atlas luuna-atlas
+complete -F _atlas la
 `;
 }
 
 function generateZsh(commands: string[], globalOptions: string[]): string {
 	const allWords = [...commands, ...globalOptions].join(" ");
-	return `# mulch zsh completions
-# Add to ~/.zshrc: eval "$(mulch completions zsh)"
-_mulch() {
+	return `# luuna-atlas zsh completions
+# Add to ~/.zshrc: eval "$(luuna-atlas completions zsh)"
+_atlas() {
   local -a words
   words=(${allWords})
-  _describe 'mulch commands' words
+  _describe 'luuna-atlas commands' words
 }
-compdef _mulch mulch
-compdef _mulch ml
+compdef _atlas luuna-atlas
+compdef _atlas la
 `;
 }
 
 function generateFish(commands: string[], _globalOptions: string[]): string {
-	const lines = ["# mulch fish completions", "# Save to ~/.config/fish/completions/mulch.fish", ""];
+	const lines = [
+		"# luuna-atlas fish completions",
+		"# Save to ~/.config/fish/completions/luuna-atlas.fish",
+		"",
+	];
 	for (const cmd of commands) {
-		lines.push(`complete -c mulch -n '__fish_use_subcommand' -a '${cmd}' -d '${cmd} command'`);
-		lines.push(`complete -c ml -n '__fish_use_subcommand' -a '${cmd}' -d '${cmd} command'`);
+		lines.push(
+			`complete -c luuna-atlas -n '__fish_use_subcommand' -a '${cmd}' -d '${cmd} command'`,
+		);
+		lines.push(`complete -c la -n '__fish_use_subcommand' -a '${cmd}' -d '${cmd} command'`);
 	}
 	return `${lines.join("\n")}\n`;
 }

@@ -7,9 +7,9 @@ import { Command } from "commander";
 import { registerAddCommand } from "../../src/commands/add.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
 import {
+	getAtlasDir,
 	getExpertisePath,
-	getMulchDir,
-	initMulchDir,
+	initAtlasDir,
 	readConfig,
 	writeConfig,
 } from "../../src/utils/config.ts";
@@ -20,8 +20,8 @@ describe("add command", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-add-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-add-test-"));
+		await initAtlasDir(tmpDir);
 	});
 
 	afterEach(async () => {
@@ -94,9 +94,9 @@ describe("add command", () => {
 		expect(path).toContain("testing.jsonl");
 	});
 
-	it("requires .mulch/ directory to exist", async () => {
-		const emptyDir = await mkdtemp(join(tmpdir(), "mulch-add-empty-"));
-		expect(existsSync(getMulchDir(emptyDir))).toBe(false);
+	it("requires .luuna/atlas/ directory to exist", async () => {
+		const emptyDir = await mkdtemp(join(tmpdir(), "atlas-add-empty-"));
+		expect(existsSync(getAtlasDir(emptyDir))).toBe(false);
 		await rm(emptyDir, { recursive: true, force: true });
 	});
 
@@ -119,9 +119,9 @@ describe("add command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = new Command();
-				program.name("mulch").exitOverride();
+				program.name("luuna-atlas").exitOverride();
 				registerAddCommand(program);
-				await program.parseAsync(["node", "mulch", "add", "qtest"]);
+				await program.parseAsync(["node", "luuna-atlas", "add", "qtest"]);
 				expect(logSpy).not.toHaveBeenCalled();
 				const updated = await readConfig(tmpDir);
 				expect(updated.domains).toHaveProperty("qtest");
@@ -139,9 +139,9 @@ describe("add command", () => {
 			const logSpy = spyOn(console, "log").mockImplementation(() => {});
 			try {
 				const program = new Command();
-				program.name("mulch").exitOverride();
+				program.name("luuna-atlas").exitOverride();
 				registerAddCommand(program);
-				await program.parseAsync(["node", "mulch", "add", "loud"]);
+				await program.parseAsync(["node", "luuna-atlas", "add", "loud"]);
 				expect(logSpy).toHaveBeenCalled();
 				expect(logSpy.mock.calls[0]?.[0]).toContain("Added domain");
 			} finally {

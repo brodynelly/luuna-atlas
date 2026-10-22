@@ -7,7 +7,7 @@ import { initRegistryFromConfig } from "../../src/registry/init.ts";
 import { getRegistry, resetRegistry } from "../../src/registry/type-registry.ts";
 import type { CustomTypeConfig } from "../../src/schemas/config.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 
 describe("validateCustomTypeConfig — extends", () => {
 	it("accepts extends: <builtin> with no other fields", () => {
@@ -79,7 +79,7 @@ describe("validateCustomTypeConfig — extends", () => {
 		).not.toThrow();
 	});
 
-	it("rejects aliases legacy that collides with another built-in's field (mulch-aeb2)", () => {
+	it("rejects aliases legacy that collides with another built-in's field (atlas-aeb2)", () => {
 		// `name` is required on pattern. Even though this type extends
 		// decision (so `name` is not its own field), declaring it as an alias
 		// legacy is rejected because the field belongs to a foreign type.
@@ -226,8 +226,8 @@ describe("extends end-to-end via registry", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-extends-e2e-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-extends-e2e-"));
+		await initAtlasDir(tmpDir);
 	});
 
 	afterEach(async () => {

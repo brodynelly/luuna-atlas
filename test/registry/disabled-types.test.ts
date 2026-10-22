@@ -8,9 +8,9 @@ import { getRegistry, resetRegistry } from "../../src/registry/type-registry.ts"
 let tmpDir: string;
 
 async function makeTempProject(configBody: string): Promise<string> {
-	const dir = await mkdtemp(join(tmpdir(), "mulch-disabled-"));
-	await mkdir(join(dir, ".mulch", "expertise"), { recursive: true });
-	await writeFile(join(dir, ".mulch", "mulch.config.yaml"), configBody, "utf-8");
+	const dir = await mkdtemp(join(tmpdir(), "atlas-disabled-"));
+	await mkdir(join(dir, ".luuna/atlas", "expertise"), { recursive: true });
+	await writeFile(join(dir, ".luuna/atlas", "config.yaml"), configBody, "utf-8");
 	return dir;
 }
 

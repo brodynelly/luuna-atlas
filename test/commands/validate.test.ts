@@ -6,7 +6,7 @@ import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
 import { recordSchema } from "../../src/schemas/record-schema.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 
 describe("validate command", () => {
 	const ajv = new Ajv();
@@ -239,8 +239,8 @@ describe("validate CLI — unknown-type policy (Phase 3)", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-validate-unknown-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-validate-unknown-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { cli: {} } }, tmpDir);
 
 		// Plant one good record and one with an unregistered type.

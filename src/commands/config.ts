@@ -9,11 +9,11 @@ import { getConfigPath, readConfig } from "../utils/config.ts";
 import { withFileLock } from "../utils/lock.ts";
 
 export function registerConfigCommand(program: Command): void {
-	const config = program.command("config").description("Read and write .mulch/mulch.config.yaml");
+	const config = program.command("config").description("Read and write .luuna/atlas/config.yaml");
 
 	config
 		.command("schema")
-		.description("Emit MulchConfig JSON Schema for warren and other config-UI consumers")
+		.description("Emit AtlasConfig JSON Schema for warren and other config-UI consumers")
 		.action(() => {
 			process.stdout.write(`${JSON.stringify(configSchema, null, 2)}\n`);
 		});
@@ -21,7 +21,7 @@ export function registerConfigCommand(program: Command): void {
 	config
 		.command("show")
 		.description(
-			"Emit the effective MulchConfig as JSON. Pass --path to read a single knob; falls back to the schema default when the knob is unset.",
+			"Emit the effective AtlasConfig as JSON. Pass --path to read a single knob; falls back to the schema default when the knob is unset.",
 		)
 		.option(
 			"--path <path>",
@@ -61,7 +61,7 @@ export function registerConfigCommand(program: Command): void {
 	config
 		.command("set")
 		.description(
-			"Set a config knob via dot-notation path. <value> is YAML-parsed (so booleans, numbers, lists, and objects all work uniformly). The full resulting config is validated against the schema before atomic write under a file lock; invalid values are rejected with a schema-referenced error. Last-writer-wins semantics under concurrent writes — re-read via `ml config show` after every write.",
+			"Set a config knob via dot-notation path. <value> is YAML-parsed (so booleans, numbers, lists, and objects all work uniformly). The full resulting config is validated against the schema before atomic write under a file lock; invalid values are rejected with a schema-referenced error. Last-writer-wins semantics under concurrent writes — re-read via `luuna-atlas config show` after every write.",
 		)
 		.argument(
 			"<path>",
@@ -80,7 +80,7 @@ export function registerConfigCommand(program: Command): void {
 	config
 		.command("unset")
 		.description(
-			"Remove a config knob via dot-notation path so subsequent reads fall back to the schema default. Empty parent objects along the unset path are pruned when the schema allows the parent to be omitted; required-field removals are rejected with a schema-referenced error (use `ml config set` to override). Idempotent — unsetting a never-set path is a silent no-op. Atomic write under a file lock.",
+			"Remove a config knob via dot-notation path so subsequent reads fall back to the schema default. Empty parent objects along the unset path are pruned when the schema allows the parent to be omitted; required-field removals are rejected with a schema-referenced error (use `luuna-atlas config set` to override). Idempotent — unsetting a never-set path is a silent no-op. Atomic write under a file lock.",
 		)
 		.argument(
 			"<path>",
@@ -105,13 +105,13 @@ async function runConfigSet(rawPath: string, rawValue: string): Promise<void> {
 	const configPath = getConfigPath();
 	if (!existsSync(configPath)) {
 		throw new Error(
-			"No .mulch/ directory found. Run `mulch init` to set up this project before `ml config set`.",
+			"No .luuna/atlas/ directory found. Run `luuna-atlas init` to set up this project before `luuna-atlas config set`.",
 		);
 	}
 
 	// Reject paths that descend through a closed-shape boundary into an unknown
 	// key. AJV catches type/range mismatches at validate time; this gives a
-	// targeted error before write so `ml config set governance.typo 5` doesn't
+	// targeted error before write so `luuna-atlas config set governance.typo 5` doesn't
 	// silently turn into "valid value at an unknown leaf".
 	validatePathInSchema(segments);
 
@@ -140,11 +140,11 @@ async function runConfigUnset(rawPath: string): Promise<void> {
 	const configPath = getConfigPath();
 	if (!existsSync(configPath)) {
 		throw new Error(
-			"No .mulch/ directory found. Run `mulch init` to set up this project before `ml config unset`.",
+			"No .luuna/atlas/ directory found. Run `luuna-atlas init` to set up this project before `luuna-atlas config unset`.",
 		);
 	}
 
-	// Same closed-shape gate as `ml config set`: catches typos like
+	// Same closed-shape gate as `luuna-atlas config set`: catches typos like
 	// `governance.typo` before we touch the file.
 	validatePathInSchema(segments);
 
@@ -327,7 +327,7 @@ function walkConfig(value: unknown, segments: string[]): unknown {
 // Walk the JSON Schema down `segments` and synthesize a default for the
 // resulting node. Leaves return their declared `default`; non-leaf nodes
 // recurse into `properties` and collect child defaults so `--path search`
-// (after `ml config unset search`) yields `{ boost_factor: 0.1 }` rather than
+// (after `luuna-atlas config unset search`) yields `{ boost_factor: 0.1 }` rather than
 // "not found". Open maps (additionalProperties as an object) are followed when
 // no matching `properties` entry exists, supporting paths like
 // `domains.<name>.allowed_types`.

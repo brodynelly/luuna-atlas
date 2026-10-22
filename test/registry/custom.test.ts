@@ -57,7 +57,7 @@ describe("validateCustomTypeConfig", () => {
 		).toThrow(/starts with a digit/);
 	});
 
-	it("rejects required field names that don't match the naming rule (mulch-aeb2)", () => {
+	it("rejects required field names that don't match the naming rule (atlas-aeb2)", () => {
 		expect(() =>
 			validateCustomTypeConfig("hypothesis", {
 				required: ["my-field"],
@@ -67,7 +67,7 @@ describe("validateCustomTypeConfig", () => {
 		).toThrow(/required field "my-field" \(contains a hyphen\)/);
 	});
 
-	it("rejects optional field names that don't match the naming rule (mulch-aeb2)", () => {
+	it("rejects optional field names that don't match the naming rule (atlas-aeb2)", () => {
 		expect(() =>
 			validateCustomTypeConfig("hypothesis", {
 				required: ["statement"],

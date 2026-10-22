@@ -5,10 +5,10 @@ import { join } from "node:path";
 import { Command } from "commander";
 import { registerCompactCommand } from "../../src/commands/compact.ts";
 import { registerRestoreCommand } from "../../src/commands/restore.ts";
-import { DEFAULT_CONFIG, type MulchConfig } from "../../src/schemas/config.ts";
+import { type AtlasConfig, DEFAULT_CONFIG } from "../../src/schemas/config.ts";
 import type { ExpertiseRecord } from "../../src/schemas/record.ts";
 import { getArchivePath, readArchiveFile } from "../../src/utils/archive.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../src/utils/expertise.ts";
 
 function daysAgo(n: number): string {
@@ -21,8 +21,8 @@ describe("compact command", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-compact-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-compact-test-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {}, architecture: {} } }, tmpDir);
 	});
 
@@ -1011,7 +1011,7 @@ async function runCompact(
 		program.option("--json", "output JSON");
 		program.exitOverride();
 		register(program);
-		await program.parseAsync(["node", "mulch", ...args]);
+		await program.parseAsync(["node", "luuna-atlas", ...args]);
 	} catch {
 		// commander exitOverride throws on errors; the inner action sets process.exitCode.
 	} finally {
@@ -1036,12 +1036,12 @@ async function writeHookScript(dir: string, name: string, body: string): Promise
 	return path;
 }
 
-describe("ml compact archive integration", () => {
+describe("luuna-atlas compact archive integration", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-compact-archive-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-compact-archive-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {} } }, tmpDir);
 	});
 
@@ -1126,7 +1126,7 @@ describe("ml compact archive integration", () => {
 		}
 	});
 
-	it("ml restore round-trips a compacted record back to live", async () => {
+	it("luuna-atlas restore round-trips a compacted record back to live", async () => {
 		const filePath = getExpertisePath("testing", tmpDir);
 		await createExpertiseFile(filePath);
 		await appendRecord(filePath, {
@@ -1174,16 +1174,16 @@ describe("ml compact archive integration", () => {
 	});
 });
 
-describe("ml compact pre-compact hook", () => {
+describe("luuna-atlas compact pre-compact hook", () => {
 	let tmpDir: string;
 
-	async function setupConfig(hooks: MulchConfig["hooks"]): Promise<void> {
+	async function setupConfig(hooks: AtlasConfig["hooks"]): Promise<void> {
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {} }, hooks }, tmpDir);
 	}
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-compact-hook-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-compact-hook-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {} } }, tmpDir);
 	});
 
@@ -1379,12 +1379,12 @@ EOF`,
 	});
 });
 
-describe("ml compact --auto strict numeric flag parsing", () => {
+describe("luuna-atlas compact --auto strict numeric flag parsing", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-compact-strict-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-compact-strict-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {} } }, tmpDir);
 	});
 

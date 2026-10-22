@@ -16,8 +16,8 @@ export function normalizeDirAnchor(input: string): string {
 
 // Throws if the input is unsafe to store as a project-root-relative anchor:
 // absolute paths (`/etc/passwd`, `C:\…`) and parent-traversal segments (`..`)
-// would silently break ml prime/--files matching, doctor's existsSync probe,
-// and anchor-validity decay. Called at write time (ml record / ml edit) so
+// would silently break luuna-atlas prime/--files matching, doctor's existsSync probe,
+// and anchor-validity decay. Called at write time (luuna-atlas record / luuna-atlas edit) so
 // invalid input surfaces as a formatted error before it lands on disk.
 export function assertWritableDirAnchor(raw: string): void {
 	const v = raw.trim();

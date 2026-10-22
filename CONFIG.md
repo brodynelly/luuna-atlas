@@ -1,31 +1,31 @@
-# Mulch Configuration Guide
+# Atlas Configuration Guide
 
-This guide covers `mulch.config.yaml` and the surrounding `.mulch/` surface for **v0.10.7**. It is the reference doc for orgs running Mulch across many repos and many ICs.
+This guide covers `config.yaml` and the surrounding `.luuna/atlas/` surface for **v0.10.7**. It is the reference doc for orgs running Atlas across many repos and many ICs.
 
-If you're new to Mulch, start with the [README](./README.md) — it covers what Mulch is and the day-one commands. This document assumes you already know `ml record` / `ml prime` and want to tune them.
+If you're new to Atlas, start with the [README](./README.md) — it covers what Atlas is and the day-one commands. This document assumes you already know `luuna-atlas record` / `luuna-atlas prime` and want to tune them.
 
 Conventions in this doc:
 
 - Every config key states its **default** next to its name.
 - YAML examples are minimal and copy-pasteable.
 - Cross-references look like `(see §Hooks)` and link to a section below.
-- Two audiences: **Part 1** for platform engineers rolling Mulch out; **Part 2** for ICs working inside a rollout.
+- Two audiences: **Part 1** for platform engineers rolling Atlas out; **Part 2** for ICs working inside a rollout.
 
 ---
 
-## Why customize Mulch
+## Why customize Atlas
 
 The defaults work fine for a solo repo or a five-person team. At 50+ ICs writing into the same expertise store, four kinds of entropy start to bite:
 
-**Vocabulary drift.** Three different teams independently invent `incident`, `postmortem`, and `outage` records. None of them validate against each other, none of them surface to `ml prime` consistently, and reviewers can't tell which kind of record they're reading. The fix is `custom_types` plus `disabled_types` to retire the losing names without breaking peer repos (see §Custom record types, §Retiring types).
+**Vocabulary drift.** Three different teams independently invent `incident`, `postmortem`, and `outage` records. None of them validate against each other, none of them surface to `luuna-atlas prime` consistently, and reviewers can't tell which kind of record they're reading. The fix is `custom_types` plus `disabled_types` to retire the losing names without breaking peer repos (see §Custom record types, §Retiring types).
 
 **Ungoverned writes.** Without per-domain rules, anyone can drop a `pattern` into a `security` domain without naming an owner. Six months later, no one knows who to ask about the rule. The fix is `domains.<name>.required_fields` — say "every record in `security` must carry `owner`" and validation enforces it (see §Per-domain rules).
 
-**Stale records crowding `ml prime`.** Tactical records are 14-day by default. On a monolith, that's still hundreds of records on day 15. Two levers: drop `ml prime` into `manifest` mode for large repos (see §Prime), and tighten `classification_defaults.shelf_life` so prune walks records out faster (see §Classification defaults).
+**Stale records crowding `luuna-atlas prime`.** Tactical records are 14-day by default. On a monolith, that's still hundreds of records on day 15. Two levers: drop `luuna-atlas prime` into `manifest` mode for large repos (see §Prime), and tighten `classification_defaults.shelf_life` so prune walks records out faster (see §Classification defaults).
 
 **Integration sprawl.** Slack wants a webhook on every new failure. Compliance wants an audit log on every record. Each repo solving this independently produces six implementations and three of them break silently. The fix is `hooks` — a single shell script per repo, deployed from a template, doing the integration work in one place (see §Hooks).
 
-**Provider fragmentation.** Your org standardized on an internal coding agent runtime three months ago. The built-in `claude` / `cursor` / `codex` recipes don't know about it. Filesystem recipes let you ship a custom recipe through repo scaffolding without forking Mulch (see §Provider recipes).
+**Provider fragmentation.** Your org standardized on an internal coding agent runtime three months ago. The built-in `claude` / `cursor` / `codex` recipes don't know about it. Filesystem recipes let you ship a custom recipe through repo scaffolding without forking Atlas (see §Provider recipes).
 
 ---
 
@@ -33,7 +33,7 @@ The defaults work fine for a solo repo or a five-person team. At 50+ ICs writing
 
 Eight motivating scenarios. Each one is short on purpose — the section it points to has the working example.
 
-**Slack-notify the team on every new failure record.** Drop a `post-record` hook that reads `payload.type === "failure"` from stdin and POSTs to a webhook. Non-zero exit warns but doesn't block, so a Slack outage can't take down `ml record`. → §Hooks.
+**Slack-notify the team on every new failure record.** Drop a `post-record` hook that reads `payload.type === "failure"` from stdin and POSTs to a webhook. Non-zero exit warns but doesn't block, so a Slack outage can't take down `luuna-atlas record`. → §Hooks.
 
 **Gate the `infra` domain to only `decision` and `runbook` types.** Set `domains.infra.allowed_types: [decision, runbook]`. ICs writing `failure` records into `infra` get a validation error pointing at the violating field, plus a copy-paste retry hint. → §Per-domain rules.
 
@@ -41,23 +41,23 @@ Eight motivating scenarios. Each one is short on purpose — the section it poin
 
 **Retire the `reference` type org-wide without breaking peer repos.** Add `reference` to `disabled_types`. New writes emit a deprecation warning; existing records still read; CLI `--type` choices still include it so peer repos that haven't synced the config aren't surprised mid-command. → §Retiring types.
 
-**Ship a custom Cursor recipe to every repo in the org.** Drop a `.mulch/recipes/cursor.ts` shipping with your repo scaffolding. Filesystem recipes win over built-ins, so the org variant takes precedence without anyone running `npm install`. → §Provider recipes.
+**Ship a custom Cursor recipe to every repo in the org.** Drop a `.luuna/atlas/recipes/cursor.ts` shipping with your repo scaffolding. Filesystem recipes win over built-ins, so the org variant takes precedence without anyone running `npm install`. → §Provider recipes.
 
-**Drop `ml prime` output size on a monolith from 12k tokens to 800.** Set `prime.default_mode: manifest`. Agents see a domain index and per-domain counts up front, then call `ml prime <domain>` or `ml prime --files <path>` to scope-load. → §Prime output tuning.
+**Drop `luuna-atlas prime` output size on a monolith from 12k tokens to 800.** Set `prime.default_mode: manifest`. Agents see a domain index and per-domain counts up front, then call `luuna-atlas prime <domain>` or `luuna-atlas prime --files <path>` to scope-load. → §Prime output tuning.
 
-**Force every record in `security` to carry an `owner` field.** Set `domains.security.required_fields: [owner]`. ICs running `ml record security ...` without `--owner` get a targeted error before the write hits disk. → §Per-domain rules.
+**Force every record in `security` to carry an `owner` field.** Set `domains.security.required_fields: [owner]`. ICs running `luuna-atlas record security ...` without `--owner` get a targeted error before the write hits disk. → §Per-domain rules.
 
-**Auto-archive observational records older than 14 days, not 30.** Set `classification_defaults.shelf_life.observational: 14`. The demotion ladder is unchanged — records still walk one tier per `ml prune` pass — but the threshold to enter the walk shrinks. → §Classification defaults.
+**Auto-archive observational records older than 14 days, not 30.** Set `classification_defaults.shelf_life.observational: 14`. The demotion ladder is unchanged — records still walk one tier per `luuna-atlas prune` pass — but the threshold to enter the walk shrinks. → §Classification defaults.
 
 ---
 
 # Part 1 — Admin guide
 
-## The `.mulch/` directory layout
+## The `.luuna/atlas/` directory layout
 
 ```
-.mulch/
-├── mulch.config.yaml         # config (this doc); commit
+.luuna/atlas/
+├── config.yaml         # config (this doc); commit
 ├── expertise/
 │   └── <domain>.jsonl        # append-only records; commit
 ├── archive/
@@ -70,22 +70,22 @@ Eight motivating scenarios. Each one is short on purpose — the section it poin
 └── README.md                 # auto-generated; commit
 ```
 
-**Commit everything.** `.mulch/` is intentionally checked in — expertise is a team artifact, not a per-developer cache. The auto-generated `README.md` describes the layout for first-time visitors to the repo.
+**Commit everything.** `.luuna/atlas/` is intentionally checked in — expertise is a team artifact, not a per-developer cache. The auto-generated `README.md` describes the layout for first-time visitors to the repo.
 
-**`.gitattributes` setup.** At the repo root (not inside `.mulch/`):
+**`.gitattributes` setup.** At the repo root (not inside `.luuna/atlas/`):
 
 ```
-.mulch/expertise/*.jsonl merge=union
-.mulch/archive/*.jsonl   merge=union
+.luuna/atlas/expertise/*.jsonl merge=union
+.luuna/atlas/archive/*.jsonl   merge=union
 ```
 
-`merge=union` makes concurrent record writes from two branches concatenate instead of conflicting on the merge. Combined with atomic writes and file locking inside Mulch itself, two agents writing to the same domain on different worktrees never collide.
+`merge=union` makes concurrent record writes from two branches concatenate instead of conflicting on the merge. Combined with atomic writes and file locking inside Atlas itself, two agents writing to the same domain on different worktrees never collide.
 
-**What not to read directly.** `.mulch/archive/<domain>.jsonl` is stale by definition. `ml prime` and `ml search` (without `--archived`) both skip it. Don't `cat` it during a coding session; use `ml search --archived <query>` instead.
+**What not to read directly.** `.luuna/atlas/archive/<domain>.jsonl` is stale by definition. `luuna-atlas prime` and `luuna-atlas search` (without `--archived`) both skip it. Don't `cat` it during a coding session; use `luuna-atlas search --archived <query>` instead.
 
 ---
 
-## `mulch.config.yaml` — top-level shape
+## `config.yaml` — top-level shape
 
 A fully-populated config, with comments:
 
@@ -108,14 +108,14 @@ governance:
   warn_entries: 150
   hard_limit: 200
 
-# Days before a record demotes one tier on `ml prune`. foundational is
+# Days before a record demotes one tier on `luuna-atlas prune`. foundational is
 # permanent and not configurable here.
 classification_defaults:
   shelf_life:
     tactical: 14
     observational: 30
 
-# Output mode for `ml prime`. "full" emits every record; "manifest" emits
+# Output mode for `luuna-atlas prime`. "full" emits every record; "manifest" emits
 # a domain index. Switch to manifest on monoliths.
 prime:
   default_mode: full
@@ -137,18 +137,18 @@ disabled_types: []
 
 # Lifecycle hooks. See §Hooks.
 hooks:
-  post-record: [.mulch/hooks/slack-failures.sh]
+  post-record: [.luuna/atlas/hooks/slack-failures.sh]
 hook_settings:
   timeout_ms: 5000
 
-# Decay knobs (only active with `ml prune --check-anchors`).
+# Decay knobs (only active with `luuna-atlas prune --check-anchors`).
 decay:
   anchor_validity:
     threshold: 0.5
     grace_days: 7
 ```
 
-**Required keys** (omit and Mulch refuses to start): `version`, `domains`, `governance`, `classification_defaults`. Mulch ships sensible defaults for the latter three; the typical real-world config overrides governance caps and adds domains.
+**Required keys** (omit and Atlas refuses to start): `version`, `domains`, `governance`, `classification_defaults`. Atlas ships sensible defaults for the latter three; the typical real-world config overrides governance caps and adds domains.
 
 **Defaults applied automatically.** Any of the four top-level required keys missing in your file is filled in from `DEFAULT_CONFIG` (see `src/schemas/config.ts`). You only need to spell out the keys you're customizing.
 
@@ -172,13 +172,13 @@ domains:
     required_fields: [owner]
 ```
 
-After this lands, `ml record security --type pattern ...` fails before writing. So does `ml record security --type decision --title "..." --rationale "..."` without `--owner`.
+After this lands, `luuna-atlas record security --type pattern ...` fails before writing. So does `luuna-atlas record security --type decision --title "..." --rationale "..."` without `--owner`.
 
 **Overlap with `disabled_types`.** Disabled wins. If `security.allowed_types` contains `failure` and `disabled_types` also contains `failure`, writing a failure record still emits the deprecation warning. This is deliberate — disabling a type at the org level shouldn't be silently re-enabled by a stale per-domain config.
 
-**Escape hatch.** Pass `--allow-domain-mismatch` to `ml record` or `ml validate` to bypass the domain check. This is for worktree/CI lag where the JSONL has landed (via `merge=union`) before the config update has propagated. `ml sync` intentionally ignores `--allow-domain-mismatch` — sync is the gate that catches misconfiguration before push.
+**Escape hatch.** Pass `--allow-domain-mismatch` to `luuna-atlas record` or `luuna-atlas validate` to bypass the domain check. This is for worktree/CI lag where the JSONL has landed (via `merge=union`) before the config update has propagated. `luuna-atlas sync` intentionally ignores `--allow-domain-mismatch` — sync is the gate that catches misconfiguration before push.
 
-**Doctor checks.** `ml doctor` surfaces two related checks:
+**Doctor checks.** `luuna-atlas doctor` surfaces two related checks:
 
 - `domain-conformance` (informational) — records that violate per-domain rules but still parse.
 - `domain-violations` (failing) — same set, but as a hard fail when run with `--strict`.
@@ -201,7 +201,7 @@ Fields:
 | `id_key` | string | optional | Field used as the human-readable id stem. Overrides parent. |
 | `summary` | string | optional | Summary template. `"{field}"` tokens interpolate record fields. |
 | `compact` | enum | optional | One of `concat`, `merge_outcomes`, `keep_latest`, `manual`. |
-| `section_title` | string | optional | Heading used in `ml prime` output. |
+| `section_title` | string | optional | Heading used in `luuna-atlas prime` output. |
 | `extracts_files` | bool | optional | Whether `files_field` should be parsed as file anchors. |
 | `files_field` | string | optional | Field name holding file paths. |
 | `aliases` | `Record<string, string[]>` | optional | Map canonical field name to legacy names. Disk records carrying a legacy field are rewritten to canonical at read time. |
@@ -221,7 +221,7 @@ custom_types:
 Use it:
 
 ```bash
-ml record releases \
+luuna-atlas record releases \
   --type release_decision \
   --title "Cut v2.4 from main-stable" \
   --rationale "Hotfix for CVE-2026-1234 lands today" \
@@ -271,7 +271,7 @@ disabled_types: [reference, runbook_v1]
 - **Delete the `custom_types` entry entirely** when:
   - All historical records have been migrated to the replacement type.
   - No peer repo writes the type anymore.
-  - You're confident `ml doctor` reports zero records of this type across all repos.
+  - You're confident `luuna-atlas doctor` reports zero records of this type across all repos.
 
 **Conflict semantics.** `disabled_types` wins over `allowed_types` on overlap (see §Per-domain rules). This is deliberate so a stale `allowed_types` entry doesn't silently un-retire a type.
 
@@ -290,8 +290,8 @@ Hooks run external scripts at lifecycle events. Four events, two semantics each:
 
 **Execution contract.**
 
-- **Working directory**: project root (the repo containing `.mulch/`).
-- **Environment**: parent env preserved, plus `MULCH_HOOK=1`.
+- **Working directory**: project root (the repo containing `.luuna/atlas/`).
+- **Environment**: parent env preserved, plus `LUUNA_ATLAS_HOOK=1`.
 - **Process group**: detached, so SIGKILL on timeout cleans up children.
 - **stdin**: payload JSON.
 - **stdout**: read only on mutable events (`pre-record`, `pre-prime`). Accepts both `{ event, payload }` and bare-payload shapes — pick whichever is convenient.
@@ -308,7 +308,7 @@ hook_settings:
   timeout_ms: 5000     # default 5000ms; SIGKILL on timeout
 ```
 
-**Dry-run.** `ml record --dry-run` and `ml prune --dry-run` skip hooks. Preview commands never trigger Slack posts or external confirmation flows.
+**Dry-run.** `luuna-atlas record --dry-run` and `luuna-atlas prune --dry-run` skip hooks. Preview commands never trigger Slack posts or external confirmation flows.
 
 ### Payload examples
 
@@ -362,7 +362,7 @@ hook_settings:
 
 ### Worked example: Slack-notify on new failures
 
-`.mulch/hooks/slack-failures.sh`:
+`.luuna/atlas/hooks/slack-failures.sh`:
 
 ```bash
 #!/usr/bin/env bash
@@ -392,7 +392,7 @@ Wire it up:
 
 ```yaml
 hooks:
-  post-record: [.mulch/hooks/slack-failures.sh]
+  post-record: [.luuna/atlas/hooks/slack-failures.sh]
 ```
 
 `SLACK_WEBHOOK_URL` is read from the parent env, which is preserved into the hook.
@@ -401,7 +401,7 @@ hooks:
 
 ## Prune, decay, and archive (`decay`, `--check-anchors`)
 
-`ml prune` is the demotion engine. Default behavior is **soft-archive**, not delete.
+`luuna-atlas prune` is the demotion engine. Default behavior is **soft-archive**, not delete.
 
 **The demotion ladder (hardcoded):**
 
@@ -409,23 +409,23 @@ hooks:
 foundational  →  tactical  →  observational  →  archived
 ```
 
-One tier per `ml prune` pass. `--aggressive` collapses straight to archived in a single pass.
+One tier per `luuna-atlas prune` pass. `--aggressive` collapses straight to archived in a single pass.
 
-**Soft-archive.** Records demoted past `observational` move to `.mulch/archive/<domain>.jsonl` with `status: "archived"` and `archived_at: <iso-date>`. Each archive file begins with a `# ARCHIVED — ...` banner. `readExpertiseFile` skips `#`-prefixed lines, so banners never confuse parsers.
+**Soft-archive.** Records demoted past `observational` move to `.luuna/atlas/archive/<domain>.jsonl` with `status: "archived"` and `archived_at: <iso-date>`. Each archive file begins with a `# ARCHIVED — ...` banner. `readExpertiseFile` skips `#`-prefixed lines, so banners never confuse parsers.
 
-**Hard delete.** `ml prune --hard` skips the archive and removes records outright. Reserve this for sensitive data that shouldn't persist anywhere.
+**Hard delete.** `luuna-atlas prune --hard` skips the archive and removes records outright. Reserve this for sensitive data that shouldn't persist anywhere.
 
-**Restore.** `ml restore <id>` brings a soft-archived record back to live expertise. The classification resets to `observational`.
+**Restore.** `luuna-atlas restore <id>` brings a soft-archived record back to live expertise. The classification resets to `observational`.
 
-**Read paths.** `ml prime` and the default `ml search` never read archive files. `ml search --archived <query>` is the only built-in read path that walks `.mulch/archive/`.
+**Read paths.** `luuna-atlas prime` and the default `luuna-atlas search` never read archive files. `luuna-atlas search --archived <query>` is the only built-in read path that walks `.luuna/atlas/archive/`.
 
 ### Supersession decay
 
-When record B has `supersedes: [A]`, A walks one tier per `ml prune` pass. Cross-domain by design — if a `frontend` decision supersedes an `infra` decision, the infra record demotes regardless. Each step stamps `supersession_demoted_at: <iso-date>` on A. `--aggressive` collapses A to archived in a single pass.
+When record B has `supersedes: [A]`, A walks one tier per `luuna-atlas prune` pass. Cross-domain by design — if a `frontend` decision supersedes an `infra` decision, the infra record demotes regardless. Each step stamps `supersession_demoted_at: <iso-date>` on A. `--aggressive` collapses A to archived in a single pass.
 
 ### Anchor-validity decay
 
-Opt in with `ml prune --check-anchors`. Records whose declared file or directory anchors stop resolving (the underlying path was deleted, moved, etc.) demote one tier per pass when **both** of these are true:
+Opt in with `luuna-atlas prune --check-anchors`. Records whose declared file or directory anchors stop resolving (the underlying path was deleted, moved, etc.) demote one tier per pass when **both** of these are true:
 
 - The fraction of valid anchors is below `decay.anchor_validity.threshold`.
 - The record's age exceeds `decay.anchor_validity.grace_days`.
@@ -448,10 +448,10 @@ Demotions stamp `anchor_decay_demoted_at: <iso-date>`.
 
 ### Conflict resolution
 
-When supersession decay and anchor-validity decay both want to demote the same record, **staleness wins**. Mulch picks the tier walk caused by classification age and skips the intermediate demotion stamp. `--explain` prints per-record reasons:
+When supersession decay and anchor-validity decay both want to demote the same record, **staleness wins**. Atlas picks the tier walk caused by classification age and skips the intermediate demotion stamp. `--explain` prints per-record reasons:
 
 ```bash
-ml prune --check-anchors --explain --dry-run
+luuna-atlas prune --check-anchors --explain --dry-run
 ```
 
 emits a line per candidate showing which decay path fired and why.
@@ -474,27 +474,27 @@ prime:
     observational: 10
 ```
 
-**`full`** (the default) emits the record index: one line per record, failures first, capped by `--budget` (default 4000 tokens). `ml show <id>` prints a full record.
+**`full`** (the default) emits the record index: one line per record, failures first, capped by `--budget` (default 4000 tokens). `luuna-atlas show <id>` prints a full record.
 
-**`manifest`** emits a domain index and per-domain record counts plus a quick reference of common commands. Agents then scope-load with `ml prime <domain>` or `ml prime --files <path>`. On a 12k-token expertise store, manifest mode typically drops session-priming output to under 1k tokens.
+**`manifest`** emits a domain index and per-domain record counts plus a quick reference of common commands. Agents then scope-load with `luuna-atlas prime <domain>` or `luuna-atlas prime --files <path>`. On a 12k-token expertise store, manifest mode typically drops session-priming output to under 1k tokens.
 
 Override per invocation:
 
-- `ml prime --manifest` — manifest mode regardless of config.
-- `ml prime --full` — full record bodies regardless of config.
-- `ml prime --files src/foo.ts` — load only records relevant to the listed paths, with per-file framing, classification age, and confirmation scores.
+- `luuna-atlas prime --manifest` — manifest mode regardless of config.
+- `luuna-atlas prime --full` — full record bodies regardless of config.
+- `luuna-atlas prime --files src/foo.ts` — load only records relevant to the listed paths, with per-file framing, classification age, and confirmation scores.
 
 ### Session-close footer (`prime.session_close`)
 
-`ml prime` (and the snippet `ml setup` / `ml onboard` writes into CLAUDE.md / AGENTS.md / `.cursor/rules/mulch.mdc`) ends with a footer reminding the agent to record insights before closing the session. The footer is configurable so each project can dial in the right voice without forking:
+`luuna-atlas prime` (and the snippet `luuna-atlas setup` / `luuna-atlas onboard` writes into CLAUDE.md / AGENTS.md / `.cursor/rules/luuna-atlas.mdc`) ends with a footer reminding the agent to record insights before closing the session. The footer is configurable so each project can dial in the right voice without forking:
 
-- **`style: directive`** — numbered imperative + inline type glossary + dedup nudge + anti-filler examples. Loudest. Use when the team needs reminding that `ml record` exists at all.
+- **`style: directive`** — numbered imperative + inline type glossary + dedup nudge + anti-filler examples. Loudest. Use when the team needs reminding that `luuna-atlas record` exists at all.
 - **`style: conditional`** (default) — "if you discovered insights worth preserving, record them; skip if no insight surfaced." The v0.10.0 reframing. Use for teams already recording consistently.
 - **`style: minimal`** — one-line nudge.
 - **`style: none`** — suppress the footer entirely.
 - **`custom: "<prose>"`** — verbatim override. Wins over `style`. Use for org-specific phrasing or non-English voices.
 
-The 🚨 marker is preserved on `directive` for `markdown` / `plain` prime footers (memory anchor in long sessions) and dropped from the embedded variant (which lives at the top of CLAUDE.md, not at end-of-session). Re-run `ml setup <provider>` and `ml onboard` after changing this knob — the existing files check stale until you do.
+The 🚨 marker is preserved on `directive` for `markdown` / `plain` prime footers (memory anchor in long sessions) and dropped from the embedded variant (which lives at the top of CLAUDE.md, not at end-of-session). Re-run `luuna-atlas setup <provider>` and `luuna-atlas onboard` after changing this knob — the existing files check stale until you do.
 
 ---
 
@@ -505,7 +505,7 @@ search:
   boost_factor: 0.1        # default 0.1; multiplier on confirmation outcomes
 ```
 
-`ml search` ranks results with BM25, then applies a confirmation boost: records with positive `outcomes` (an IC marked the record as having helped) rerank higher. `boost_factor` scales the multiplier. Setting it to `0` disables boost. `ml search --no-boost` disables it for a single call.
+`luuna-atlas search` ranks results with BM25, then applies a confirmation boost: records with positive `outcomes` (an IC marked the record as having helped) rerank higher. `boost_factor` scales the multiplier. Setting it to `0` disables boost. `luuna-atlas search --no-boost` disables it for a single call.
 
 Tune higher if your team is diligent about marking outcomes and you want confirmed records to dominate ranking. Tune lower (or zero) if outcomes are inconsistently recorded and you want raw text relevance.
 
@@ -517,17 +517,17 @@ Tune higher if your team is diligent about marking outcomes and you want confirm
 
 ```yaml
 governance:
-  max_entries: 100         # soft target; ml status flags above this
-  warn_entries: 150        # ml record prints a "consider compacting" hint
+  max_entries: 100         # soft target; luuna-atlas status flags above this
+  warn_entries: 150        # luuna-atlas record prints a "consider compacting" hint
   hard_limit: 200          # writes past this are refused
 ```
 
 All three are per-domain, not global. The flow is:
 
 1. Below `max_entries`: silent.
-2. Between `max_entries` and `warn_entries`: `ml status` warns, writes proceed.
-3. Between `warn_entries` and `hard_limit`: every `ml record` write prints a "consider compacting" hint.
-4. At `hard_limit`: writes are refused with a hint to run `ml compact <domain>`.
+2. Between `max_entries` and `warn_entries`: `luuna-atlas status` warns, writes proceed.
+3. Between `warn_entries` and `hard_limit`: every `luuna-atlas record` write prints a "consider compacting" hint.
+4. At `hard_limit`: writes are refused with a hint to run `luuna-atlas compact <domain>`.
 
 Tune `hard_limit` up only after auditing prime output cost — every extra record is tokens in the agent's session start.
 
@@ -540,7 +540,7 @@ classification_defaults:
     observational: 30      # days
 ```
 
-Records older than the shelf life become demotion candidates on the next `ml prune` pass. **Foundational is permanent and not configurable here** — by definition, foundational is "load-bearing forever." If a record should expire, classify it tactical or observational at record time.
+Records older than the shelf life become demotion candidates on the next `luuna-atlas prune` pass. **Foundational is permanent and not configurable here** — by definition, foundational is "load-bearing forever." If a record should expire, classify it tactical or observational at record time.
 
 The ladder (`foundational → tactical → observational → archived`) is hardcoded. You can change the speed of the walk via shelf life, but not the steps.
 
@@ -548,28 +548,28 @@ The ladder (`foundational → tactical → observational → archived`) is hardc
 
 ## Provider recipes
 
-`ml setup <name>` wires Mulch into a coding agent runtime. Recipes are pluggable.
+`luuna-atlas setup <name>` wires Atlas into a coding agent runtime. Recipes are pluggable.
 
 ### Discovery order
 
-1. **Filesystem**: `.mulch/recipes/<name>.ts` or `.mulch/recipes/<name>.sh` (TypeScript wins on tie).
-2. **npm**: a package named `mulch-recipe-<name>` resolvable from the repo.
+1. **Filesystem**: `.luuna/atlas/recipes/<name>.ts` or `.luuna/atlas/recipes/<name>.sh` (TypeScript wins on tie).
+2. **npm**: a package named `luuna-atlas-recipe-<name>` resolvable from the repo.
 3. **Built-in**: one of the recipes shipped in `src/commands/setup.ts`.
 
-Filesystem wins so an org can shadow built-ins without forking Mulch.
+Filesystem wins so an org can shadow built-ins without forking Atlas.
 
 ### Built-ins as of v0.10.2
 
 - `claude` — writes `SessionStart` hook into `.claude/`. `PreCompact` is intentionally not registered because its stdout is discarded across compaction.
 - `cursor` — writes Cursor's project rules surface.
-- `codex` — writes both an `AGENTS.md` mulch section (fallback prose) and a `[[hooks.SessionStart]]` block in `.codex/config.toml` fenced by `# mulch:start` / `# mulch:end` line comments for idempotency.
+- `codex` — writes both an `AGENTS.md` luuna-atlas section (fallback prose) and a `[[hooks.SessionStart]]` block in `.codex/config.toml` fenced by `# luuna-atlas:start` / `# luuna-atlas:end` line comments for idempotency.
 
-**Removed in v0.9.0**: `aider`, `gemini`, `windsurf`. **Removed in v0.10.2**: `pi` (experiment rolled back). Users who relied on any of these can re-create the same behavior as a filesystem recipe under `.mulch/recipes/<name>.{ts,sh}`.
+**Removed in v0.9.0**: `aider`, `gemini`, `windsurf`. **Removed in v0.10.2**: `pi` (experiment rolled back). Users who relied on any of these can re-create the same behavior as a filesystem recipe under `.luuna/atlas/recipes/<name>.{ts,sh}`.
 
 ### TypeScript recipe shape
 
 ```typescript
-import type { ProviderRecipe, RecipeResult } from "@os-eco/mulch-cli";
+import type { ProviderRecipe, RecipeResult } from "@luuna/atlas-cli";
 
 const recipe: ProviderRecipe = {
   async install(cwd: string): Promise<RecipeResult> {
@@ -596,13 +596,13 @@ export default recipe;
 ```
 
 - **cwd**: project root.
-- **env**: `MULCH_RECIPE_NAME=<name>`, `MULCH_RECIPE_ACTION=<install|check|remove>`, plus all parent env.
+- **env**: `LUUNA_ATLAS_RECIPE_NAME=<name>`, `LUUNA_ATLAS_RECIPE_ACTION=<install|check|remove>`, plus all parent env.
 - **stdout/stderr**: forwarded to the calling terminal.
 - **Exit code**: `0` for success, non-zero for failure (the action is reported as failed and the message is the script's stderr).
 
 ### Worked example: an internal `windsurf-org` recipe
 
-`.mulch/recipes/windsurf-org.sh`:
+`.luuna/atlas/recipes/windsurf-org.sh`:
 
 ```bash
 #!/usr/bin/env bash
@@ -611,8 +611,8 @@ set -euo pipefail
 action="${1:?action required}"
 target_dir=".windsurf-org"
 target_file="$target_dir/agent_context.md"
-fence_start="<!-- mulch:start -->"
-fence_end="<!-- mulch:end -->"
+fence_start="<!-- luuna-atlas:start -->"
+fence_end="<!-- luuna-atlas:end -->"
 
 case "$action" in
   install)
@@ -627,7 +627,7 @@ case "$action" in
     {
       cat "$tmp"
       echo "$fence_start"
-      echo "Run: ml prime"
+      echo "Run: luuna-atlas prime"
       echo "$fence_end"
     } > "$target_file"
     rm "$tmp"
@@ -656,9 +656,9 @@ case "$action" in
 esac
 ```
 
-Make it executable (`chmod +x`), commit it under `.mulch/recipes/`, and `ml setup windsurf-org` Just Works in every repo that pulls the scaffolding.
+Make it executable (`chmod +x`), commit it under `.luuna/atlas/recipes/`, and `luuna-atlas setup windsurf-org` Just Works in every repo that pulls the scaffolding.
 
-`ml setup --list` enumerates everything found with source + shadow markers, so it's easy to verify the filesystem recipe is winning over a built-in of the same name.
+`luuna-atlas setup --list` enumerates everything found with source + shadow markers, so it's easy to verify the filesystem recipe is winning over a built-in of the same name.
 
 ---
 
@@ -666,31 +666,31 @@ Make it executable (`chmod +x`), commit it under `.mulch/recipes/`, and `ml setu
 
 The recommended pattern:
 
-1. **Commit `mulch.config.yaml` in every repo.** Don't try to centralize at the org level — repos move at different speeds, and a config out of sync with on-disk records is worse than a stale-but-consistent config.
-2. **Seed identical config via repo scaffolding.** A cookiecutter template, an internal `degit` source, or a tool like Backstage that scaffolds new repos with a known `.mulch/` baseline.
-3. **Roll out config changes via PRs.** Every change to `mulch.config.yaml` is a code review just like any other. `ml sync` is the safety net that catches misconfiguration before the change merges.
+1. **Commit `config.yaml` in every repo.** Don't try to centralize at the org level — repos move at different speeds, and a config out of sync with on-disk records is worse than a stale-but-consistent config.
+2. **Seed identical config via repo scaffolding.** A cookiecutter template, an internal `degit` source, or a tool like Backstage that scaffolds new repos with a known `.luuna/atlas/` baseline.
+3. **Roll out config changes via PRs.** Every change to `config.yaml` is a code review just like any other. `luuna-atlas sync` is the safety net that catches misconfiguration before the change merges.
 4. **Use `disabled_types` and `--allow-unknown-types` to absorb rollout lag.** Two repos sharing expertise (via copy, fork, or external sync) will occasionally disagree on whether a custom type exists. `disabled_types` preserves CLI choices through the transition. `--allow-unknown-types` is the per-invocation escape hatch for reads against records of an unknown type.
 
 ### `.gitattributes` setup
 
 ```
-.mulch/expertise/*.jsonl merge=union
-.mulch/archive/*.jsonl   merge=union
+.luuna/atlas/expertise/*.jsonl merge=union
+.luuna/atlas/archive/*.jsonl   merge=union
 ```
 
-`merge=union` is critical at scale. Two ICs working on different branches both running `ml record` produces append-only writes that merge cleanly without conflicts. Combined with file locking (advisory, 50ms retry, 5s timeout, 30s stale detection) and atomic writes (temp file + rename), concurrent agents on the same repo never produce partial JSONL.
+`merge=union` is critical at scale. Two ICs working on different branches both running `luuna-atlas record` produces append-only writes that merge cleanly without conflicts. Combined with file locking (advisory, 50ms retry, 5s timeout, 30s stale detection) and atomic writes (temp file + rename), concurrent agents on the same repo never produce partial JSONL.
 
 ### Worktree behavior
 
-`getMulchDir()` resolves `.mulch/` to the main repo when invoked from a `git worktree`. Expertise survives worktree cleanup — a record written from `repo.worktrees/feature-x/` lands in `repo/.mulch/expertise/<domain>.jsonl`, not in the throwaway worktree.
+`getAtlasDir()` resolves `.luuna/atlas/` to the main repo when invoked from a `git worktree`. Expertise survives worktree cleanup — a record written from `repo.worktrees/feature-x/` lands in `repo/.luuna/atlas/expertise/<domain>.jsonl`, not in the throwaway worktree.
 
 `isInsideWorktree()` guards against a submodule false positive: `git rev-parse --git-common-dir` returns `/parent/.git/modules/<name>` for submodules (without a `.git` suffix), which the naive worktree check would treat as a worktree. The guard correctly identifies the submodule case and uses the local `.git`.
 
-### `ml sync` is the gate
+### `luuna-atlas sync` is the gate
 
-`ml sync` re-validates every staged record against the on-disk config before committing. It **ignores** `--allow-unknown-types` and `--allow-domain-mismatch` by design — those flags are for unblocking writes during rollout lag, not for bypassing the validation gate that protects the canonical history.
+`luuna-atlas sync` re-validates every staged record against the on-disk config before committing. It **ignores** `--allow-unknown-types` and `--allow-domain-mismatch` by design — those flags are for unblocking writes during rollout lag, not for bypassing the validation gate that protects the canonical history.
 
-If `ml sync` rejects something, the fix is one of:
+If `luuna-atlas sync` rejects something, the fix is one of:
 
 - Update the record to match current config.
 - Update config to accept the record (then commit the config change first).
@@ -706,21 +706,21 @@ Every record carries these fields regardless of type. Most are set automatically
 
 | Field | Type | Set by | Notes |
 |-------|------|--------|-------|
-| `id` | string | Mulch | Human-readable id stem + date. Stable across edits. |
+| `id` | string | Atlas | Human-readable id stem + date. Stable across edits. |
 | `type` | string | you (`--type`) | One of the registered types (built-in or custom). |
 | `classification` | enum | you (`--classification`) | `foundational` / `tactical` / `observational`. Default `tactical`. |
-| `recorded_at` | ISO 8601 string | Mulch | Set at write time. |
-| `evidence` | object | mixed | Sub-fields: `commit`, `date`, `issue`, `file`, `bead`, `seeds`, `gh`, `linear`. Commit + changed files auto-populate from git. |
+| `recorded_at` | ISO 8601 string | Atlas | Set at write time. |
+| `evidence` | object | mixed | Sub-fields: `commit`, `date`, `issue`, `file`, `bead`, `missions`, `gh`, `linear`. Commit + changed files auto-populate from git. |
 | `tags` | `string[]` | you (`--tags`) | Free-form. Searchable. |
 | `relates_to` | `string[]` | you (`--relates-to`) | mx-ids of related records. |
-| `supersedes` | `string[]` | you (`--supersedes`) | mx-ids this record replaces. Triggers supersession decay on `ml prune`. |
-| `outcomes` | object | `ml outcome` | Confirmation counts. Drives search boost. |
-| `dir_anchors` | `string[]` | mixed | Directory paths the record applies to. Drives `ml prime --files` filtering. |
-| `owner` | string | you (`--owner`) | Reserved, opaque to Mulch — use it however your org wants. |
-| `status` | enum | Mulch | `draft` / `active` / `deprecated` / `archived`. |
-| `archived_at` | ISO 8601 string | Mulch | Set when prune archives the record. |
-| `supersession_demoted_at` | ISO 8601 string | Mulch | Set when supersession decay demoted this record. |
-| `anchor_decay_demoted_at` | ISO 8601 string | Mulch | Set when anchor-validity decay demoted this record. |
+| `supersedes` | `string[]` | you (`--supersedes`) | mx-ids this record replaces. Triggers supersession decay on `luuna-atlas prune`. |
+| `outcomes` | object | `luuna-atlas outcome` | Confirmation counts. Drives search boost. |
+| `dir_anchors` | `string[]` | mixed | Directory paths the record applies to. Drives `luuna-atlas prime --files` filtering. |
+| `owner` | string | you (`--owner`) | Reserved, opaque to Atlas — use it however your org wants. |
+| `status` | enum | Atlas | `draft` / `active` / `deprecated` / `archived`. |
+| `archived_at` | ISO 8601 string | Atlas | Set when prune archives the record. |
+| `supersession_demoted_at` | ISO 8601 string | Atlas | Set when supersession decay demoted this record. |
+| `anchor_decay_demoted_at` | ISO 8601 string | Atlas | Set when anchor-validity decay demoted this record. |
 
 ---
 
@@ -735,36 +735,36 @@ Every record carries these fields regardless of type. Most are set automatically
 | `reference` | `name`, `description` | `files` | `name` | `{name}` |
 | `guide` | `name`, `description` | `content`, `files` | `name` | `{name}` |
 
-Each example below is the minimum to make `ml record` succeed.
+Each example below is the minimum to make `luuna-atlas record` succeed.
 
 ```bash
 # convention
-ml record style --type convention \
+luuna-atlas record style --type convention \
   --content "Use .ts extensions on all relative imports"
 
 # pattern
-ml record adapters --type pattern \
+luuna-atlas record adapters --type pattern \
   --name "Atomic write via temp + rename" \
   --description "Write to <path>.tmp.<pid>, then rename to <path>" \
   --files src/utils/expertise.ts
 
 # failure
-ml record schemas --type failure \
+luuna-atlas record schemas --type failure \
   --description "AJV strict mode rejects schema missing type: object" \
   --resolution "Include type: object alongside required/properties"
 
 # decision
-ml record architecture --type decision \
+luuna-atlas record architecture --type decision \
   --title "Soft-archive over hard-delete on prune" \
-  --rationale "Archived records remain searchable via ml search --archived"
+  --rationale "Archived records remain searchable via luuna-atlas search --archived"
 
 # reference
-ml record vendors --type reference \
+luuna-atlas record vendors --type reference \
   --name "Bun runtime docs" \
   --description "Bun handles ESM/CJS interop transparently for AJV"
 
 # guide
-ml record onboarding --type guide \
+luuna-atlas record onboarding --type guide \
   --name "First-day-on-team setup" \
   --description "Steps for new ICs to get a working dev environment" \
   --content "1. Install bun. 2. bun install. 3. bun test."
@@ -777,7 +777,7 @@ ml record onboarding --type guide \
 | Flag | When to use |
 |------|-------------|
 | `--allow-unknown-types` | Reading expertise that references a type not registered in the local config. Common during org rollout lag. |
-| `--allow-domain-mismatch` | Writing a record where per-domain rules don't yet match an on-disk update. Same lag scenario. `ml sync` ignores this. |
+| `--allow-domain-mismatch` | Writing a record where per-domain rules don't yet match an on-disk update. Same lag scenario. `luuna-atlas sync` ignores this. |
 | `--quiet` / `-q` | Suppress informational output. Useful in scripts. |
 | `--json` | Emit JSON instead of formatted text. For piping into `jq` or other tools. |
 | `--verbose` | Extra diagnostic output. Use when something looks off. |
@@ -789,22 +789,22 @@ ml record onboarding --type guide \
 
 | Variable | Set by | Available where |
 |----------|--------|-----------------|
-| `MULCH_HOOK` | Mulch (set to `1`) | Inside hook scripts. Detect with `[ "${MULCH_HOOK:-}" = "1" ]`. |
-| `MULCH_RECIPE_NAME` | Mulch | Inside recipe scripts (shell only). |
-| `MULCH_RECIPE_ACTION` | Mulch | Inside recipe scripts. One of `install` / `check` / `remove`. |
-| `MULCH_DEBUG` | You (operator) | Read by `ml` at startup. Set to any non-empty value to raise the diagnostic logger to `debug` (hook traces, registry-init failures). Diagnostics go to **stderr** only and never touch stdout / `--json` output. |
-| `MULCH_LOG_LEVEL` | You (operator) | Read by `ml` at startup. Authoritative log level (`trace`/`debug`/`info`/`warn`/`error`/`fatal`); overrides `MULCH_DEBUG`. Default `info` (silent for routine internals). |
-| `MULCH_LOG_JSON` | You (operator) | Read by `ml` at startup. Set to `1` to force newline-delimited JSON logs even in a TTY (the default pretty-renders to stderr in an interactive terminal). |
+| `LUUNA_ATLAS_HOOK` | Atlas (set to `1`) | Inside hook scripts. Detect with `[ "${LUUNA_ATLAS_HOOK:-}" = "1" ]`. |
+| `LUUNA_ATLAS_RECIPE_NAME` | Atlas | Inside recipe scripts (shell only). |
+| `LUUNA_ATLAS_RECIPE_ACTION` | Atlas | Inside recipe scripts. One of `install` / `check` / `remove`. |
+| `LUUNA_ATLAS_DEBUG` | You (operator) | Read by `luuna-atlas` at startup. Set to any non-empty value to raise the diagnostic logger to `debug` (hook traces, registry-init failures). Diagnostics go to **stderr** only and never touch stdout / `--json` output. |
+| `LUUNA_ATLAS_LOG_LEVEL` | You (operator) | Read by `luuna-atlas` at startup. Authoritative log level (`trace`/`debug`/`info`/`warn`/`error`/`fatal`); overrides `LUUNA_ATLAS_DEBUG`. Default `info` (silent for routine internals). |
+| `LUUNA_ATLAS_LOG_JSON` | You (operator) | Read by `luuna-atlas` at startup. Set to `1` to force newline-delimited JSON logs even in a TTY (the default pretty-renders to stderr in an interactive terminal). |
 
 Parent env is preserved into both hooks and recipes. `SLACK_WEBHOOK_URL`, `OPS_TOKEN`, whatever you have exported in the agent's session is visible to the script.
 
-The `MULCH_*` *logging* variables (`MULCH_DEBUG`, `MULCH_LOG_LEVEL`, `MULCH_LOG_JSON`) control mulch's diagnostic channel only — they never alter product output. Mulch's user-facing output (the markdown `ml prime` emits, status tables, `--json` results) always goes to stdout; the logger writes exclusively to stderr, so turning on `MULCH_DEBUG` is safe even when piping `--json` to a machine consumer.
+The `LUUNA_ATLAS_*` *logging* variables (`LUUNA_ATLAS_DEBUG`, `LUUNA_ATLAS_LOG_LEVEL`, `LUUNA_ATLAS_LOG_JSON`) control luuna-atlas's diagnostic channel only — they never alter product output. Atlas's user-facing output (the markdown `luuna-atlas prime` emits, status tables, `--json` results) always goes to stdout; the logger writes exclusively to stderr, so turning on `LUUNA_ATLAS_DEBUG` is safe even when piping `--json` to a machine consumer.
 
 ---
 
 ## Working in worktrees and across branches
 
-**Worktree resolution.** `.mulch/` always resolves to the main repo, even when you invoke `ml` from a worktree directory. A record written from `~/repo.worktrees/feat-x/` lands in `~/repo/.mulch/expertise/<domain>.jsonl`. Worktree cleanup never loses expertise.
+**Worktree resolution.** `.luuna/atlas/` always resolves to the main repo, even when you invoke `luuna-atlas` from a worktree directory. A record written from `~/repo.worktrees/feat-x/` lands in `~/repo/.luuna/atlas/expertise/<domain>.jsonl`. Worktree cleanup never loses expertise.
 
 **Concurrent writes.** Two ICs writing to the same domain on different branches produce two appends to the same JSONL file. The combination of:
 
@@ -814,7 +814,7 @@ The `MULCH_*` *logging* variables (`MULCH_DEBUG`, `MULCH_LOG_LEVEL`, `MULCH_LOG_
 
 means concurrent writes never produce partial or corrupt JSONL, and post-merge JSONL is the union of both branches' records.
 
-If two branches write a record with the same `dedup_key`, both records are preserved on disk after merge. Run `ml compact <domain>` to collapse them according to the type's compact strategy.
+If two branches write a record with the same `dedup_key`, both records are preserved on disk after merge. Run `luuna-atlas compact <domain>` to collapse them according to the type's compact strategy.
 
 ---
 
@@ -822,19 +822,19 @@ If two branches write a record with the same `dedup_key`, both records are prese
 
 Discovery from the command line:
 
-- `ml --help` lists registered types in the description of the `--type` flag.
-- `ml record --help` shows the allowed `--type` values, including custom types.
-- `ml record <domain> --type <name> --help` shows required/optional flags for that combination — including any extra `required_fields` from the domain config.
+- `luuna-atlas --help` lists registered types in the description of the `--type` flag.
+- `luuna-atlas record --help` shows the allowed `--type` values, including custom types.
+- `luuna-atlas record <domain> --type <name> --help` shows required/optional flags for that combination — including any extra `required_fields` from the domain config.
 
-**How required fields surface as CLI flags.** A `required_fields: [owner]` entry in `domains.security` means `ml record security ...` accepts (and demands) `--owner`. The flag name follows the field name with `_` replaced by `-`.
+**How required fields surface as CLI flags.** A `required_fields: [owner]` entry in `domains.security` means `luuna-atlas record security ...` accepts (and demands) `--owner`. The flag name follows the field name with `_` replaced by `-`.
 
-**Validate your local records against org rules.** Run `ml doctor` to check that everything you've written is conformant. Common checks:
+**Validate your local records against org rules.** Run `luuna-atlas doctor` to check that everything you've written is conformant. Common checks:
 
 - `domain-conformance` / `domain-violations` — per-domain rule conformance.
 - `type-registry` — built-in vs custom types in use; counts; disabled markers.
 - `unknown-types` — fails if records reference a type the local config doesn't know about. Pass `--allow-unknown-types` to relax.
 
-`ml doctor --fix` strips broken file anchors but does not move records between domains or rewrite fields. Bigger fixes need an explicit `ml edit`.
+`luuna-atlas doctor --fix` strips broken file anchors but does not move records between domains or rewrite fields. Bigger fixes need an explicit `luuna-atlas edit`.
 
 ---
 
@@ -865,12 +865,12 @@ Discovery from the command line:
 | `domains.<name>.required_fields` | `string[]` | `[]` | Extra required fields per domain. |
 | `governance.hard_limit` | int | `200` | Writes past this are refused. |
 | `governance.max_entries` | int | `100` | Soft target; status flags above this. |
-| `governance.warn_entries` | int | `150` | `ml record` prints compaction hint. |
+| `governance.warn_entries` | int | `150` | `luuna-atlas record` prints compaction hint. |
 | `hook_settings.timeout_ms` | int | `5000` | Per-hook timeout, ms. SIGKILL on timeout. |
 | `hooks.post-record` | `string[]` | — | Scripts run after a successful record. Non-zero warns. |
-| `hooks.pre-compact` | `string[]` | — | Scripts run before `ml compact`. Mutable (replacement record). Non-zero blocks. |
-| `hooks.pre-prime` | `string[]` | — | Scripts run before `ml prime`. Mutable. Non-zero blocks. |
-| `hooks.pre-prune` | `string[]` | — | Scripts run before `ml prune`. Non-zero blocks. Stdout ignored. |
+| `hooks.pre-compact` | `string[]` | — | Scripts run before `luuna-atlas compact`. Mutable (replacement record). Non-zero blocks. |
+| `hooks.pre-prime` | `string[]` | — | Scripts run before `luuna-atlas prime`. Mutable. Non-zero blocks. |
+| `hooks.pre-prune` | `string[]` | — | Scripts run before `luuna-atlas prune`. Non-zero blocks. Stdout ignored. |
 | `hooks.pre-record` | `string[]` | — | Scripts run before a record is written. Mutable. Non-zero blocks. |
 | `prime.default_mode` | enum | `full` | `full` or `manifest`. |
 | `prime.session_close.custom` | string | — | Verbatim footer prose. Wins over `style`. |
@@ -897,7 +897,7 @@ All keys are defined in `src/schemas/config.ts`.
 Common contract for all five:
 
 - `cwd` = project root.
-- `MULCH_HOOK=1` plus all parent env.
+- `LUUNA_ATLAS_HOOK=1` plus all parent env.
 - stdin = JSON payload.
 - stderr forwarded to caller.
 - SIGKILL on `hook_settings.timeout_ms` (default 5000).
@@ -910,7 +910,7 @@ Global, available on every command:
 | Flag | Description |
 |------|-------------|
 | `--allow-unknown-types` | Relax `unknown-types` error when reading. |
-| `--allow-domain-mismatch` | Relax per-domain validation on `ml record` / `ml validate`. Ignored by `ml sync`. |
+| `--allow-domain-mismatch` | Relax per-domain validation on `luuna-atlas record` / `luuna-atlas validate`. Ignored by `luuna-atlas sync`. |
 | `--quiet`, `-q` | Suppress informational output. |
 | `--json` | Emit JSON. |
 | `--verbose` | Extra diagnostic output. |
@@ -920,33 +920,33 @@ Notable command-specific flags referenced in this doc:
 
 | Flag | Command | Effect |
 |------|---------|--------|
-| `--manifest` | `ml prime` | Force manifest mode for this call. |
-| `--full` | `ml prime` | Force full mode for this call. |
-| `--files <path...>` | `ml prime` | Scope-load records by file relevance. |
-| `--no-boost` | `ml search` | Disable confirmation boost. |
-| `--archived` | `ml search` | Walk `.mulch/archive/` too. |
-| `--check-anchors` | `ml prune` | Enable anchor-validity decay. |
-| `--aggressive` | `ml prune` | Collapse straight to archived in one pass. |
-| `--hard` | `ml prune` | True delete instead of soft archive. |
-| `--explain` | `ml prune` | Per-record demotion reasons. |
-| `--dry-run` | `ml record`, `ml prune` | Preview; skips hooks. |
-| `--fix` | `ml doctor` | Strip broken file anchors. |
-| `--strict` | `ml doctor` | Fail on informational checks too. |
-| `--list` | `ml setup` | Enumerate recipes with source + shadow markers. |
+| `--manifest` | `luuna-atlas prime` | Force manifest mode for this call. |
+| `--full` | `luuna-atlas prime` | Force full mode for this call. |
+| `--files <path...>` | `luuna-atlas prime` | Scope-load records by file relevance. |
+| `--no-boost` | `luuna-atlas search` | Disable confirmation boost. |
+| `--archived` | `luuna-atlas search` | Walk `.luuna/atlas/archive/` too. |
+| `--check-anchors` | `luuna-atlas prune` | Enable anchor-validity decay. |
+| `--aggressive` | `luuna-atlas prune` | Collapse straight to archived in one pass. |
+| `--hard` | `luuna-atlas prune` | True delete instead of soft archive. |
+| `--explain` | `luuna-atlas prune` | Per-record demotion reasons. |
+| `--dry-run` | `luuna-atlas record`, `luuna-atlas prune` | Preview; skips hooks. |
+| `--fix` | `luuna-atlas doctor` | Strip broken file anchors. |
+| `--strict` | `luuna-atlas doctor` | Fail on informational checks too. |
+| `--list` | `luuna-atlas setup` | Enumerate recipes with source + shadow markers. |
 
 ## D. File path reference
 
-Every path Mulch reads or writes under the repo root:
+Every path Atlas reads or writes under the repo root:
 
 | Path | Purpose | Written by | Read by |
 |------|---------|------------|---------|
-| `.mulch/mulch.config.yaml` | Configuration | you / `ml init` | every command |
-| `.mulch/expertise/<domain>.jsonl` | Live records | `ml record`, `ml edit`, `ml compact`, `ml restore`, `ml doctor --fix` | `ml prime`, `ml search`, `ml query`, `ml rank`, `ml status`, `ml validate`, `ml learn`, `ml ready`, `ml sync` |
-| `.mulch/archive/<domain>.jsonl` | Soft-archived records | `ml prune` | `ml search --archived`, `ml restore` |
-| `.mulch/recipes/<name>.ts` | TypeScript provider recipe | you | `ml setup`, `ml setup --list` |
-| `.mulch/recipes/<name>.sh` | Shell provider recipe | you | `ml setup`, `ml setup --list` |
-| `.mulch/hooks/*.sh` (or anywhere) | Lifecycle hook scripts | you | `ml record`, `ml prime`, `ml prune` |
-| `.mulch/README.md` | Auto-generated layout doc | `ml init` | humans |
+| `.luuna/atlas/config.yaml` | Configuration | you / `luuna-atlas init` | every command |
+| `.luuna/atlas/expertise/<domain>.jsonl` | Live records | `luuna-atlas record`, `luuna-atlas edit`, `luuna-atlas compact`, `luuna-atlas restore`, `luuna-atlas doctor --fix` | `luuna-atlas prime`, `luuna-atlas search`, `luuna-atlas query`, `luuna-atlas rank`, `luuna-atlas status`, `luuna-atlas validate`, `luuna-atlas learn`, `luuna-atlas ready`, `luuna-atlas sync` |
+| `.luuna/atlas/archive/<domain>.jsonl` | Soft-archived records | `luuna-atlas prune` | `luuna-atlas search --archived`, `luuna-atlas restore` |
+| `.luuna/atlas/recipes/<name>.ts` | TypeScript provider recipe | you | `luuna-atlas setup`, `luuna-atlas setup --list` |
+| `.luuna/atlas/recipes/<name>.sh` | Shell provider recipe | you | `luuna-atlas setup`, `luuna-atlas setup --list` |
+| `.luuna/atlas/hooks/*.sh` (or anywhere) | Lifecycle hook scripts | you | `luuna-atlas record`, `luuna-atlas prime`, `luuna-atlas prune` |
+| `.luuna/atlas/README.md` | Auto-generated layout doc | `luuna-atlas init` | humans |
 | `.gitattributes` (repo root) | `merge=union` rules | you | git |
 
-Lock files (`.mulch/expertise/<domain>.jsonl.lock` and similar) are created and removed by `withFileLock` during writes. They should not persist between commands; if you find a stale one, it will self-clear after the 30s stale-lock window.
+Lock files (`.luuna/atlas/expertise/<domain>.jsonl.lock` and similar) are created and removed by `withFileLock` during writes. They should not persist between commands; if you find a stale one, it will self-clear after the 30s stale-lock window.

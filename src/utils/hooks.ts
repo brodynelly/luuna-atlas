@@ -1,16 +1,16 @@
 import { spawn } from "node:child_process";
 import { log } from "../log.ts";
 import {
+	type AtlasConfig,
 	DEFAULT_HOOK_TIMEOUT_MS,
 	HOOK_EVENTS,
 	type HookEvent,
-	type MulchConfig,
 } from "../schemas/config.ts";
 import { readConfig } from "./config.ts";
 
 // Events whose hooks may mutate the payload via stdout JSON. `pre-record` and
 // `pre-prime` carry the original R-02 mutable payloads; `pre-compact` lets a
-// hook substitute the merged replacement record (mulch-184b). `pre-prune` is
+// hook substitute the merged replacement record (atlas-184b). `pre-prune` is
 // block-or-allow only (a hook can prevent the prune but not reshape the
 // candidate set).
 const MUTABLE_EVENTS: ReadonlySet<HookEvent> = new Set<HookEvent>([
@@ -57,13 +57,13 @@ interface HookSettings {
 	timeoutMs: number;
 }
 
-function resolveSettings(config: MulchConfig): HookSettings {
+function resolveSettings(config: AtlasConfig): HookSettings {
 	const raw = config.hook_settings?.timeout_ms;
 	const timeoutMs = typeof raw === "number" && raw > 0 ? raw : DEFAULT_HOOK_TIMEOUT_MS;
 	return { timeoutMs };
 }
 
-function getHookList(config: MulchConfig, event: HookEvent): string[] {
+function getHookList(config: AtlasConfig, event: HookEvent): string[] {
 	const list = config.hooks?.[event] ?? [];
 	return Array.isArray(list)
 		? list.filter((s) => typeof s === "string" && s.trim().length > 0)
@@ -97,7 +97,7 @@ async function runOne(
 	const child = spawn("sh", ["-c", command], {
 		cwd,
 		stdio: ["pipe", "pipe", "pipe"],
-		env: { ...process.env, MULCH_HOOK: "1" },
+		env: { ...process.env, LUUNA_ATLAS_HOOK: "1" },
 		detached: true,
 	});
 
@@ -171,7 +171,7 @@ async function runOne(
 export async function runHooks<T>(
 	event: HookEvent,
 	payload: T,
-	opts: { cwd?: string; config?: MulchConfig; forwardStderr?: boolean } = {},
+	opts: { cwd?: string; config?: AtlasConfig; forwardStderr?: boolean } = {},
 ): Promise<HookResult<T>> {
 	if (!HOOK_EVENTS.includes(event)) {
 		throw new Error(`Unknown hook event: "${event}".`);
@@ -179,11 +179,11 @@ export async function runHooks<T>(
 
 	const cwd = opts.cwd ?? process.cwd();
 
-	let config: MulchConfig;
+	let config: AtlasConfig;
 	try {
 		config = opts.config ?? (await readConfig(cwd));
 	} catch {
-		// No config available (e.g., before `ml init`). Treat as no hooks.
+		// No config available (e.g., before `luuna-atlas init`). Treat as no hooks.
 		return {
 			ranAny: false,
 			blocked: false,
@@ -227,7 +227,7 @@ export async function runHooks<T>(
 		});
 
 		// Diagnostic trace of hook execution. Silent at the default `info`
-		// level; surfaces under MULCH_DEBUG. Runs outside the expertise-file
+		// level; surfaces under LUUNA_ATLAS_DEBUG. Runs outside the expertise-file
 		// write lock (record.ts runs pre-/post-hooks around the locked write),
 		// so logging here can never contend with a concurrent writer.
 		log.debug(

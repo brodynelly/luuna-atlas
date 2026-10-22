@@ -21,7 +21,7 @@ export function parseExpertiseDiff(diffOutput: string): DiffEntry[] {
 	for (const line of lines) {
 		// Extract domain from 'diff --git' headers
 		if (line.startsWith("diff --git")) {
-			const match = line.match(/\.mulch\/expertise\/([^/]+)\.jsonl/);
+			const match = line.match(/\.luuna\/atlas\/expertise\/([^/]+)\.jsonl/);
 			if (match) {
 				currentDomain = match[1] ?? "";
 				if (!entriesMap.has(currentDomain)) {
@@ -132,7 +132,7 @@ export function registerDiffCommand(program: Command): void {
 						// `--end-of-options` (git 2.24+) prevents a user-supplied ref
 						// starting with `-` from being parsed as a git option. The
 						// trailing `--` still separates revisions from pathspecs.
-						["diff", "--end-of-options", options.since, "--", ".mulch/expertise/"],
+						["diff", "--end-of-options", options.since, "--", ".luuna/atlas/expertise/"],
 						{
 							cwd,
 							encoding: "utf-8",

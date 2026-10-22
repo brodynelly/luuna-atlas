@@ -1,11 +1,11 @@
-// Injection half of `ml hook` (Claude Code PreToolUse on Read/Edit/Write/
+// Injection half of `luuna-atlas hook` (Claude Code PreToolUse on Read/Edit/Write/
 // MultiEdit/NotebookEdit). When the agent touches a file, the records anchored
 // to that file (files[] / dir_anchors[]) arrive as additionalContext next to
 // the tool result: failures first, ~500-token budget, stale records last.
-// Unanchored records are left to the SessionStart `ml prime` index, so a file
+// Unanchored records are left to the SessionStart `luuna-atlas prime` index, so a file
 // with no anchored records produces no output at all.
 //
-// State lives in `.mulch/state/` (self-gitignored with a `*` .gitignore):
+// State lives in `.luuna/atlas/state/` (self-gitignored with a `*` .gitignore):
 //   sessions/<session_id>.txt  ids already injected this session, one per line
 //                              (no record is injected twice per session)
 //   usage.jsonl                one line per injection:
@@ -20,7 +20,7 @@ import { estimateRecordText } from "../commands/prime.ts";
 import { collectSupersededIds } from "../commands/prune.ts";
 import type { ExpertiseRecord } from "../schemas/record.ts";
 import { applyBudget, type DomainRecords } from "./budget.ts";
-import { getExpertisePath, getMulchDir, readConfig } from "./config.ts";
+import { getAtlasDir, getExpertisePath, readConfig } from "./config.ts";
 import { readExpertiseFile } from "./expertise.ts";
 import { formatIndexLine } from "./format.ts";
 import { matchesFileAnchors } from "./git.ts";
@@ -50,7 +50,7 @@ export function findRepoRoot(cwd: string): string {
 }
 
 function stateDir(cwd: string): string {
-	return join(getMulchDir(cwd), "state");
+	return join(getAtlasDir(cwd), "state");
 }
 
 function sessionFile(cwd: string, session: string): string {
@@ -131,9 +131,9 @@ async function loadAnchored(
  * to it. Records what it injected (session dedup + usage log).
  */
 export async function injectForFile(req: InjectRequest): Promise<string> {
-	if (!existsSync(join(getMulchDir(req.cwd), "mulch.config.yaml"))) return "";
+	if (!existsSync(join(getAtlasDir(req.cwd), "config.yaml"))) return "";
 	const rel = repoRelative(req.file, req.cwd);
-	if (!rel || rel.startsWith(".mulch/")) return "";
+	if (!rel || rel.startsWith(".luuna/atlas/")) return "";
 
 	const config = await readConfig(req.cwd);
 	const seen = await readSeen(req.cwd, req.session);
@@ -163,5 +163,5 @@ export async function injectForFile(req: InjectRequest): Promise<string> {
 		records.map((r) => r.id ?? ""),
 	);
 	const lines = records.map((r) => formatIndexLine(r, isStale(r)));
-	return `mulch: records anchored to ${rel} (\`ml show <id>\` for the full record)\n${lines.join("\n")}`;
+	return `luuna-atlas: records anchored to ${rel} (\`luuna-atlas show <id>\` for the full record)\n${lines.join("\n")}`;
 }

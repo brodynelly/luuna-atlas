@@ -6,11 +6,11 @@ import { join, resolve } from "node:path";
 import { processStdinRecords } from "../../src/commands/record.ts";
 import { initRegistryFromConfig } from "../../src/registry/init.ts";
 import { resetRegistry } from "../../src/registry/type-registry.ts";
-import { DEFAULT_CONFIG, type MulchConfig } from "../../src/schemas/config.ts";
+import { type AtlasConfig, DEFAULT_CONFIG } from "../../src/schemas/config.ts";
 import {
 	getExpertisePath,
-	initMulchDir,
-	writeConfig as writeMulchConfig,
+	initAtlasDir,
+	writeConfig as writeAtlasConfig,
 } from "../../src/utils/config.ts";
 import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../src/utils/expertise.ts";
 
@@ -23,8 +23,8 @@ async function writeHookScript(dir: string, name: string, body: string): Promise
 	return path;
 }
 
-async function configureWith(cwd: string, hooks: MulchConfig["hooks"]): Promise<void> {
-	await writeMulchConfig(
+async function configureWith(cwd: string, hooks: AtlasConfig["hooks"]): Promise<void> {
+	await writeAtlasConfig(
 		{ ...DEFAULT_CONFIG, domains: { testing: {}, architecture: {} }, hooks },
 		cwd,
 	);
@@ -35,8 +35,8 @@ describe("record + hooks (processStdinRecords)", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-hooks-rec-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-hooks-rec-"));
+		await initAtlasDir(tmpDir);
 	});
 
 	afterEach(async () => {
@@ -195,8 +195,8 @@ describe("prime + hooks (CLI)", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-hooks-prime-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-hooks-prime-"));
+		await initAtlasDir(tmpDir);
 	});
 
 	afterEach(async () => {
@@ -233,7 +233,7 @@ for (const d of j.payload.domains) {
 console.log(JSON.stringify(j));
 "`,
 		);
-		await writeMulchConfig(
+		await writeAtlasConfig(
 			{ ...DEFAULT_CONFIG, domains: { testing: {} }, hooks: { "pre-prime": [filter] } },
 			tmpDir,
 		);
@@ -270,7 +270,7 @@ console.log(JSON.stringify(j));
 			"block.sh",
 			"echo 'team boundary violation' >&2; exit 2",
 		);
-		await writeMulchConfig(
+		await writeAtlasConfig(
 			{ ...DEFAULT_CONFIG, domains: { testing: {} }, hooks: { "pre-prime": [block] } },
 			tmpDir,
 		);
@@ -293,8 +293,8 @@ describe("prune + hooks (CLI)", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-hooks-prune-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-hooks-prune-"));
+		await initAtlasDir(tmpDir);
 	});
 
 	afterEach(async () => {
@@ -318,7 +318,7 @@ describe("prune + hooks (CLI)", () => {
 			"refuse.sh",
 			"echo 'human review required' >&2; exit 1",
 		);
-		await writeMulchConfig(
+		await writeAtlasConfig(
 			{ ...DEFAULT_CONFIG, domains: { testing: {} }, hooks: { "pre-prune": [block] } },
 			tmpDir,
 		);
@@ -348,7 +348,7 @@ describe("prune + hooks (CLI)", () => {
 		});
 
 		const allow = await writeHookScript(tmpDir, "allow.sh", "cat > /dev/null; exit 0");
-		await writeMulchConfig(
+		await writeAtlasConfig(
 			{ ...DEFAULT_CONFIG, domains: { testing: {} }, hooks: { "pre-prune": [allow] } },
 			tmpDir,
 		);
@@ -381,7 +381,7 @@ describe("prune + hooks (CLI)", () => {
 			"hook.sh",
 			`cat > /dev/null; touch '${marker}'; exit 0`,
 		);
-		await writeMulchConfig(
+		await writeAtlasConfig(
 			{ ...DEFAULT_CONFIG, domains: { testing: {} }, hooks: { "pre-prune": [hook] } },
 			tmpDir,
 		);

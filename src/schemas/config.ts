@@ -18,7 +18,7 @@ export interface SessionCloseConfig {
 
 export const DEFAULT_SEARCH_BOOST_FACTOR = 0.1;
 
-// Trust-tier ranking weights for `ml prime` full-mode output (v0.10 slice 3).
+// Trust-tier ranking weights for `luuna-atlas prime` full-mode output (v0.10 slice 3).
 // Sort score = stars * star_weight + classification_weight. Higher scores are
 // surfaced first; ties preserve insertion order so within-tier output stays
 // stable across runs.
@@ -100,7 +100,7 @@ export interface DecayConfig {
 export const DEFAULT_ANCHOR_VALIDITY_THRESHOLD = 0.5;
 export const DEFAULT_ANCHOR_VALIDITY_GRACE_DAYS = 7;
 
-// `ml audit` thresholds. PASS/WARN/FAIL bands for the three primary corpus
+// `luuna-atlas audit` thresholds. PASS/WARN/FAIL bands for the three primary corpus
 // health metrics. Defaults relaxed from the Python prototype per V1_PLAN §4.2
 // ("0.7 evidence coverage is empirically unreachable today"). All knobs are
 // overridable globally under `audit.thresholds` and per-domain under
@@ -148,7 +148,7 @@ export function resolveAuditThresholds(
 
 /**
  * Range-check decay.anchor_validity knobs. Returns a list of human-readable
- * error strings (empty when valid). Caught at command-time (e.g. `ml prune
+ * error strings (empty when valid). Caught at command-time (e.g. `luuna-atlas prune
  * --check-anchors`) so a misconfigured threshold/grace doesn't silently produce
  * wrong demotion decisions:
  *   - threshold < 0 or > 1: validFraction is in [0, 1], so out-of-range values
@@ -179,7 +179,7 @@ export function validateAnchorValidityConfig(cfg: AnchorValidityConfig): string[
 	return errors;
 }
 
-// Write-time quality gate for `ml record` (near-duplicates, ungrounded
+// Write-time quality gate for `luuna-atlas record` (near-duplicates, ungrounded
 // conventions/patterns, code-restatement conventions). `warn` prints and
 // writes; `error` blocks unless --force; `off` skips the checks. Exact
 // duplicates are blocked regardless of level.
@@ -189,7 +189,7 @@ export interface QualityConfig {
 	level?: QualityLevel;
 }
 
-export interface MulchConfig {
+export interface AtlasConfig {
 	version: string;
 	domains: Record<string, DomainConfig>;
 	governance: {
@@ -220,18 +220,18 @@ export interface MulchConfig {
 		boost_factor: number;
 	};
 	custom_types?: Record<string, CustomTypeConfig>;
-	// Decay knobs. R-05f wires `anchor_validity` into `ml prune --check-anchors`;
+	// Decay knobs. R-05f wires `anchor_validity` into `luuna-atlas prune --check-anchors`;
 	// `weight` is reserved for the future R-05g fitness blend and otherwise unused.
 	decay?: DecayConfig;
-	// `ml audit` thresholds and ignore-list. See AuditConfig.
+	// `luuna-atlas audit` thresholds and ignore-list. See AuditConfig.
 	audit?: AuditConfig;
-	// `ml record` write-time quality gate. See QualityConfig.
+	// `luuna-atlas record` write-time quality gate. See QualityConfig.
 	quality?: QualityConfig;
 	// Names of registered types (built-in or custom) that emit a deprecation
 	// warning on write. Reads still succeed; the type stays in CLI choices.
 	disabled_types?: string[];
 	// Lifecycle hook scripts. Each event maps to an ordered array of shell
-	// commands. Mulch invokes each script with the relevant payload as JSON on
+	// commands. Atlas invokes each script with the relevant payload as JSON on
 	// stdin. See HookEvent for semantics.
 	hooks?: HooksConfig;
 	// Per-hook execution settings. `timeout_ms` defaults to DEFAULT_HOOK_TIMEOUT_MS.
@@ -240,7 +240,7 @@ export interface MulchConfig {
 	};
 }
 
-export const DEFAULT_CONFIG: MulchConfig = {
+export const DEFAULT_CONFIG: AtlasConfig = {
 	version: "1",
 	domains: {},
 	governance: {

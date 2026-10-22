@@ -16,7 +16,7 @@ import {
 	stripArchiveFields,
 	writeArchiveFile,
 } from "../../src/utils/archive.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import { readExpertiseFile } from "../../src/utils/expertise.ts";
 
 function makeRecord(content: string): ExpertiseRecord {
@@ -32,8 +32,8 @@ describe("archive utilities", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-archive-util-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-archive-util-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { testing: {} } }, tmpDir);
 	});
 
@@ -41,10 +41,10 @@ describe("archive utilities", () => {
 		await rm(tmpDir, { recursive: true, force: true });
 	});
 
-	it("getArchivePath places domain files under .mulch/archive/", () => {
+	it("getArchivePath places domain files under .luuna/atlas/archive/", () => {
 		const path = getArchivePath("testing", tmpDir);
 		expect(path).toBe(join(getArchiveDir(tmpDir), "testing.jsonl"));
-		expect(path.includes("/.mulch/archive/")).toBe(true);
+		expect(path.includes("/.luuna/atlas/archive/")).toBe(true);
 	});
 
 	it("writeArchiveFile prefixes file with the standard banner", async () => {

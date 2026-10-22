@@ -14,16 +14,16 @@ export function outputJsonError(command: string, error: string): void {
 	console.error(JSON.stringify({ success: false, command, error }, null, 2));
 }
 
-const NO_MULCH_DIR_MESSAGE = "No .mulch/ directory found. Run `mulch init` first.";
+const NO_ATLAS_DIR_MESSAGE = "No .luuna/atlas/ directory found. Run `luuna-atlas init` first.";
 
 /**
  * Report a command failure in JSON or text mode and set a non-zero exit code.
- * A missing `.mulch/` directory (ENOENT) is reported with the standard init hint.
+ * A missing `.luuna/atlas/` directory (ENOENT) is reported with the standard init hint.
  */
 export function reportCommandError(command: string, jsonMode: boolean, err: unknown): void {
 	const message =
 		(err as NodeJS.ErrnoException | null)?.code === "ENOENT"
-			? NO_MULCH_DIR_MESSAGE
+			? NO_ATLAS_DIR_MESSAGE
 			: err instanceof Error
 				? err.message
 				: String(err);

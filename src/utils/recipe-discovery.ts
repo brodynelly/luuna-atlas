@@ -30,10 +30,10 @@ export interface FilesystemRecipeListing {
 	path: string;
 }
 
-export const NPM_RECIPE_PREFIX = "mulch-recipe-";
+export const NPM_RECIPE_PREFIX = "luuna-atlas-recipe-";
 
 export function recipesDir(cwd: string): string {
-	return join(cwd, ".mulch", "recipes");
+	return join(cwd, ".luuna/atlas", "recipes");
 }
 
 export function validateRecipeShape(obj: unknown): obj is ProviderRecipe {
@@ -53,8 +53,8 @@ function makeShellRecipe(name: string, scriptPath: string): ProviderRecipe {
 				cwd,
 				env: {
 					...process.env,
-					MULCH_RECIPE_NAME: name,
-					MULCH_RECIPE_ACTION: action,
+					LUUNA_ATLAS_RECIPE_NAME: name,
+					LUUNA_ATLAS_RECIPE_ACTION: action,
 				},
 				stdio: ["ignore", "pipe", "pipe"],
 			});

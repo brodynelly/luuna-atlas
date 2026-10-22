@@ -6,9 +6,9 @@ import { join, resolve } from "node:path";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
 import type { ExpertiseRecord } from "../../src/schemas/record.ts";
 import {
+	getAtlasDir,
 	getExpertisePath,
-	getMulchDir,
-	initMulchDir,
+	initAtlasDir,
 	readConfig,
 	writeConfig,
 } from "../../src/utils/config.ts";
@@ -38,27 +38,27 @@ describe("status command", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-status-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-status-test-"));
+		await initAtlasDir(tmpDir);
 	});
 
 	afterEach(async () => {
 		await rm(tmpDir, { recursive: true, force: true });
 	});
 
-	it("detects .mulch/ directory exists", () => {
-		expect(existsSync(getMulchDir(tmpDir))).toBe(true);
+	it("detects .luuna/atlas/ directory exists", () => {
+		expect(existsSync(getAtlasDir(tmpDir))).toBe(true);
 	});
 
-	it("detects missing .mulch/ directory", async () => {
-		const emptyDir = await mkdtemp(join(tmpdir(), "mulch-status-empty-"));
-		expect(existsSync(getMulchDir(emptyDir))).toBe(false);
+	it("detects missing .luuna/atlas/ directory", async () => {
+		const emptyDir = await mkdtemp(join(tmpdir(), "atlas-status-empty-"));
+		expect(existsSync(getAtlasDir(emptyDir))).toBe(false);
 		await rm(emptyDir, { recursive: true, force: true });
 	});
 
 	it("shows status with no domains configured", () => {
 		const output = formatStatusOutput([], DEFAULT_CONFIG.governance);
-		expect(output).toContain("Mulch Status");
+		expect(output).toContain("Atlas Status");
 		expect(output).toContain("No domains configured");
 	});
 
@@ -84,7 +84,7 @@ describe("status command", () => {
 			DEFAULT_CONFIG.governance,
 		);
 
-		expect(output).toContain("Mulch Status");
+		expect(output).toContain("Atlas Status");
 		expect(output).toContain("testing");
 		expect(output).toContain("1 records");
 	});
@@ -418,7 +418,7 @@ describe("status command", () => {
 		expect(output).not.toContain("recorded");
 	});
 
-	it("ml status (CLI) flags a rotting domain and surfaces range", async () => {
+	it("luuna-atlas status (CLI) flags a rotting domain and surfaces range", async () => {
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { legacy: {} } }, tmpDir);
 		const filePath = getExpertisePath("legacy", tmpDir);
 		await createExpertiseFile(filePath);
@@ -443,7 +443,7 @@ describe("status command", () => {
 		expect(out).toContain("no writes in 45d");
 	});
 
-	it("ml status (CLI) does not flag fresh domains as rotting", async () => {
+	it("luuna-atlas status (CLI) does not flag fresh domains as rotting", async () => {
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { fresh: {} } }, tmpDir);
 		const filePath = getExpertisePath("fresh", tmpDir);
 		await createExpertiseFile(filePath);
@@ -460,7 +460,7 @@ describe("status command", () => {
 		expect(out).not.toContain("ROTTING");
 	});
 
-	it("ml status --json exposes oldest/newest/rotting per domain", async () => {
+	it("luuna-atlas status --json exposes oldest/newest/rotting per domain", async () => {
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { mixed: {} } }, tmpDir);
 		const filePath = getExpertisePath("mixed", tmpDir);
 		await createExpertiseFile(filePath);

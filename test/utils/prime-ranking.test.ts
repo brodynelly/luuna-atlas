@@ -212,11 +212,11 @@ describe("prime-ranking", () => {
 				files: ["src/foo.ts"],
 				outcomes: [ok(), ok()],
 				recorded_at: new Date().toISOString(),
-				evidence: { seeds: "sd-1" },
+				evidence: { missions: "sd-1" },
 			});
 			const ctx: ActiveContext = {
 				changedFiles: ["src/foo.ts"],
-				trackers: { seeds: "sd-1" },
+				trackers: { missions: "sd-1" },
 			};
 			expect(whySurfaced(r, ctx)).toEqual({ kind: "file_match", anchor: "src/foo.ts" });
 		});
@@ -233,18 +233,22 @@ describe("prime-ranking", () => {
 		it("falls back to tracker_match when neither files nor dir_anchors match", () => {
 			const r = makePattern({
 				files: ["src/other.ts"],
-				evidence: { seeds: "sd-42" },
+				evidence: { missions: "sd-42" },
 			});
 			const ctx: ActiveContext = {
 				changedFiles: ["src/unrelated.ts"],
-				trackers: { seeds: "sd-42" },
+				trackers: { missions: "sd-42" },
 			};
-			expect(whySurfaced(r, ctx)).toEqual({ kind: "tracker_match", tracker: "seeds", id: "sd-42" });
+			expect(whySurfaced(r, ctx)).toEqual({
+				kind: "tracker_match",
+				tracker: "missions",
+				id: "sd-42",
+			});
 		});
 
 		it("ignores tracker matches where the active value is an empty string", () => {
-			const r = makePattern({ evidence: { seeds: "" } });
-			const ctx: ActiveContext = { changedFiles: [], trackers: { seeds: "" } };
+			const r = makePattern({ evidence: { missions: "" } });
+			const ctx: ActiveContext = { changedFiles: [], trackers: { missions: "" } };
 			expect(whySurfaced(r, ctx)).toEqual({ kind: "universal" });
 		});
 
@@ -273,8 +277,8 @@ describe("prime-ranking", () => {
 		});
 
 		it("formats tracker_match", () => {
-			expect(formatSurfaceReason({ kind: "tracker_match", tracker: "seeds", id: "sd-1" })).toBe(
-				"why: in-progress seeds:sd-1",
+			expect(formatSurfaceReason({ kind: "tracker_match", tracker: "missions", id: "sd-1" })).toBe(
+				"why: in-progress missions:sd-1",
 			);
 		});
 

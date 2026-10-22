@@ -1,6 +1,6 @@
 # Luuna Atlas development
 
-This component is a maintained fork of Mulch, with provenance in `UPSTREAM.md` and the original MIT notice in `LICENSE`.
+This component is a maintained fork of an upstream project, with provenance in `UPSTREAM.md` and the original MIT notice in `LICENSE`.
 
 Use Bun 1.4.3. From this directory:
 
@@ -14,7 +14,7 @@ bun run verify
 
 Source is in `src/`; tests use Bun and real temporary files. Keep strict TypeScript, existing module conventions, advisory locks, atomic writes, JSON output contracts, and secret redaction. Test changes at the appropriate public boundary.
 
-Primary executable: luuna-atlas (la). Legacy commands and .mulch storage remain compatibility contracts. Preserve configuration keys, record schemas, public types, and environment variables unless an explicit migration is designed and tested. Runtime policy and approval enforcement belong in Luuna, not in a rewrite of this component.
+Primary executable: luuna-atlas (la). Project data lives under .luuna/atlas in the user project (config in config.yaml); the one-way migration from the pre-Luuna layout lives only in `src/utils/legacy-layout.ts`. Preserve configuration keys and record schemas unless an explicit migration is designed and tested. Runtime policy and approval enforcement belong in Luuna, not in a rewrite of this component.
 
 Do not load imported dogfooding stores, session histories, or upstream agent skills as Luuna work records. Do not create them as a development ritual. Installations must not alter the root Git hook configuration. This is an independent public repository maintained by brodynelly. Packages remain unpublished; registry publication and upstream self-upgrades require a separate reviewed release process.
 

@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import chalk from "chalk";
 import type { Command } from "commander";
 import { getRegistry } from "../registry/type-registry.ts";
-import { getExpertisePath, getMulchDir, readConfig } from "../utils/config.ts";
+import { getAtlasDir, getExpertisePath, readConfig } from "../utils/config.ts";
 import { readExpertiseFile } from "../utils/expertise.ts";
 import { getChangedFiles, isGitRepo } from "../utils/git.ts";
 import { outputJson, outputJsonError } from "../utils/json-output.ts";
@@ -88,8 +88,8 @@ export function registerLearnCommand(program: Command): void {
 				return;
 			}
 
-			// No .mulch/ directory — exit cleanly (supports hook usage in non-mulch projects)
-			if (!existsSync(getMulchDir(cwd))) {
+			// No .luuna/atlas/ directory — exit cleanly (supports hook usage in non-luuna-atlas projects)
+			if (!existsSync(getAtlasDir(cwd))) {
 				if (jsonMode) {
 					outputJson({
 						success: true,
@@ -97,7 +97,7 @@ export function registerLearnCommand(program: Command): void {
 						changedFiles: [],
 						suggestedDomains: [],
 						unmatchedFiles: [],
-						message: "No .mulch/ directory found — skipping",
+						message: "No .luuna/atlas/ directory found — skipping",
 					});
 				}
 				return;
@@ -165,7 +165,7 @@ export function registerLearnCommand(program: Command): void {
 				}
 
 				console.log(chalk.dim("\nRecord learnings with:"));
-				console.log(chalk.dim('  ml record <domain> --type <type> --description "..."'));
+				console.log(chalk.dim('  luuna-atlas record <domain> --type <type> --description "..."'));
 				console.log();
 			} catch (err) {
 				if (jsonMode) {

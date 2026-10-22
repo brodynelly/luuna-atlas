@@ -2,15 +2,16 @@ import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
 import {
+	type AtlasConfig,
 	type AuditConfig,
 	type AuditThresholds,
-	type MulchConfig,
 	resolveAuditThresholds,
 } from "../schemas/config.ts";
 import type { ExpertiseRecord } from "../schemas/record.ts";
 import { TRACKERS, type TrackerName } from "./active-work.ts";
 import { getExpertisePath } from "./config.ts";
 import { isRecordStale, readExpertiseFile } from "./expertise.ts";
+import { evidenceMissionRef, resolveMissionsDir } from "./legacy-layout.ts";
 
 // Words that indicate a convention encodes a rule or rationale rather than
 // restating code structure. Mirrors the Python prototype's RULE_SIGNALS so
@@ -74,9 +75,9 @@ export interface AuditReport {
 	ignored_domains: string[];
 	type_mix: Array<{ type: string; count: number; pct: number }>;
 	evidence: {
-		// Deprecated since v0.10.1 (mulch-1334) — populated from `with_tracker.seeds`.
+		// Deprecated since v0.10.1 (atlas-1334) — populated from `with_tracker.missions`.
 		// Kept readable for one release so old JSON consumers don't break. Removed in v0.11.
-		with_seeds: number;
+		with_missions: number;
 		with_tracker: Record<TrackerName, number>;
 		with_any_tracker: number;
 		with_commit: number;
@@ -88,12 +89,12 @@ export interface AuditReport {
 		with_rule_signal: number;
 		likely_code_restatement: number;
 	} | null;
-	// Deprecated since v0.10.1 (mulch-1334) — populated from seeds entries in
+	// Deprecated since v0.10.1 (atlas-1334) — populated from missions entries in
 	// `tracker_citations` for back-compat. Removed in v0.11. Read `tracker_citations`.
-	seed_citations: {
+	mission_citations: {
 		unique: number;
 		status_counts: Record<string, number>;
-		missing_in_seeds: number;
+		missing_in_missions: number;
 		top_cited: Array<{ id: string; count: number; status: string; title: string }>;
 	};
 	tracker_citations: {
@@ -149,7 +150,7 @@ export function extractTrackerRefs(record: ExpertiseRecord): TrackerRef[] {
 function recordHasTracker(record: ExpertiseRecord): boolean {
 	const ev = record.evidence;
 	if (!ev) return false;
-	return Boolean(ev.seeds || ev.gh || ev.linear || ev.bead);
+	return Boolean(evidenceMissionRef(ev) || ev.gh || ev.linear || ev.bead);
 }
 
 function recordIsFloater(record: ExpertiseRecord): boolean {
@@ -157,7 +158,7 @@ function recordIsFloater(record: ExpertiseRecord): boolean {
 	if (!ev) {
 		return !(record.relates_to && record.relates_to.length > 0);
 	}
-	if (ev.seeds || ev.gh || ev.linear || ev.bead || ev.commit) return false;
+	if (evidenceMissionRef(ev) || ev.gh || ev.linear || ev.bead || ev.commit) return false;
 	if (record.relates_to && record.relates_to.length > 0) return false;
 	return true;
 }
@@ -179,12 +180,14 @@ function trackerKey(tracker: TrackerName, id: string): string {
 	return `${tracker}:${id}`;
 }
 
-// Render a tracker ref for human-readable output. Seeds keep the bare id
-// (back-compat with the pre-mulch-1334 top_cited shape); gh uses the
+// Render a tracker ref for human-readable output. Missions keep the bare id
+// (back-compat with the pre-atlas-1334 top_cited shape); gh uses the
 // GitHub-native `gh#42` form (incoming `#42` is normalized to `gh#42`);
 // linear and bead use a `<tracker>:<id>` prefix.
+const MISSIONS_DIR = ".luuna/missions";
+
 export function formatTrackerId(tracker: TrackerName, id: string): string {
-	if (tracker === "seeds") return id;
+	if (tracker === "missions") return id;
 	if (tracker === "gh") return `gh#${id.replace(/^#/, "")}`;
 	return `${tracker}:${id}`;
 }
@@ -192,31 +195,31 @@ export function formatTrackerId(tracker: TrackerName, id: string): string {
 async function loadTrackerIndex(cwd: string): Promise<Map<string, TrackerIndexEntry>> {
 	const index = new Map<string, TrackerIndexEntry>();
 
-	// Seeds: read .seeds/issues.jsonl (only tracker with local resolution today).
-	const seedsPath = join(cwd, ".seeds", "issues.jsonl");
-	if (existsSync(seedsPath)) {
-		const content = await readFile(seedsPath, "utf-8");
+	// Missions: read .luuna/missions/issues.jsonl (only tracker with local resolution today).
+	const missionsPath = join(cwd, resolveMissionsDir(cwd, MISSIONS_DIR), "issues.jsonl");
+	if (existsSync(missionsPath)) {
+		const content = await readFile(missionsPath, "utf-8");
 		for (const line of content.split("\n")) {
 			const trimmed = line.trim();
 			if (!trimmed || trimmed.startsWith("#")) continue;
 			try {
 				const row = JSON.parse(trimmed) as SeedRow;
 				if (row && typeof row.id === "string") {
-					index.set(trackerKey("seeds", row.id), {
-						tracker: "seeds",
+					index.set(trackerKey("missions", row.id), {
+						tracker: "missions",
 						id: row.id,
 						status: row.status,
 						title: row.title,
 					});
 				}
 			} catch {
-				// Skip malformed seeds rows — the audit is read-only and best-effort here.
+				// Skip malformed missions rows — the audit is read-only and best-effort here.
 			}
 		}
 	}
 
 	// gh / linear / bead: no local resolution. Citations to these trackers fall
-	// through to `unresolved` in status_counts (per mulch-1334 acceptance).
+	// through to `unresolved` in status_counts (per atlas-1334 acceptance).
 	// A future seed can layer in networked status lookups (gh CLI, linear API).
 
 	return index;
@@ -287,7 +290,7 @@ async function readDomainRecords(cwd: string, domains: string[]): Promise<Record
 }
 
 export async function computeAudit(
-	config: MulchConfig,
+	config: AtlasConfig,
 	options: AuditOptions = {},
 ): Promise<AuditReport> {
 	const cwd = options.cwd ?? process.cwd();
@@ -331,7 +334,7 @@ export async function computeAudit(
 		}));
 
 	// Evidence coverage (per-tracker breakdown + roll-ups)
-	const withTracker: Record<TrackerName, number> = { seeds: 0, gh: 0, linear: 0, bead: 0 };
+	const withTracker: Record<TrackerName, number> = { missions: 0, gh: 0, linear: 0, bead: 0 };
 	let withCommit = 0;
 	let withRelates = 0;
 	let withAnyTracker = 0;
@@ -346,7 +349,7 @@ export async function computeAudit(
 		if (recordIsFloater(r)) floaters++;
 	}
 
-	// Tracker citations (generalized from seed_citations per mulch-1334).
+	// Tracker citations (generalized from mission_citations per atlas-1334).
 	const trackerIndex = await loadTrackerIndex(cwd);
 	const refCounts = new Map<string, { tracker: TrackerName; id: string; count: number }>();
 	for (const r of records) {
@@ -367,9 +370,9 @@ export async function computeAudit(
 		if (hit) {
 			const status = hit.status ?? "?";
 			trackerStatusCounts[status] = (trackerStatusCounts[status] ?? 0) + 1;
-		} else if (entry.tracker === "seeds") {
-			// Seeds is the one tracker with a local index — a missing entry means
-			// the citation points at a seeds id that isn't in .seeds/issues.jsonl.
+		} else if (entry.tracker === "missions") {
+			// Missions is the one tracker with a local index — a missing entry means
+			// the citation points at a missions id that isn't in .luuna/missions/issues.jsonl.
 			trackerMissing++;
 		} else {
 			// gh/linear/bead have no local index yet — bucket into "unresolved"
@@ -385,7 +388,7 @@ export async function computeAudit(
 			let status: string;
 			if (hit) {
 				status = hit.status ?? "?";
-			} else if (tracker === "seeds") {
+			} else if (tracker === "missions") {
 				status = "MISSING";
 			} else {
 				status = "unresolved";
@@ -399,26 +402,26 @@ export async function computeAudit(
 			};
 		});
 
-	// Seeds-only back-compat shape (deprecated, populated from tracker_citations).
-	// Filter the tracker refs/index to seeds entries so old JSON consumers reading
-	// `report.seed_citations` still see exactly what they saw pre-mulch-1334.
-	const seedsRefEntries = Array.from(refCounts.values()).filter((e) => e.tracker === "seeds");
-	const seedsStatusCounts: Record<string, number> = {};
-	let seedsMissing = 0;
-	for (const { tracker, id } of seedsRefEntries) {
+	// Missions-only back-compat shape (deprecated, populated from tracker_citations).
+	// Filter the tracker refs/index to missions entries so old JSON consumers reading
+	// `report.mission_citations` still see exactly what they saw pre-atlas-1334.
+	const missionsRefEntries = Array.from(refCounts.values()).filter((e) => e.tracker === "missions");
+	const missionsStatusCounts: Record<string, number> = {};
+	let missionsMissing = 0;
+	for (const { tracker, id } of missionsRefEntries) {
 		const hit = trackerIndex.get(trackerKey(tracker, id));
 		if (hit) {
 			const status = hit.status ?? "?";
-			seedsStatusCounts[status] = (seedsStatusCounts[status] ?? 0) + 1;
+			missionsStatusCounts[status] = (missionsStatusCounts[status] ?? 0) + 1;
 		} else {
-			seedsMissing++;
+			missionsMissing++;
 		}
 	}
-	const seedsTopCited = seedsRefEntries
+	const missionsTopCited = missionsRefEntries
 		.sort((a, b) => b.count - a.count)
 		.slice(0, 8)
 		.map(({ id, count }) => {
-			const hit = trackerIndex.get(trackerKey("seeds", id));
+			const hit = trackerIndex.get(trackerKey("missions", id));
 			return {
 				id,
 				count,
@@ -535,7 +538,7 @@ export async function computeAudit(
 		ignored_domains: ignored,
 		type_mix,
 		evidence: {
-			with_seeds: withTracker.seeds,
+			with_missions: withTracker.missions,
 			with_tracker: withTracker,
 			with_any_tracker: withAnyTracker,
 			with_commit: withCommit,
@@ -543,11 +546,11 @@ export async function computeAudit(
 			floaters,
 		},
 		convention_quality: conv_quality,
-		seed_citations: {
-			unique: seedsRefEntries.length,
-			status_counts: seedsStatusCounts,
-			missing_in_seeds: seedsMissing,
-			top_cited: seedsTopCited,
+		mission_citations: {
+			unique: missionsRefEntries.length,
+			status_counts: missionsStatusCounts,
+			missing_in_missions: missionsMissing,
+			top_cited: missionsTopCited,
 		},
 		tracker_citations: {
 			unique: refCounts.size,
@@ -586,7 +589,7 @@ export interface SuggestPayload {
 }
 
 export async function buildSuggestions(
-	config: MulchConfig,
+	config: AtlasConfig,
 	options: AuditOptions = {},
 ): Promise<SuggestPayload> {
 	const cwd = options.cwd ?? process.cwd();
@@ -630,11 +633,11 @@ export async function buildSuggestions(
 			action: "archive",
 			headline: `${archive.length} stale records past shelf life`,
 			rationale:
-				"These records are past their classification shelf life and are not foundational. Soft-archive them with `ml prune` (or `ml archive` once it lands in v0.10).",
+				"These records are past their classification shelf life and are not foundational. Soft-archive them with `luuna-atlas prune` (or `luuna-atlas archive` once it lands in v0.10).",
 			record_ids: archive,
 			commands: [
-				`ml prune --ids ${archive.join(",")} --dry-run`,
-				`ml prune --ids ${archive.join(",")}`,
+				`luuna-atlas prune --ids ${archive.join(",")} --dry-run`,
+				`luuna-atlas prune --ids ${archive.join(",")}`,
 			],
 		});
 	}
@@ -645,7 +648,7 @@ export async function buildSuggestions(
 			rationale:
 				"Conventions without rule-signal words (because, must not, avoid, always, never, …) often restate code rather than encode a rule. Revise the content or downgrade to a note.",
 			record_ids: revise,
-			commands: revise.slice(0, 10).map((id) => `ml edit ${id} --content "..."`),
+			commands: revise.slice(0, 10).map((id) => `luuna-atlas edit ${id} --content "..."`),
 		});
 	}
 	if (attribute.length > 0) {
@@ -653,13 +656,13 @@ export async function buildSuggestions(
 			action: "attribute",
 			headline: `${attribute.length} records have no evidence or relates_to link`,
 			rationale:
-				"Floater records lack any tracker (seeds/gh/linear/bead), commit, or relates_to link. Attribute them so future audits and pruning can follow the trail.",
+				"Floater records lack any tracker (missions/gh/linear/bead), commit, or relates_to link. Attribute them so future audits and pruning can follow the trail.",
 			record_ids: attribute,
 			commands: attribute
 				.slice(0, 10)
 				.map(
 					(id) =>
-						`ml edit ${id} --evidence-seeds <id>   # or --evidence-commit <sha> / --relates-to <mx-id>`,
+						`luuna-atlas edit ${id} --evidence-missions <id>   # or --evidence-commit <sha> / --relates-to <mx-id>`,
 				),
 		});
 	}

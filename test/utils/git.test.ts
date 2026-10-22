@@ -22,7 +22,7 @@ describe("git utils — slice 2 helpers", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-git-utils-"));
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-git-utils-"));
 	});
 
 	afterEach(async () => {
@@ -131,13 +131,13 @@ describe("git utils — slice 2 helpers", () => {
 		});
 
 		it("returns true when any tracker is set", () => {
-			expect(activeContextHasSignal({ changedFiles: [], trackers: { seeds: "mulch-1234" } })).toBe(
-				true,
-			);
+			expect(
+				activeContextHasSignal({ changedFiles: [], trackers: { missions: "atlas-1234" } }),
+			).toBe(true);
 		});
 
 		it("treats empty-string tracker values as no signal", () => {
-			expect(activeContextHasSignal({ changedFiles: [], trackers: { seeds: "" } })).toBe(false);
+			expect(activeContextHasSignal({ changedFiles: [], trackers: { missions: "" } })).toBe(false);
 		});
 	});
 
@@ -167,11 +167,11 @@ describe("git utils — slice 2 helpers", () => {
 		const seedAnchored: ExpertiseRecord = {
 			type: "pattern",
 			name: "tracked-by-seed",
-			description: "Tracked by mulch-244c",
+			description: "Tracked by atlas-244c",
 			files: ["totally/different/path.ts"],
 			classification: "foundational",
 			recorded_at: "2026-05-13T00:00:00Z",
-			evidence: { seeds: "mulch-244c" },
+			evidence: { missions: "atlas-244c" },
 		};
 
 		it("keeps universal records regardless of context", () => {
@@ -194,10 +194,10 @@ describe("git utils — slice 2 helpers", () => {
 			expect(kept.map((r) => "name" in r && r.name)).toEqual(["schema-area"]);
 		});
 
-		it("matches by seeds evidence tracker even when files don't match", () => {
+		it("matches by missions evidence tracker even when files don't match", () => {
 			const ctx: ActiveContext = {
 				changedFiles: ["src/cli.ts"],
-				trackers: { seeds: "mulch-244c" },
+				trackers: { missions: "atlas-244c" },
 			};
 			const kept = filterByActiveContext([seedAnchored], ctx);
 			expect(kept).toHaveLength(1);
@@ -206,7 +206,7 @@ describe("git utils — slice 2 helpers", () => {
 		it("does not match when tracker id differs", () => {
 			const ctx: ActiveContext = {
 				changedFiles: [],
-				trackers: { seeds: "mulch-0000" },
+				trackers: { missions: "atlas-0000" },
 			};
 			expect(filterByActiveContext([seedAnchored], ctx)).toHaveLength(0);
 		});

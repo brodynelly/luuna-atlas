@@ -1,7 +1,7 @@
 import { getRegistry } from "../registry/type-registry.ts";
 import type {
+	AtlasConfig,
 	HookEvent,
-	MulchConfig,
 	SessionCloseConfig,
 	SessionCloseStyleName,
 } from "../schemas/config.ts";
@@ -33,7 +33,7 @@ export function getRecordSummary(record: ExpertiseRecord): string {
 	return def.summary(record);
 }
 
-// Index-mode line cap: one line per record, bodies live behind `ml show <id>`.
+// Index-mode line cap: one line per record, bodies live behind `luuna-atlas show <id>`.
 const INDEX_TEXT_MAX = 100;
 const INDEX_ANCHORS_MAX = 3;
 
@@ -88,16 +88,16 @@ export function formatDomainExpertiseCompact(
 export function formatPrimeOutputCompact(domainSections: string[]): string {
 	const lines: string[] = [];
 
-	lines.push("# Project Expertise (via Mulch)");
+	lines.push("# Project Expertise (via Atlas)");
 	lines.push("");
 
 	if (domainSections.length === 0) {
 		lines.push(
-			"No expertise recorded yet. Use `ml add <domain>` to create a domain, then `ml record` to add records.",
+			"No expertise recorded yet. Use `luuna-atlas add <domain>` to create a domain, then `luuna-atlas record` to add records.",
 		);
 	} else {
 		lines.push(
-			"Index: one line per record, failures first. `ml show <id>` prints the full record.",
+			"Index: one line per record, failures first. `luuna-atlas show <id>` prints the full record.",
 		);
 		lines.push("");
 		lines.push(domainSections.join("\n\n"));
@@ -106,14 +106,14 @@ export function formatPrimeOutputCompact(domainSections: string[]): string {
 	lines.push("");
 	lines.push("## Quick Reference");
 	lines.push("");
-	lines.push("- `ml show <id>` — full record body");
-	lines.push('- `ml search "query"` — find relevant records before implementing');
+	lines.push("- `luuna-atlas show <id>` — full record body");
+	lines.push('- `luuna-atlas search "query"` — find relevant records before implementing');
 	lines.push(
-		"- `ml prime --files src/foo.ts` — prime **before** editing a file, not just at session start",
+		"- `luuna-atlas prime --files src/foo.ts` — prime **before** editing a file, not just at session start",
 	);
-	lines.push("- `ml prime --full` — full record bodies instead of the index");
+	lines.push("- `luuna-atlas prime --full` — full record bodies instead of the index");
 	lines.push(
-		'- `ml record <domain> --type <type> --description "..."` — evidence auto-populates from git; link with `--relates-to <mx-id>`',
+		'- `luuna-atlas record <domain> --type <type> --description "..."` — evidence auto-populates from git; link with `--relates-to <mx-id>`',
 	);
 
 	return lines.join("\n");
@@ -174,30 +174,32 @@ function annotateMarkdownBlock(
 export function formatPrimeOutput(domainSections: string[]): string {
 	const lines: string[] = [];
 
-	lines.push("# Project Expertise (via Mulch)");
+	lines.push("# Project Expertise (via Atlas)");
 	lines.push("");
-	lines.push("> **Context Recovery**: Run `ml prime` after compaction, clear, or new session");
+	lines.push(
+		"> **Context Recovery**: Run `luuna-atlas prime` after compaction, clear, or new session",
+	);
 	lines.push("");
 	lines.push("## Rules");
 	lines.push("");
 	lines.push(
-		"- **Record learnings**: When you discover a pattern, fix a bug, or make a design decision — record it with `ml record`",
+		"- **Record learnings**: When you discover a pattern, fix a bug, or make a design decision — record it with `luuna-atlas record`",
 	);
 	lines.push(
-		"- **Check expertise first**: Before implementing, check if relevant expertise exists with `ml search` or `ml prime --context`",
+		"- **Check expertise first**: Before implementing, check if relevant expertise exists with `luuna-atlas search` or `luuna-atlas prime --context`",
 	);
 	lines.push(
-		"- **Targeted priming**: Use `ml prime --files src/foo.ts` to load only records relevant to specific files",
+		"- **Targeted priming**: Use `luuna-atlas prime --files src/foo.ts` to load only records relevant to specific files",
 	);
 	lines.push(
-		"- **Do NOT** store expertise in code comments, markdown files, or memory tools — use `ml record`",
+		"- **Do NOT** store expertise in code comments, markdown files, or memory tools — use `luuna-atlas record`",
 	);
-	lines.push("- Run `ml doctor` if you are unsure whether records are healthy");
+	lines.push("- Run `luuna-atlas doctor` if you are unsure whether records are healthy");
 	lines.push("");
 
 	if (domainSections.length === 0) {
 		lines.push(
-			"No expertise recorded yet. Use `ml add <domain>` to create a domain, then `ml record` to add records.",
+			"No expertise recorded yet. Use `luuna-atlas add <domain>` to create a domain, then `luuna-atlas record` to add records.",
 		);
 		lines.push("");
 	} else {
@@ -213,12 +215,16 @@ export function formatPrimeOutput(domainSections: string[]): string {
 	);
 	lines.push("");
 	lines.push("```bash");
-	lines.push('ml record <domain> --type convention "description"');
-	lines.push('ml record <domain> --type failure --description "..." --resolution "..."');
-	lines.push('ml record <domain> --type decision --title "..." --rationale "..."');
-	lines.push('ml record <domain> --type pattern --name "..." --description "..." --files "..."');
-	lines.push('ml record <domain> --type reference --name "..." --description "..." --files "..."');
-	lines.push('ml record <domain> --type guide --name "..." --description "..."');
+	lines.push('luuna-atlas record <domain> --type convention "description"');
+	lines.push('luuna-atlas record <domain> --type failure --description "..." --resolution "..."');
+	lines.push('luuna-atlas record <domain> --type decision --title "..." --rationale "..."');
+	lines.push(
+		'luuna-atlas record <domain> --type pattern --name "..." --description "..." --files "..."',
+	);
+	lines.push(
+		'luuna-atlas record <domain> --type reference --name "..." --description "..." --files "..."',
+	);
+	lines.push('luuna-atlas record <domain> --type guide --name "..." --description "..."');
 	lines.push("```");
 	lines.push("");
 	lines.push("**Required fields by type:**");
@@ -231,36 +237,38 @@ export function formatPrimeOutput(domainSections: string[]): string {
 	lines.push("");
 	lines.push("```bash");
 	lines.push(
-		'ml record <domain> --type pattern --name "..." --description "..." --evidence-seeds SEED-123',
+		'luuna-atlas record <domain> --type pattern --name "..." --description "..." --evidence-missions SEED-123',
 	);
 	lines.push(
-		'ml record <domain> --type decision --title "..." --rationale "..." --evidence-gh 42 --evidence-linear ENG-9',
+		'luuna-atlas record <domain> --type decision --title "..." --rationale "..." --evidence-gh 42 --evidence-linear ENG-9',
 	);
 	lines.push(
-		'ml record <domain> --type convention "..." --relates-to mx-abc  # link to related records',
+		'luuna-atlas record <domain> --type convention "..." --relates-to mx-abc  # link to related records',
 	);
 	lines.push("```");
 	lines.push("");
 	lines.push("**Batch record** multiple records at once:");
 	lines.push("");
 	lines.push("```bash");
-	lines.push("ml record <domain> --batch records.json  # from file");
+	lines.push("luuna-atlas record <domain> --batch records.json  # from file");
 	lines.push(
-		'echo \'[{"type":"convention","content":"..."}]\' | ml record <domain> --stdin  # from stdin',
+		'echo \'[{"type":"convention","content":"..."}]\' | luuna-atlas record <domain> --stdin  # from stdin',
 	);
 	lines.push("```");
 	lines.push("");
 	lines.push("## Searching Expertise");
 	lines.push("");
 	lines.push(
-		"Use `ml search` to find relevant records across all domains. Results are ranked by relevance (BM25):",
+		"Use `luuna-atlas search` to find relevant records across all domains. Results are ranked by relevance (BM25):",
 	);
 	lines.push("");
 	lines.push("```bash");
-	lines.push('ml search "file locking"              # multi-word queries ranked by relevance');
-	lines.push('ml search "atomic" --domain cli        # limit to a specific domain');
-	lines.push('ml search "ESM" --type convention      # filter by record type');
-	lines.push('ml search "concurrency" --tag safety   # filter by tag');
+	lines.push(
+		'luuna-atlas search "file locking"              # multi-word queries ranked by relevance',
+	);
+	lines.push('luuna-atlas search "atomic" --domain cli        # limit to a specific domain');
+	lines.push('luuna-atlas search "ESM" --type convention      # filter by record type');
+	lines.push('luuna-atlas search "concurrency" --tag safety   # filter by tag');
 	lines.push("```");
 	lines.push("");
 	lines.push("Search before implementing — existing expertise may already cover your use case.");
@@ -270,14 +278,14 @@ export function formatPrimeOutput(domainSections: string[]): string {
 	lines.push("When a domain grows large, compact it to keep expertise focused:");
 	lines.push("");
 	lines.push("```bash");
-	lines.push("ml compact --auto --dry-run     # preview what would be merged");
-	lines.push("ml compact --auto               # merge same-type record groups");
+	lines.push("luuna-atlas compact --auto --dry-run     # preview what would be merged");
+	lines.push("luuna-atlas compact --auto               # merge same-type record groups");
 	lines.push("```");
 	lines.push("");
-	lines.push("Use `ml diff` to review what expertise changed:");
+	lines.push("Use `luuna-atlas diff` to review what expertise changed:");
 	lines.push("");
 	lines.push("```bash");
-	lines.push("ml diff HEAD~3                  # see record changes over last 3 commits");
+	lines.push("luuna-atlas diff HEAD~3                  # see record changes over last 3 commits");
 	lines.push("```");
 	lines.push("");
 	lines.push("## Session End");
@@ -285,9 +293,9 @@ export function formatPrimeOutput(domainSections: string[]): string {
 	lines.push("**IMPORTANT**: Before ending your session, record what you learned and sync:");
 	lines.push("");
 	lines.push("```");
-	lines.push("[ ] ml learn          # see what files changed — decide what to record");
-	lines.push("[ ] ml record ...     # record learnings (see above)");
-	lines.push("[ ] ml sync           # validate, stage, and commit .mulch/ changes");
+	lines.push("[ ] luuna-atlas learn          # see what files changed — decide what to record");
+	lines.push("[ ] luuna-atlas record ...     # record learnings (see above)");
+	lines.push("[ ] luuna-atlas sync           # validate, stage, and commit .luuna/atlas/ changes");
 	lines.push("```");
 	lines.push("");
 	lines.push("Do NOT skip this. Unrecorded learnings are lost for the next session.");
@@ -356,7 +364,7 @@ export function formatPrimeOutputXml(domainSections: string[]): string {
 
 	if (domainSections.length === 0) {
 		lines.push(
-			"  <empty>No expertise recorded yet. Use ml add and ml record to get started.</empty>",
+			"  <empty>No expertise recorded yet. Use luuna-atlas add and luuna-atlas record to get started.</empty>",
 		);
 	} else {
 		lines.push(domainSections.join("\n"));
@@ -474,7 +482,7 @@ function annotatePlainLine(line: string, annotations: Map<string, string> | unde
 // single bare line.
 export function formatPrimeOutputPlain(domainSections: string[]): string {
 	if (domainSections.length === 0) {
-		return "No expertise recorded yet. Use `ml add <domain>` and `ml record` to get started.";
+		return "No expertise recorded yet. Use `luuna-atlas add <domain>` and `luuna-atlas record` to get started.";
 	}
 	return domainSections.join("\n\n");
 }
@@ -497,7 +505,7 @@ export function formatJsonOutput(domains: JsonDomain[]): string {
 // confirmations instead of new filler. Single helper feeds the prime footer
 // (markdown/compact/xml/plain) and the onboard/cursor/codex snippets
 // ("embedded"). Style preset and custom override come from `prime.session_close`
-// in mulch.config.yaml.
+// in config.yaml.
 export type SessionCloseFormat = PrimeFormat | "embedded";
 
 export function getSessionEndReminder(
@@ -528,10 +536,10 @@ function renderConditionalSessionClose(format: SessionCloseFormat): string {
 				"<session_close>",
 				"  <instruction>Record only what a future agent would get wrong without it. Prefer a failure record: symptom, root cause, preventive check. Do not restate code, CLAUDE.md, or existing records.</instruction>",
 				"  <commands>",
-				"    <command>ml learn — see what files changed</command>",
-				"    <command>ml record &lt;domain&gt; --type &lt;type&gt; --description &quot;...&quot;</command>",
-				"    <command>ml outcome &lt;domain&gt; &lt;id&gt; --status success — confirm a record that helped</command>",
-				"    <command>ml sync — validate, stage, commit</command>",
+				"    <command>luuna-atlas learn — see what files changed</command>",
+				"    <command>luuna-atlas record &lt;domain&gt; --type &lt;type&gt; --description &quot;...&quot;</command>",
+				"    <command>luuna-atlas outcome &lt;domain&gt; &lt;id&gt; --status success — confirm a record that helped</command>",
+				"    <command>luuna-atlas sync — validate, stage, commit</command>",
 				"  </commands>",
 				"  <note>Skip if nothing qualifies. Filler records are noise every future session pays to read.</note>",
 				"</session_close>",
@@ -543,10 +551,10 @@ function renderConditionalSessionClose(format: SessionCloseFormat): string {
 				"Record only what a future agent would get wrong without it. Prefer a failure record:",
 				"symptom -> root cause -> preventive check. Do not restate code, CLAUDE.md, or existing records.",
 				"",
-				"  ml learn                                        (see what files changed)",
-				"  ml record <domain> --type <type> ...            (record the insight)",
-				"  ml outcome <domain> <id> --status success       (confirm a record that helped)",
-				"  ml sync                                         (validate, stage, commit)",
+				"  luuna-atlas learn                                        (see what files changed)",
+				"  luuna-atlas record <domain> --type <type> ...            (record the insight)",
+				"  luuna-atlas outcome <domain> <id> --status success       (confirm a record that helped)",
+				"  luuna-atlas sync                                         (validate, stage, commit)",
 				"",
 				"Skip if nothing qualifies. Filler records are noise every future session pays to read.",
 			].join("\n");
@@ -559,10 +567,10 @@ function renderConditionalSessionClose(format: SessionCloseFormat): string {
 				"records; if an existing record helped, confirm it instead:",
 				"",
 				"```bash",
-				"ml learn                                                                    # see what files changed",
-				'ml record <domain> --type <convention|pattern|failure|decision|reference|guide> --description "..."',
-				"ml outcome <domain> <id> --status success                                   # confirm a record that helped",
-				"ml sync                                                                     # validate, stage, commit",
+				"luuna-atlas learn                                                                    # see what files changed",
+				'luuna-atlas record <domain> --type <convention|pattern|failure|decision|reference|guide> --description "..."',
+				"luuna-atlas outcome <domain> <id> --status success                                   # confirm a record that helped",
+				"luuna-atlas sync                                                                     # validate, stage, commit",
 				"```",
 				"",
 				"Skip if nothing qualifies. Filler records are noise every future session pays to read.",
@@ -574,10 +582,10 @@ function renderConditionalSessionClose(format: SessionCloseFormat): string {
 				"**Record only what a future agent would get wrong without it.** Prefer a `failure` record (symptom -> root cause -> preventive check). Do not restate code, CLAUDE.md, or existing records; if an existing record helped, confirm it instead:",
 				"",
 				"```bash",
-				"ml learn                                   # see what files changed",
-				"ml record <domain> --type <type> ...       # record the insight",
-				"ml outcome <domain> <id> --status success  # confirm a record that helped",
-				"ml sync                                    # validate, stage, commit",
+				"luuna-atlas learn                                   # see what files changed",
+				"luuna-atlas record <domain> --type <type> ...       # record the insight",
+				"luuna-atlas outcome <domain> <id> --status success  # confirm a record that helped",
+				"luuna-atlas sync                                    # validate, stage, commit",
 				"```",
 				"",
 				"Skip if nothing qualifies. Filler records are noise every future session pays to read.",
@@ -594,15 +602,15 @@ function renderMinimalSessionClose(format: SessionCloseFormat): string {
 		case "xml":
 			return [
 				"<session_close>",
-				"  <instruction>Before closing, record any insight worth preserving: `ml learn` → `ml record &lt;domain&gt; --type &lt;type&gt; …` → `ml sync`. Skip if no insight surfaced.</instruction>",
+				"  <instruction>Before closing, record any insight worth preserving: `luuna-atlas learn` → `luuna-atlas record &lt;domain&gt; --type &lt;type&gt; …` → `luuna-atlas sync`. Skip if no insight surfaced.</instruction>",
 				"</session_close>",
 			].join("\n");
 		case "plain":
-			return "Before closing, record any insight worth preserving: ml learn → ml record <domain> --type <type> … → ml sync. Skip if no insight surfaced.";
+			return "Before closing, record any insight worth preserving: luuna-atlas learn → luuna-atlas record <domain> --type <type> … → luuna-atlas sync. Skip if no insight surfaced.";
 		case "embedded":
-			return "**Before you finish**: record any insight worth preserving with `ml learn` → `ml record <domain> --type <type> …` → `ml sync`. Skip if no insight surfaced.";
+			return "**Before you finish**: record any insight worth preserving with `luuna-atlas learn` → `luuna-atlas record <domain> --type <type> …` → `luuna-atlas sync`. Skip if no insight surfaced.";
 		default:
-			return "**Before closing**: record any insight worth preserving — `ml learn` → `ml record <domain> --type <type> …` → `ml sync`. Skip if no insight surfaced.";
+			return "**Before closing**: record any insight worth preserving — `luuna-atlas learn` → `luuna-atlas record <domain> --type <type> …` → `luuna-atlas sync`. Skip if no insight surfaced.";
 	}
 }
 
@@ -617,9 +625,9 @@ function renderDirectiveSessionClose(format: SessionCloseFormat): string {
 				"<session_close>",
 				"  <heading>SESSION CLOSE — record insights before exiting</heading>",
 				"  <steps>",
-				'    <step n="1">Run `ml learn` to see changed files and suggested domains.</step>',
-				'    <step n="2">Run `ml record &lt;domain&gt; --type &lt;type&gt; …` for each insight worth preserving.</step>',
-				'    <step n="3">Run `ml sync` to validate, stage, and commit the .mulch/ changes.</step>',
+				'    <step n="1">Run `luuna-atlas learn` to see changed files and suggested domains.</step>',
+				'    <step n="2">Run `luuna-atlas record &lt;domain&gt; --type &lt;type&gt; …` for each insight worth preserving.</step>',
+				'    <step n="3">Run `luuna-atlas sync` to validate, stage, and commit the .luuna/atlas/ changes.</step>',
 				"  </steps>",
 				"  <types>",
 				'    <type name="convention">a norm the project follows (e.g. naming, formatting)</type>',
@@ -645,9 +653,9 @@ function renderDirectiveSessionClose(format: SessionCloseFormat): string {
 				"",
 				"Record insights before exiting:",
 				"",
-				"  1. ml learn                              (see changed files + suggested domains)",
-				"  2. ml record <domain> --type <type> ...  (record each insight)",
-				"  3. ml sync                               (validate, stage, commit)",
+				"  1. luuna-atlas learn                              (see changed files + suggested domains)",
+				"  2. luuna-atlas record <domain> --type <type> ...  (record each insight)",
+				"  3. luuna-atlas sync                               (validate, stage, commit)",
 				"",
 				"Types:",
 				"  - convention : a norm the project follows (naming, formatting, ...)",
@@ -673,9 +681,9 @@ function renderDirectiveSessionClose(format: SessionCloseFormat): string {
 				"",
 				"Record insights worth preserving before closing this session:",
 				"",
-				"1. `ml learn` — see changed files and suggested domains",
-				"2. `ml record <domain> --type <type> …` — record each insight",
-				"3. `ml sync` — validate, stage, commit",
+				"1. `luuna-atlas learn` — see changed files and suggested domains",
+				"2. `luuna-atlas record <domain> --type <type> …` — record each insight",
+				"3. `luuna-atlas sync` — validate, stage, commit",
 				"",
 				"**Types**:",
 				"- `convention` — a norm the project follows (naming, formatting, …)",
@@ -697,9 +705,9 @@ function renderDirectiveSessionClose(format: SessionCloseFormat): string {
 				"",
 				"**Record insights before exiting:**",
 				"",
-				"1. `ml learn` — see changed files and suggested domains",
-				"2. `ml record <domain> --type <type> …` — record each insight",
-				"3. `ml sync` — validate, stage, commit",
+				"1. `luuna-atlas learn` — see changed files and suggested domains",
+				"2. `luuna-atlas record <domain> --type <type> …` — record each insight",
+				"3. `luuna-atlas sync` — validate, stage, commit",
 				"",
 				"**Types**:",
 				"- `convention` — a norm the project follows (naming, formatting, …)",
@@ -735,12 +743,12 @@ export function formatStatusOutput(
 	governance: { max_entries: number; warn_entries: number; hard_limit: number },
 ): string {
 	const lines: string[] = [];
-	lines.push("Mulch Status");
+	lines.push("Atlas Status");
 	lines.push("============");
 	lines.push("");
 
 	if (domainStats.length === 0) {
-		lines.push("No domains configured. Run `ml add <domain>` to get started.");
+		lines.push("No domains configured. Run `luuna-atlas add <domain>` to get started.");
 		return lines.join("\n");
 	}
 
@@ -804,15 +812,18 @@ interface QuickRef {
 }
 
 const MANIFEST_QUICK_REF: QuickRef[] = [
-	{ command: "ml prime <domain>", description: "load full records for one domain" },
-	{ command: "ml prime --files <path>", description: "load records relevant to specific files" },
-	{ command: 'ml search "<query>"', description: "search records across domains" },
+	{ command: "luuna-atlas prime <domain>", description: "load full records for one domain" },
 	{
-		command: 'ml record <domain> --type <type> --description "..."',
+		command: "luuna-atlas prime --files <path>",
+		description: "load records relevant to specific files",
+	},
+	{ command: 'luuna-atlas search "<query>"', description: "search records across domains" },
+	{
+		command: 'luuna-atlas record <domain> --type <type> --description "..."',
 		description: "store an insight",
 	},
-	{ command: "ml learn", description: "discover what to record from changed files" },
-	{ command: "ml sync", description: "validate, stage, and commit .mulch/ changes" },
+	{ command: "luuna-atlas learn", description: "discover what to record from changed files" },
+	{ command: "luuna-atlas sync", description: "validate, stage, and commit .luuna/atlas/ changes" },
 ];
 
 function manifestStatusSuffix(count: number, governance: ManifestGovernance): string {
@@ -871,10 +882,10 @@ function formatPrimeManifestMarkdown(
 	governance: ManifestGovernance,
 ): string {
 	const lines: string[] = [];
-	lines.push("# Project Expertise Manifest (via Mulch)");
+	lines.push("# Project Expertise Manifest (via Atlas)");
 	lines.push("");
 	lines.push(
-		"> Manifest mode lists available domains. Load records on demand with `ml prime <domain>` or `ml prime --files <path>`.",
+		"> Manifest mode lists available domains. Load records on demand with `luuna-atlas prime <domain>` or `luuna-atlas prime --files <path>`.",
 	);
 	lines.push("");
 	lines.push("## Quick Reference");
@@ -887,7 +898,7 @@ function formatPrimeManifestMarkdown(
 	lines.push("");
 	if (domains.length === 0) {
 		lines.push(
-			"No expertise recorded yet. Use `ml add <domain>` to create a domain, then `ml record` to add records.",
+			"No expertise recorded yet. Use `luuna-atlas add <domain>` to create a domain, then `luuna-atlas record` to add records.",
 		);
 	} else {
 		for (const { domain, count, lastUpdated, typeCounts } of domains) {
@@ -908,11 +919,11 @@ function formatPrimeManifestPlain(
 	governance: ManifestGovernance,
 ): string {
 	const lines: string[] = [];
-	lines.push("Project Expertise Manifest (via Mulch)");
+	lines.push("Project Expertise Manifest (via Atlas)");
 	lines.push("======================================");
 	lines.push("");
 	lines.push(
-		"Manifest mode lists available domains. Load records on demand with `ml prime <domain>` or `ml prime --files <path>`.",
+		"Manifest mode lists available domains. Load records on demand with `luuna-atlas prime <domain>` or `luuna-atlas prime --files <path>`.",
 	);
 	lines.push("");
 	lines.push("Quick Reference:");
@@ -923,7 +934,7 @@ function formatPrimeManifestPlain(
 	lines.push("Available Domains:");
 	if (domains.length === 0) {
 		lines.push(
-			"  No expertise recorded yet. Use `ml add <domain>` and `ml record` to get started.",
+			"  No expertise recorded yet. Use `luuna-atlas add <domain>` and `luuna-atlas record` to get started.",
 		);
 	} else {
 		for (const { domain, count, lastUpdated, typeCounts } of domains) {
@@ -943,7 +954,7 @@ function formatPrimeManifestXml(domains: ManifestDomain[], governance: ManifestG
 	const lines: string[] = [];
 	lines.push("<manifest>");
 	lines.push(
-		"  <description>Manifest mode lists available domains. Load records on demand with `ml prime &lt;domain&gt;` or `ml prime --files &lt;path&gt;`.</description>",
+		"  <description>Manifest mode lists available domains. Load records on demand with `luuna-atlas prime &lt;domain&gt;` or `luuna-atlas prime --files &lt;path&gt;`.</description>",
 	);
 	lines.push("  <quick_reference>");
 	for (const { command, description } of MANIFEST_QUICK_REF) {
@@ -1029,7 +1040,7 @@ export function computeTypeCounts(records: ExpertiseRecord[]): Record<string, nu
 // --- Project Contract block (write-side gates from config) ---
 //
 // Slice 1 of the v0.10 prime overhaul leads with this so agents see the
-// project's write-side rules (`ml record` will enforce them) before any
+// project's write-side rules (`luuna-atlas record` will enforce them) before any
 // record content. Surfaces custom types, disabled types, per-domain
 // allowed_types / required_fields, and active hooks. Returns null when the
 // project has no contract content worth surfacing — keeps minimal configs
@@ -1055,7 +1066,7 @@ export interface ProjectContract {
 	hooks: HookEvent[];
 }
 
-export function buildProjectContract(config: MulchConfig): ProjectContract {
+export function buildProjectContract(config: AtlasConfig): ProjectContract {
 	const registry = getRegistry();
 	const customTypes: ContractCustomType[] = registry.customDefs().map((def) => ({
 		name: def.name,
@@ -1104,7 +1115,7 @@ function formatProjectContractMarkdown(c: ProjectContract): string {
 	const lines: string[] = [];
 	lines.push("## Project Contract");
 	lines.push("");
-	lines.push("Write-side gates `ml record` enforces in this project.");
+	lines.push("Write-side gates `luuna-atlas record` enforces in this project.");
 	lines.push("");
 
 	if (c.customTypes.length > 0) {
@@ -1218,7 +1229,7 @@ function formatProjectContractXml(c: ProjectContract): string {
 	return lines.join("\n");
 }
 
-export function formatProjectContract(config: MulchConfig, format: PrimeFormat): string | null {
+export function formatProjectContract(config: AtlasConfig, format: PrimeFormat): string | null {
 	const contract = buildProjectContract(config);
 	if (!hasContractContent(contract)) return null;
 	switch (format) {

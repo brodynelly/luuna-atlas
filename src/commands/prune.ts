@@ -187,7 +187,7 @@ export function registerPruneCommand(program: Command): void {
 		.option("--dry-run", "Show what would be pruned without removing", false)
 		.option(
 			"--hard",
-			"Permanently delete stale records instead of moving them to .mulch/archive/",
+			"Permanently delete stale records instead of moving them to .luuna/atlas/archive/",
 			false,
 		)
 		.option(
@@ -221,7 +221,7 @@ export function registerPruneCommand(program: Command): void {
 				const anchorCfg = config.decay?.anchor_validity ?? {};
 				const anchorValidationErrors = validateAnchorValidityConfig(anchorCfg);
 				if (anchorValidationErrors.length > 0) {
-					const msg = `Invalid decay.anchor_validity config: ${anchorValidationErrors.join("; ")}. Edit .mulch/mulch.config.yaml.`;
+					const msg = `Invalid decay.anchor_validity config: ${anchorValidationErrors.join("; ")}. Edit .luuna/atlas/config.yaml.`;
 					reportCommandError("prune", jsonMode, msg);
 					return;
 				}
@@ -251,7 +251,7 @@ export function registerPruneCommand(program: Command): void {
 				if (cycleIds.size > 0 && !jsonMode && !isQuiet()) {
 					console.error(
 						chalk.yellow(
-							`Warning: supersession cycle detected for ${cycleIds.size} record(s); cycle members will not be demoted. Run \`ml doctor\` for details.`,
+							`Warning: supersession cycle detected for ${cycleIds.size} record(s); cycle members will not be demoted. Run \`luuna-atlas doctor\` for details.`,
 						),
 					);
 				}
@@ -564,13 +564,13 @@ export function registerPruneCommand(program: Command): void {
 					totals.push(`${demoteLabel.toLowerCase()} ${totalDemoted} ${tag}${noun}${suffix}`);
 				}
 				// Totals print even under --quiet; the per-record list above is
-				// what --quiet suppresses (seed mulch-5ce3).
+				// what --quiet suppresses (seed atlas-5ce3).
 				const separator = quiet ? "" : "\n";
 				console.log(`${separator}${prefix}${chalk.bold(`Total: ${totals.join("; ")}.`)}`);
 				if (!quiet && !options.hard && !options.dryRun && totalPruned > 0) {
 					console.log(
 						chalk.dim(
-							"Records moved to .mulch/archive/. Restore with `ml restore <id>` or use `--hard` next time to permanently delete.",
+							"Records moved to .luuna/atlas/archive/. Restore with `luuna-atlas restore <id>` or use `--hard` next time to permanently delete.",
 						),
 					);
 				}

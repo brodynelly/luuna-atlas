@@ -1,4 +1,4 @@
-export type { MulchConfig } from "./config.ts";
+export type { AtlasConfig } from "./config.ts";
 export { DEFAULT_CONFIG } from "./config.ts";
 export { configSchema } from "./config-schema.ts";
 export type {

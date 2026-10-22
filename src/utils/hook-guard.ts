@@ -1,6 +1,6 @@
-// Guard half of `ml hook` (Claude Code PreToolUse). Denies hand edits of
-// .mulch/expertise/*.jsonl: they skip the lock, schema validation, and dedup
-// that `ml record` / `ml edit` / `ml delete` do.
+// Guard half of `luuna-atlas hook` (Claude Code PreToolUse). Denies hand edits of
+// .luuna/atlas/expertise/*.jsonl: they skip the lock, schema validation, and dedup
+// that `luuna-atlas record` / `luuna-atlas edit` / `luuna-atlas delete` do.
 //
 //   Write | Edit | MultiEdit   tool_input.file_path
 //   NotebookEdit               tool_input.notebook_path
@@ -8,16 +8,17 @@
 //
 // Bash is best effort, like roots' guard. The command is split into segments
 // on ; && || | and newlines; a segment is denied when it mentions
-// .mulch/expertise and
+// .luuna/atlas/expertise and
 //   - redirects output (>, >>, &>) to an expertise .jsonl, or
 //   - runs tee/rm/mv/truncate/touch/unlink/shred/sponge on one, or
 //   - runs cp/ln/install/rsync with the last argument inside expertise/, or
 //   - runs sed/perl with -i (in place), or dd with of=... .
-// Reads (cat, grep, jq without a redirect), git, and `ml`/`mulch` itself pass.
+// Reads (cat, grep, jq without a redirect), git, and `luuna-atlas` itself pass.
 // A shell can always evade this (cd first, variables, scripts); the goal is
 // catching the accidental hand edit, not a determined one.
 
 import { resolve } from "node:path";
+import { LEGACY_COMMAND_NAMES } from "./legacy-layout.ts";
 
 export const FILE_TOOLS: Record<string, string> = {
 	Write: "file_path",
@@ -27,11 +28,11 @@ export const FILE_TOOLS: Record<string, string> = {
 };
 
 export const GUARD_REASON =
-	"mulch: do not edit .mulch/expertise/*.jsonl by hand. Use `ml record <domain> --type <t> --description ...` to add, " +
-	"`ml edit <id>` to change, `ml delete <id>` to remove (they lock, validate, and dedup the store).";
+	"luuna-atlas: do not edit .luuna/atlas/expertise/*.jsonl by hand. Use `luuna-atlas record <domain> --type <t> --description ...` to add, " +
+	"`luuna-atlas edit <id>` to change, `luuna-atlas delete <id>` to remove (they lock, validate, and dedup the store).";
 
-const EXPERTISE_FILE = /(^|[\\/])\.mulch[\\/]+expertise[\\/]+[^\\/]+\.jsonl$/;
-const EXPERTISE_MENTION = /\.mulch[\\/]+expertise/;
+const EXPERTISE_FILE = /(^|[\\/])\.luuna[\\/]+atlas[\\/]+expertise[\\/]+[^\\/]+\.jsonl$/;
+const EXPERTISE_MENTION = /\.luuna[\\/]+atlas[\\/]+expertise/;
 
 const WRITES_ARGS = new Set(["tee", "rm", "mv", "truncate", "touch", "unlink", "shred", "sponge"]);
 const COPY_TO_LAST = new Set(["cp", "ln", "install", "rsync"]);
@@ -47,7 +48,7 @@ function unquote(t: string): string {
 	return t.replace(/^['"]|['"]$/g, "");
 }
 
-/** True when `p` (relative to `cwd`) is a `.mulch/expertise/<domain>.jsonl` file. */
+/** True when `p` (relative to `cwd`) is a `.luuna/atlas/expertise/<domain>.jsonl` file. */
 export function isExpertiseFile(p: string, cwd: string): boolean {
 	return EXPERTISE_FILE.test(resolve(cwd, p));
 }
@@ -73,7 +74,7 @@ function redirectsIntoExpertise(segment: string): boolean {
 function segmentWrites(segment: string): boolean {
 	const [cmd = "", ...args] = commandWords(segment);
 	const name = cmd.split("/").pop() ?? cmd;
-	if (name === "ml" || name === "mulch") return false;
+	if (name === "luuna-atlas" || LEGACY_COMMAND_NAMES.includes(name)) return false;
 	if (redirectsIntoExpertise(segment)) return true;
 	const paths = args.filter((a) => !a.startsWith("-"));
 	const anyExpertise = paths.some((a) => EXPERTISE_MENTION.test(a));
@@ -86,7 +87,7 @@ function segmentWrites(segment: string): boolean {
 	return false;
 }
 
-/** Best effort: does this shell command look like it writes .mulch/expertise? */
+/** Best effort: does this shell command look like it writes .luuna/atlas/expertise? */
 export function bashWritesExpertise(command: string): boolean {
 	if (!EXPERTISE_MENTION.test(command)) return false;
 	return command.split(/\n|;|&&|\|\||\|/).some(segmentWrites);

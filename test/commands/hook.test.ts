@@ -1,4 +1,4 @@
-// `ml hook` (mulch-7164): PreToolUse guard + file-anchored injection.
+// `luuna-atlas hook` (atlas-7164): PreToolUse guard + file-anchored injection.
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -8,7 +8,7 @@ import { join, resolve } from "node:path";
 import { hookOutput } from "../../src/commands/hook.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
 import type { ExpertiseRecord } from "../../src/schemas/record.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import { appendRecord } from "../../src/utils/expertise.ts";
 import { bashWritesExpertise, guardDecision } from "../../src/utils/hook-guard.ts";
 import { findRepoRoot } from "../../src/utils/hook-inject.ts";
@@ -20,35 +20,39 @@ describe("hook guard", () => {
 	const edit = (tool: string, key: string, p: string) =>
 		guardDecision({ tool_name: tool, tool_input: { [key]: p } }, cwd);
 
-	it("denies file tools on .mulch/expertise/*.jsonl only", () => {
-		expect(edit("Edit", "file_path", ".mulch/expertise/cli.jsonl")).toContain("ml record");
-		expect(edit("Write", "file_path", "/repo/.mulch/expertise/db.jsonl")).toContain("ml edit");
-		expect(edit("NotebookEdit", "notebook_path", ".mulch/expertise/x.jsonl")).not.toBeNull();
-		expect(edit("Edit", "file_path", ".mulch/mulch.config.yaml")).toBeNull();
+	it("denies file tools on .luuna/atlas/expertise/*.jsonl only", () => {
+		expect(edit("Edit", "file_path", ".luuna/atlas/expertise/cli.jsonl")).toContain(
+			"luuna-atlas record",
+		);
+		expect(edit("Write", "file_path", "/repo/.luuna/atlas/expertise/db.jsonl")).toContain(
+			"luuna-atlas edit",
+		);
+		expect(edit("NotebookEdit", "notebook_path", ".luuna/atlas/expertise/x.jsonl")).not.toBeNull();
+		expect(edit("Edit", "file_path", ".luuna/atlas/config.yaml")).toBeNull();
 		expect(edit("Edit", "file_path", "src/expertise/cli.jsonl")).toBeNull();
-		expect(edit("Read", "file_path", ".mulch/expertise/cli.jsonl")).toBeNull();
+		expect(edit("Read", "file_path", ".luuna/atlas/expertise/cli.jsonl")).toBeNull();
 		expect(edit("Edit", "file_path", "")).toBeNull();
 	});
 
-	it("catches shell writes, allows reads and ml itself", () => {
+	it("catches shell writes, allows reads and luuna-atlas itself", () => {
 		const denied = [
-			"echo '{}' >> .mulch/expertise/cli.jsonl",
-			"jq -c . a.json > .mulch/expertise/cli.jsonl",
-			"sed -i '' 's/a/b/' .mulch/expertise/cli.jsonl",
-			"cat x | tee -a .mulch/expertise/cli.jsonl",
-			"cp /tmp/x.jsonl .mulch/expertise/",
-			"FOO=1 perl -pi -e 's/a/b/' .mulch/expertise/cli.jsonl",
-			"dd if=/dev/null of=.mulch/expertise/cli.jsonl",
-			"rm .mulch/expertise/cli.jsonl",
+			"echo '{}' >> .luuna/atlas/expertise/cli.jsonl",
+			"jq -c . a.json > .luuna/atlas/expertise/cli.jsonl",
+			"sed -i '' 's/a/b/' .luuna/atlas/expertise/cli.jsonl",
+			"cat x | tee -a .luuna/atlas/expertise/cli.jsonl",
+			"cp /tmp/x.jsonl .luuna/atlas/expertise/",
+			"FOO=1 perl -pi -e 's/a/b/' .luuna/atlas/expertise/cli.jsonl",
+			"dd if=/dev/null of=.luuna/atlas/expertise/cli.jsonl",
+			"rm .luuna/atlas/expertise/cli.jsonl",
 		];
 		for (const cmd of denied) expect(bashWritesExpertise(cmd)).toBe(true);
 		const allowed = [
-			"cat .mulch/expertise/cli.jsonl",
-			"grep -c mx- .mulch/expertise/*.jsonl",
-			"jq -c '.id' .mulch/expertise/cli.jsonl 2>&1 | head",
-			"cp .mulch/expertise/cli.jsonl /tmp/backup.jsonl",
-			"ml record cli --type convention --description 'never > .mulch/expertise/x.jsonl'",
-			"git checkout .mulch/expertise/cli.jsonl",
+			"cat .luuna/atlas/expertise/cli.jsonl",
+			"grep -c mx- .luuna/atlas/expertise/*.jsonl",
+			"jq -c '.id' .luuna/atlas/expertise/cli.jsonl 2>&1 | head",
+			"cp .luuna/atlas/expertise/cli.jsonl /tmp/backup.jsonl",
+			"luuna-atlas record cli --type convention --description 'never > .luuna/atlas/expertise/x.jsonl'",
+			"git checkout .luuna/atlas/expertise/cli.jsonl",
 			"echo hi > out.txt",
 		];
 		for (const cmd of allowed) expect(bashWritesExpertise(cmd)).toBe(false);
@@ -59,13 +63,13 @@ describe("hook guard", () => {
 	});
 });
 
-describe("ml hook", () => {
+describe("luuna-atlas hook", () => {
 	let tmpDir: string;
 	const now = new Date().toISOString();
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-hook-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-hook-test-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { cli: {}, db: {} } }, tmpDir);
 		await mkdir(join(tmpDir, "src"), { recursive: true });
 		await writeFile(join(tmpDir, "src", "a.ts"), "x");
@@ -126,7 +130,7 @@ describe("ml hook", () => {
 		const other = await hookOutput(input("Read", "src/a.ts", { session_id: "s2" }), "/");
 		expect(other).toContain("mx-1");
 
-		const state = join(tmpDir, ".mulch", "state");
+		const state = join(tmpDir, ".luuna/atlas", "state");
 		expect(await readFile(join(state, ".gitignore"), "utf-8")).toBe("*\n");
 		const usage = (await readFile(join(state, "usage.jsonl"), "utf-8"))
 			.trim()
@@ -142,16 +146,16 @@ describe("ml hook", () => {
 		await writeFile(join(tmpDir, "README.md"), "x");
 		expect(await hookOutput(input("Read", "README.md"), "/")).toBe("");
 		expect(await hookOutput(input("Read", "/elsewhere/a.ts"), "/")).toBe("");
-		expect(await hookOutput(input("Read", ".mulch/expertise/cli.jsonl"), "/")).toBe("");
+		expect(await hookOutput(input("Read", ".luuna/atlas/expertise/cli.jsonl"), "/")).toBe("");
 		const start = input("Read", "src/a.ts", { hook_event_name: "SessionStart" });
 		expect(await hookOutput(start, "/")).toBe("");
 		expect(await hookOutput(input("Glob", "src/a.ts"), "/")).toBe("");
 		expect(await hookOutput("not json", "/")).toBe("");
-		expect(existsSync(join(tmpDir, ".mulch", "state"))).toBe(false);
+		expect(existsSync(join(tmpDir, ".luuna/atlas", "state"))).toBe(false);
 	});
 
-	it("is silent without a .mulch project", async () => {
-		const bare = await mkdtemp(join(tmpdir(), "mulch-hook-bare-"));
+	it("is silent without a .luuna/atlas project", async () => {
+		const bare = await mkdtemp(join(tmpdir(), "atlas-hook-bare-"));
 		try {
 			const raw = JSON.stringify({ cwd: bare, tool_name: "Read", tool_input: { file_path: "a" } });
 			expect(await hookOutput(raw, "/")).toBe("");
@@ -161,7 +165,7 @@ describe("ml hook", () => {
 	});
 
 	it("denies hand edits end to end through the CLI", () => {
-		const raw = input("Write", join(tmpDir, ".mulch", "expertise", "cli.jsonl"));
+		const raw = input("Write", join(tmpDir, ".luuna/atlas", "expertise", "cli.jsonl"));
 		const r = spawnSync("bun", [cliPath, "hook"], {
 			cwd: tmpDir,
 			input: raw,
@@ -171,7 +175,7 @@ describe("ml hook", () => {
 		expect(r.status).toBe(0);
 		const out = JSON.parse(r.stdout).hookSpecificOutput;
 		expect(out.permissionDecision).toBe("deny");
-		expect(out.permissionDecisionReason).toContain("ml record");
+		expect(out.permissionDecisionReason).toContain("luuna-atlas record");
 	});
 
 	it("findRepoRoot walks up to the .git entry", async () => {

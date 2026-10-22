@@ -3,21 +3,23 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import yaml from "js-yaml";
-import type { DomainConfig, MulchConfig } from "../schemas/config.ts";
+import type { AtlasConfig, DomainConfig } from "../schemas/config.ts";
 import { DEFAULT_CONFIG } from "../schemas/config.ts";
 import { createExpertiseFile } from "./expertise.ts";
+import { hasLegacyStore, migrateLegacyStore } from "./legacy-layout.ts";
 
-const MULCH_DIR = ".mulch";
-const CONFIG_FILE = "mulch.config.yaml";
+const LUUNA_DIR = ".luuna";
+const ATLAS_DIR = ".luuna/atlas";
+const CONFIG_FILE = "config.yaml";
 const EXPERTISE_DIR = "expertise";
 
-export const GITATTRIBUTES_LINE = ".mulch/expertise/*.jsonl merge=union";
+export const GITATTRIBUTES_LINE = ".luuna/atlas/expertise/*.jsonl merge=union";
 
-const INIT_CONFIG_HEADER = `# Mulch configuration. See https://github.com/jayminwest/mulch for docs.
+const INIT_CONFIG_HEADER = `# Atlas configuration. See https://github.com/brodynelly/luuna-atlas for docs.
 #
 # Required fields below. Optional knobs are commented out at the bottom — uncomment
-# to enable. Note: commands that mutate this file (e.g. \`ml add <domain>\`,
-# \`ml record\` auto-creating a domain) rewrite it via the YAML serializer and
+# to enable. Note: commands that mutate this file (e.g. \`luuna-atlas add <domain>\`,
+# \`luuna-atlas record\` auto-creating a domain) rewrite it via the YAML serializer and
 # strip these comments.
 
 `;
@@ -26,7 +28,7 @@ const INIT_CONFIG_OPTIONAL_KNOBS = `
 # ─── Optional knobs (uncomment to enable) ────────────────────────────────────
 #
 # prime:
-#   # Pin \`ml prime\`'s unscoped output shape. When unset (recommended), prime
+#   # Pin \`luuna-atlas prime\`'s unscoped output shape. When unset (recommended), prime
 #   # emits a budget-capped record index (one line per record, failures first).
 #   #   - full     → the record index (same as unset)
 #   #   - manifest → a per-domain count table instead of records
@@ -45,7 +47,7 @@ const INIT_CONFIG_OPTIONAL_KNOBS = `
 # search:
 #   # Multiplier applied to BM25 scores so records with more confirmed outcomes
 #   # rank higher. 0 disables (pure BM25). Default 0.1: a record with N successes
-#   # gets a (1 + 0.1*N) boost. Override per-call with \`ml search --no-boost\`.
+#   # gets a (1 + 0.1*N) boost. Override per-call with \`luuna-atlas search --no-boost\`.
 #   boost_factor: 0.1
 #
 # disabled_types:
@@ -77,7 +79,7 @@ const INIT_CONFIG_OPTIONAL_KNOBS = `
 #     summary: "{decision_status}: {title}"   # tokens must be declared fields (parent's included)
 #
 # quality:
-#   # Write-time gate on ml record: near-duplicates, conventions/patterns with
+#   # Write-time gate on luuna-atlas record: near-duplicates, conventions/patterns with
 #   # no file/dir anchor or evidence, conventions that restate code.
 #   # warn (default) prints and writes; error blocks unless --force; off skips.
 #   # Exact duplicates are always blocked.
@@ -85,17 +87,17 @@ const INIT_CONFIG_OPTIONAL_KNOBS = `
 #
 # hooks:
 #   # Lifecycle hook scripts. Each event maps to an ordered list of shell
-#   # commands. Mulch invokes each with the relevant payload as JSON on stdin.
+#   # commands. Atlas invokes each with the relevant payload as JSON on stdin.
 #   # Exit 0 = continue. Non-zero from a \`pre-*\` hook blocks the action; from
 #   # a \`post-*\` hook emits a warning. \`pre-record\`, \`pre-prime\`, and
 #   # \`pre-compact\` may mutate the payload by printing modified JSON on
 #   # stdout; \`pre-prune\` is block-or-allow only — its stdout is ignored.
 #   #
-#   # pre-record:    [./.mulch/hooks/scan-secrets.sh, ./.mulch/hooks/require-owner.sh]
-#   # post-record:   [./.mulch/hooks/post-to-slack.sh]
-#   # pre-prime:     [./.mulch/hooks/filter-by-team.sh]
-#   # pre-prune:     [./.mulch/hooks/digest-then-confirm.sh]
-#   # pre-compact:   [./.mulch/hooks/llm-summarize.sh]
+#   # pre-record:    [./.luuna/atlas/hooks/scan-secrets.sh, ./.luuna/atlas/hooks/require-owner.sh]
+#   # post-record:   [./.luuna/atlas/hooks/post-to-slack.sh]
+#   # pre-prime:     [./.luuna/atlas/hooks/filter-by-team.sh]
+#   # pre-prune:     [./.luuna/atlas/hooks/digest-then-confirm.sh]
+#   # pre-compact:   [./.luuna/atlas/hooks/llm-summarize.sh]
 #
 # hook_settings:
 #   # Per-hook execution timeout in milliseconds. Default 5000.
@@ -107,32 +109,32 @@ export function buildInitialConfigYaml(): string {
 	return INIT_CONFIG_HEADER + body + INIT_CONFIG_OPTIONAL_KNOBS;
 }
 
-export const MULCH_README = `# .mulch/
+export const ATLAS_README = `# .luuna/atlas/
 
-This directory is managed by [mulch](https://github.com/jayminwest/mulch) — a structured expertise layer for coding agents.
+This directory is managed by [luuna-atlas](https://github.com/brodynelly/luuna-atlas) — a structured expertise layer for coding agents.
 
 ## Key Commands
 
-- \`ml init\`      — Initialize a .mulch directory
-- \`ml add\`       — Add a new domain
-- \`ml record\`    — Record an expertise record
-- \`ml edit\`      — Edit an existing record
-- \`ml query\`     — Query expertise records
-- \`ml prime [domain]\` — Output a record index for priming (optionally scoped to one domain)
-- \`ml show <id>\`  — Show a full record
-- \`ml search\`   — Search records across domains
-- \`ml status\`    — Show domain statistics
-- \`ml validate\`  — Validate all records against the schema
-- \`ml prune\`     — Remove expired records
+- \`luuna-atlas init\`      — Initialize a .luuna/atlas directory
+- \`luuna-atlas add\`       — Add a new domain
+- \`luuna-atlas record\`    — Record an expertise record
+- \`luuna-atlas edit\`      — Edit an existing record
+- \`luuna-atlas query\`     — Query expertise records
+- \`luuna-atlas prime [domain]\` — Output a record index for priming (optionally scoped to one domain)
+- \`luuna-atlas show <id>\`  — Show a full record
+- \`luuna-atlas search\`   — Search records across domains
+- \`luuna-atlas status\`    — Show domain statistics
+- \`luuna-atlas validate\`  — Validate all records against the schema
+- \`luuna-atlas prune\`     — Remove expired records
 
 ## Structure
 
-- \`mulch.config.yaml\` — Configuration file
+- \`config.yaml\` — Configuration file
 - \`expertise/\`        — JSONL files, one per domain
 
 ## Configuration
 
-Optional knobs in \`mulch.config.yaml\`:
+Optional knobs in \`config.yaml\`:
 
 \`\`\`yaml
 prime:
@@ -144,7 +146,7 @@ prime:
 search:
   boost_factor: 0.1        # multiplier on BM25 scores for confirmed records.
                            # 0 disables (pure BM25). Override with
-                           # \`ml search --no-boost\`.
+                           # \`luuna-atlas search --no-boost\`.
 \`\`\`
 `;
 
@@ -172,9 +174,9 @@ function resolveWorktreeRoot(cwd: string): string {
 
 	if (mainResolved === resolve(cwd)) return cwd;
 
-	// Only redirect if main repo has a .mulch/ with config
-	const mainMulchConfig = join(mainResolved, MULCH_DIR, CONFIG_FILE);
-	if (existsSync(mainMulchConfig)) {
+	// Only redirect if main repo has a .luuna/atlas/ with config
+	const mainAtlasConfig = join(mainResolved, ATLAS_DIR, CONFIG_FILE);
+	if (existsSync(mainAtlasConfig) || hasLegacyStore(mainResolved)) {
 		return mainResolved;
 	}
 
@@ -194,16 +196,18 @@ export function isInsideWorktree(cwd: string = process.cwd()): boolean {
 	return resolve(mainRoot) !== resolve(cwd);
 }
 
-export function getMulchDir(cwd: string = process.cwd()): string {
-	return join(resolveWorktreeRoot(cwd), MULCH_DIR);
+export function getAtlasDir(cwd: string = process.cwd()): string {
+	const root = resolveWorktreeRoot(cwd);
+	migrateLegacyStore(root, { luunaDir: LUUNA_DIR, storeRel: ATLAS_DIR, configFile: CONFIG_FILE });
+	return join(root, ATLAS_DIR);
 }
 
 export function getConfigPath(cwd: string = process.cwd()): string {
-	return join(getMulchDir(cwd), CONFIG_FILE);
+	return join(getAtlasDir(cwd), CONFIG_FILE);
 }
 
 export function getExpertiseDir(cwd: string = process.cwd()): string {
-	return join(getMulchDir(cwd), EXPERTISE_DIR);
+	return join(getAtlasDir(cwd), EXPERTISE_DIR);
 }
 
 export function validateDomainName(domain: string): void {
@@ -240,13 +244,13 @@ function normalizeDomains(raw: unknown): Record<string, DomainConfig> {
 // them directly and would otherwise crash with a TypeError on a config that
 // only declares `domains:`. Shallow-merge so partial user overrides
 // (e.g. `governance: { max_entries: 50 }`) keep the other defaults.
-function applyConfigDefaults(parsed: MulchConfig): MulchConfig {
-	const userGov = (parsed.governance ?? {}) as Partial<MulchConfig["governance"]>;
+function applyConfigDefaults(parsed: AtlasConfig): AtlasConfig {
+	const userGov = (parsed.governance ?? {}) as Partial<AtlasConfig["governance"]>;
 	const userCD = (parsed.classification_defaults ?? {}) as Partial<
-		MulchConfig["classification_defaults"]
+		AtlasConfig["classification_defaults"]
 	>;
 	const userShelf = (userCD.shelf_life ?? {}) as Partial<
-		MulchConfig["classification_defaults"]["shelf_life"]
+		AtlasConfig["classification_defaults"]["shelf_life"]
 	>;
 	parsed.governance = { ...DEFAULT_CONFIG.governance, ...userGov };
 	parsed.classification_defaults = {
@@ -255,28 +259,30 @@ function applyConfigDefaults(parsed: MulchConfig): MulchConfig {
 	return parsed;
 }
 
-export async function readConfig(cwd: string = process.cwd()): Promise<MulchConfig> {
+export async function readConfig(cwd: string = process.cwd()): Promise<AtlasConfig> {
 	const configPath = getConfigPath(cwd);
 	let content: string;
 	try {
 		content = await readFile(configPath, "utf-8");
 	} catch (err) {
 		if ((err as NodeJS.ErrnoException).code === "ENOENT") {
-			throw new Error("No .mulch/ directory found. Run `mulch init` to set up this project.");
+			throw new Error(
+				"No .luuna/atlas/ directory found. Run `luuna-atlas init` to set up this project.",
+			);
 		}
 		throw err;
 	}
-	let parsed: MulchConfig;
+	let parsed: AtlasConfig;
 	try {
-		parsed = (yaml.load(content) ?? {}) as MulchConfig;
+		parsed = (yaml.load(content) ?? {}) as AtlasConfig;
 	} catch (err) {
 		throw new Error(
-			`Failed to parse mulch.config.yaml: ${err instanceof Error ? err.message : String(err)}. Check the YAML syntax.`,
+			`Failed to parse config.yaml: ${err instanceof Error ? err.message : String(err)}. Check the YAML syntax.`,
 		);
 	}
 	if (!parsed || typeof parsed !== "object") {
 		// Empty file or scalar at top level — treat as empty object so defaults apply.
-		parsed = {} as MulchConfig;
+		parsed = {} as AtlasConfig;
 	}
 	parsed.domains = normalizeDomains(parsed.domains);
 	return applyConfigDefaults(parsed);
@@ -309,16 +315,16 @@ export async function removeDomain(domain: string, cwd: string = process.cwd()):
 	}
 }
 
-export async function writeConfig(config: MulchConfig, cwd: string = process.cwd()): Promise<void> {
+export async function writeConfig(config: AtlasConfig, cwd: string = process.cwd()): Promise<void> {
 	const configPath = getConfigPath(cwd);
 	const content = yaml.dump(config, { lineWidth: -1 });
 	await writeFile(configPath, content, "utf-8");
 }
 
-export async function initMulchDir(cwd: string = process.cwd()): Promise<void> {
-	const mulchDir = getMulchDir(cwd);
+export async function initAtlasDir(cwd: string = process.cwd()): Promise<void> {
+	const atlasDir = getAtlasDir(cwd);
 	const expertiseDir = getExpertiseDir(cwd);
-	await mkdir(mulchDir, { recursive: true });
+	await mkdir(atlasDir, { recursive: true });
 	await mkdir(expertiseDir, { recursive: true });
 
 	// Only write default config if none exists — preserve user customizations.
@@ -342,9 +348,9 @@ export async function initMulchDir(cwd: string = process.cwd()): Promise<void> {
 		await writeFile(gitattributesPath, `${existing + separator + GITATTRIBUTES_LINE}\n`, "utf-8");
 	}
 
-	// Create .mulch/README.md if missing
-	const readmePath = join(mulchDir, "README.md");
+	// Create .luuna/atlas/README.md if missing
+	const readmePath = join(atlasDir, "README.md");
 	if (!existsSync(readmePath)) {
-		await writeFile(readmePath, MULCH_README, "utf-8");
+		await writeFile(readmePath, ATLAS_README, "utf-8");
 	}
 }

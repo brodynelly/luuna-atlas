@@ -124,11 +124,11 @@ export function registerMoveCommand(program: Command): void {
 					}
 					const record = resolved.record;
 
-					// Reject archived records. The .mulch/archive/ store is walked by
-					// `ml restore` and `ml search --archived`; live expertise files
+					// Reject archived records. The .luuna/atlas/archive/ store is walked by
+					// `luuna-atlas restore` and `luuna-atlas search --archived`; live expertise files
 					// shouldn't carry archived rows, but a stray status field would.
 					if (record.status === "archived") {
-						const msg = `Record ${record.id ?? id} is archived. Run \`ml restore ${record.id ?? id}\` first.`;
+						const msg = `Record ${record.id ?? id} is archived. Run \`luuna-atlas restore ${record.id ?? id}\` first.`;
 						if (jsonMode) outputJsonError("move", msg);
 						else console.error(chalk.red(`Error: ${msg}`));
 						process.exitCode = 1;
@@ -138,7 +138,7 @@ export function registerMoveCommand(program: Command): void {
 					// Validate type against target allowed_types
 					const allowedTypes = getAllowedTypes(config, targetDomain);
 					if (allowedTypes && !allowedTypes.includes(record.type) && !options.force) {
-						const msg = `Type "${record.type}" is not in target domain "${targetDomain}" allowed_types (${allowedTypes.join(", ")}). Pass --force to override, or adjust mulch.config.yaml.`;
+						const msg = `Type "${record.type}" is not in target domain "${targetDomain}" allowed_types (${allowedTypes.join(", ")}). Pass --force to override, or adjust config.yaml.`;
 						if (jsonMode) outputJsonError("move", msg);
 						else console.error(chalk.red(`Error: ${msg}`));
 						process.exitCode = 1;
@@ -154,7 +154,7 @@ export function registerMoveCommand(program: Command): void {
 						);
 						if (missing.length > 0) {
 							const fieldList = missing.map((f) => `"${f}"`).join(", ");
-							const msg = `Record is missing field(s) required by target domain "${targetDomain}": ${fieldList}. Edit the record (\`ml edit ${record.id ?? id}\`) before moving.`;
+							const msg = `Record is missing field(s) required by target domain "${targetDomain}": ${fieldList}. Edit the record (\`luuna-atlas edit ${record.id ?? id}\`) before moving.`;
 							if (jsonMode) outputJsonError("move", msg);
 							else console.error(chalk.red(`Error: ${msg}`));
 							process.exitCode = 1;

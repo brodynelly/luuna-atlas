@@ -3,16 +3,16 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import yaml from "js-yaml";
-import type { MulchConfig } from "../../src/schemas/config.ts";
+import type { AtlasConfig } from "../../src/schemas/config.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { getConfigPath, initMulchDir, readConfig, writeConfig } from "../../src/utils/config.ts";
+import { getConfigPath, initAtlasDir, readConfig, writeConfig } from "../../src/utils/config.ts";
 
 describe("DomainConfig allowed_types", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-domain-cfg-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-domain-cfg-"));
+		await initAtlasDir(tmpDir);
 	});
 
 	afterEach(async () => {
@@ -20,7 +20,7 @@ describe("DomainConfig allowed_types", () => {
 	});
 
 	it("round-trips allowed_types via writeConfig + readConfig", async () => {
-		const cfg: MulchConfig = {
+		const cfg: AtlasConfig = {
 			...DEFAULT_CONFIG,
 			domains: {
 				backend: { allowed_types: ["convention", "pattern"] },
@@ -83,7 +83,7 @@ classification_defaults:
 	});
 
 	it("allowed_types serializes as a YAML list under the domain map", async () => {
-		const cfg: MulchConfig = {
+		const cfg: AtlasConfig = {
 			...DEFAULT_CONFIG,
 			domains: { backend: { allowed_types: ["convention", "pattern"] } },
 		};
@@ -99,8 +99,8 @@ describe("DomainConfig required_fields", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-domain-required-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-domain-required-"));
+		await initAtlasDir(tmpDir);
 	});
 
 	afterEach(async () => {
@@ -108,7 +108,7 @@ describe("DomainConfig required_fields", () => {
 	});
 
 	it("round-trips required_fields via writeConfig + readConfig", async () => {
-		const cfg: MulchConfig = {
+		const cfg: AtlasConfig = {
 			...DEFAULT_CONFIG,
 			domains: {
 				backend: { required_fields: ["oncall_owner", "severity"] },
@@ -149,7 +149,7 @@ classification_defaults:
 	});
 
 	it("required_fields serializes as a YAML list under the domain map", async () => {
-		const cfg: MulchConfig = {
+		const cfg: AtlasConfig = {
 			...DEFAULT_CONFIG,
 			domains: { backend: { required_fields: ["oncall_owner"] } },
 		};

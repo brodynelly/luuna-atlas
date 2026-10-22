@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { Command } from "commander";
 import { registerMoveCommand } from "../../src/commands/move.ts";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../src/utils/expertise.ts";
 
 async function runMove(
@@ -39,7 +39,7 @@ async function runMove(
 		program.option("--json", "output JSON");
 		program.exitOverride();
 		registerMoveCommand(program);
-		const argv = ["node", "mulch"];
+		const argv = ["node", "luuna-atlas"];
 		if (json) argv.push("--json");
 		argv.push("move", ...args);
 		await program.parseAsync(argv);
@@ -71,8 +71,8 @@ describe("move command", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-move-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-move-test-"));
+		await initAtlasDir(tmpDir);
 		await writeConfig({ ...DEFAULT_CONFIG, domains: { source: {}, target: {} } }, tmpDir);
 		await createExpertiseFile(getExpertisePath("source", tmpDir));
 		await createExpertiseFile(getExpertisePath("target", tmpDir));

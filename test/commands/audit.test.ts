@@ -2,10 +2,10 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { DEFAULT_CONFIG, type MulchConfig } from "../../src/schemas/config.ts";
+import { type AtlasConfig, DEFAULT_CONFIG } from "../../src/schemas/config.ts";
 import type { ExpertiseRecord } from "../../src/schemas/record.ts";
 import { buildSuggestions, computeAudit, hasRuleSignal } from "../../src/utils/audit.ts";
-import { getExpertisePath, initMulchDir, writeConfig } from "../../src/utils/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
 import { appendRecord, createExpertiseFile } from "../../src/utils/expertise.ts";
 
 const CLI_PATH = resolve(import.meta.dir, "..", "..", "src", "cli.ts");
@@ -57,7 +57,7 @@ function convention(opts: {
 	if (opts.id) r.id = opts.id;
 	if (opts.withSeed || opts.withGh || opts.withLinear || opts.withBead || opts.withCommit) {
 		r.evidence = {};
-		if (opts.withSeed) r.evidence.seeds = opts.withSeed;
+		if (opts.withSeed) r.evidence.missions = opts.withSeed;
 		if (opts.withGh) r.evidence.gh = opts.withGh;
 		if (opts.withLinear) r.evidence.linear = opts.withLinear;
 		if (opts.withBead) r.evidence.bead = opts.withBead;
@@ -71,8 +71,8 @@ describe("audit utility", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-audit-test-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-audit-test-"));
+		await initAtlasDir(tmpDir);
 	});
 
 	afterEach(async () => {
@@ -89,25 +89,25 @@ describe("audit utility", () => {
 	});
 
 	it("computes evidence coverage, floater count, and rule density", async () => {
-		const config: MulchConfig = {
+		const config: AtlasConfig = {
 			...DEFAULT_CONFIG,
 			domains: { cli: {}, testing: {} },
 		};
 		await writeConfig(config, tmpDir);
 		await seedDomain(tmpDir, "cli", [
-			convention({ content: "Always use 'records' not 'entries'", withSeed: "mulch-001" }),
+			convention({ content: "Always use 'records' not 'entries'", withSeed: "atlas-001" }),
 			convention({ content: "Never call process.exit", withCommit: "abc123" }),
 			convention({ content: "Module layout: src/foo/bar" }), // floater + no rule signal
 			convention({ content: "Module layout: test/", relates: ["mx-aaa"] }), // not a floater (relates)
 		]);
 		await seedDomain(tmpDir, "testing", [
-			convention({ content: "Always use mkdtemp because real fs", withSeed: "mulch-002" }),
+			convention({ content: "Always use mkdtemp because real fs", withSeed: "atlas-002" }),
 		]);
 
 		const report = await computeAudit(config, { cwd: tmpDir });
 		expect(report.total_records).toBe(5);
-		expect(report.evidence.with_seeds).toBe(2);
-		expect(report.evidence.with_any_tracker).toBe(3); // 2 seeds + 1 commit
+		expect(report.evidence.with_missions).toBe(2);
+		expect(report.evidence.with_any_tracker).toBe(3); // 2 missions + 1 commit
 		expect(report.evidence.floaters).toBe(1); // only the bare module-layout one
 		expect(report.convention_quality?.total).toBe(5);
 		expect(report.convention_quality?.with_rule_signal).toBe(3); // always, never, always-because
@@ -119,7 +119,7 @@ describe("audit utility", () => {
 	});
 
 	it("FAIL when evidence_coverage drops below evidence_coverage_warn", async () => {
-		const config: MulchConfig = {
+		const config: AtlasConfig = {
 			...DEFAULT_CONFIG,
 			domains: { cli: {} },
 			audit: {
@@ -144,7 +144,7 @@ describe("audit utility", () => {
 	});
 
 	it("--domain scopes metrics to one domain", async () => {
-		const config: MulchConfig = {
+		const config: AtlasConfig = {
 			...DEFAULT_CONFIG,
 			domains: { cli: {}, testing: {} },
 		};
@@ -159,7 +159,7 @@ describe("audit utility", () => {
 	});
 
 	it("--ignore-domains drops domains from compute", async () => {
-		const config: MulchConfig = {
+		const config: AtlasConfig = {
 			...DEFAULT_CONFIG,
 			domains: { cli: {}, docs: {} },
 		};
@@ -176,7 +176,7 @@ describe("audit utility", () => {
 	});
 
 	it("config.audit.ignore_domains merges with CLI ignore_domains", async () => {
-		const config: MulchConfig = {
+		const config: AtlasConfig = {
 			...DEFAULT_CONFIG,
 			domains: { cli: {}, docs: {}, notes: {} },
 			audit: { ignore_domains: ["docs"] },
@@ -195,7 +195,7 @@ describe("audit utility", () => {
 	});
 
 	it("per-domain threshold override surfaces in per_domain_thresholds", async () => {
-		const config: MulchConfig = {
+		const config: AtlasConfig = {
 			...DEFAULT_CONFIG,
 			domains: { cli: {}, docs: {} },
 			audit: {
@@ -215,7 +215,7 @@ describe("audit utility", () => {
 	});
 
 	it("buildSuggestions groups records by remediation action", async () => {
-		const config: MulchConfig = {
+		const config: AtlasConfig = {
 			...DEFAULT_CONFIG,
 			domains: { cli: {} },
 		};
@@ -256,13 +256,13 @@ describe("audit utility", () => {
 	});
 
 	it("breaks evidence coverage down per-tracker (with_tracker)", async () => {
-		const config: MulchConfig = {
+		const config: AtlasConfig = {
 			...DEFAULT_CONFIG,
 			domains: { cli: {} },
 		};
 		await writeConfig(config, tmpDir);
 		await seedDomain(tmpDir, "cli", [
-			convention({ content: "a", withSeed: "mulch-001" }),
+			convention({ content: "a", withSeed: "atlas-001" }),
 			convention({ content: "b", withGh: "42" }),
 			convention({ content: "c", withGh: "43" }),
 			convention({ content: "d", withLinear: "ENG-123" }),
@@ -271,20 +271,20 @@ describe("audit utility", () => {
 		]);
 		const report = await computeAudit(config, { cwd: tmpDir });
 		expect(report.evidence.with_tracker).toEqual({
-			seeds: 1,
+			missions: 1,
 			gh: 2,
 			linear: 1,
 			bead: 1,
 		});
-		// Back-compat: with_seeds mirrors with_tracker.seeds.
-		expect(report.evidence.with_seeds).toBe(1);
+		// Back-compat: with_missions mirrors with_tracker.missions.
+		expect(report.evidence.with_missions).toBe(1);
 		// 5 records carry at least one tracker; 1 is a floater.
 		expect(report.evidence.with_any_tracker).toBe(5);
 		expect(report.evidence.floaters).toBe(1);
 	});
 
 	it("tracker_citations buckets gh/linear/bead refs as unresolved", async () => {
-		const config: MulchConfig = {
+		const config: AtlasConfig = {
 			...DEFAULT_CONFIG,
 			domains: { cli: {} },
 		};
@@ -296,7 +296,7 @@ describe("audit utility", () => {
 			convention({ content: "d", withLinear: "ENG-9" }),
 			convention({ content: "e", withBead: "b-abc123" }),
 		]);
-		// No .seeds/issues.jsonl on disk — gh/linear/bead never resolve locally.
+		// No .luuna/missions/issues.jsonl on disk — gh/linear/bead never resolve locally.
 		const report = await computeAudit(config, { cwd: tmpDir });
 		// Unique tracker citations: gh#42, gh#43, linear:ENG-9, bead:b-abc123.
 		expect(report.tracker_citations.unique).toBe(4);
@@ -309,65 +309,65 @@ describe("audit utility", () => {
 		expect(byId["gh#43"]?.count).toBe(1);
 		expect(byId["linear:ENG-9"]).toBeDefined();
 		expect(byId["bead:b-abc123"]).toBeDefined();
-		// Back-compat: seed_citations stays empty in a gh-only repo so old
-		// consumers reading report.seed_citations don't see foreign tracker data.
-		expect(report.seed_citations.unique).toBe(0);
-		expect(report.seed_citations.top_cited).toEqual([]);
+		// Back-compat: mission_citations stays empty in a gh-only repo so old
+		// consumers reading report.mission_citations don't see foreign tracker data.
+		expect(report.mission_citations.unique).toBe(0);
+		expect(report.mission_citations.top_cited).toEqual([]);
 	});
 
-	it("tracker_citations mixes seeds (resolved) with gh/linear/bead (unresolved)", async () => {
-		const config: MulchConfig = {
+	it("tracker_citations mixes missions (resolved) with gh/linear/bead (unresolved)", async () => {
+		const config: AtlasConfig = {
 			...DEFAULT_CONFIG,
 			domains: { cli: {} },
 		};
 		await writeConfig(config, tmpDir);
 		await seedDomain(tmpDir, "cli", [
-			convention({ content: "a", withSeed: "mulch-007" }),
-			convention({ content: "b", withSeed: "mulch-007" }),
+			convention({ content: "a", withSeed: "atlas-007" }),
+			convention({ content: "b", withSeed: "atlas-007" }),
 			convention({ content: "c", withGh: "42" }),
 		]);
-		await mkdir(join(tmpDir, ".seeds"), { recursive: true });
+		await mkdir(join(tmpDir, ".luuna/missions"), { recursive: true });
 		await writeFile(
-			join(tmpDir, ".seeds", "issues.jsonl"),
-			`${JSON.stringify({ id: "mulch-007", status: "closed", title: "Fix stdin" })}\n`,
+			join(tmpDir, ".luuna/missions", "issues.jsonl"),
+			`${JSON.stringify({ id: "atlas-007", status: "closed", title: "Fix stdin" })}\n`,
 		);
 
 		const report = await computeAudit(config, { cwd: tmpDir });
-		expect(report.tracker_citations.unique).toBe(2); // mulch-007 + gh#42
+		expect(report.tracker_citations.unique).toBe(2); // atlas-007 + gh#42
 		expect(report.tracker_citations.status_counts.closed).toBe(1);
 		expect(report.tracker_citations.status_counts.unresolved).toBe(1);
-		// Back-compat: seed_citations still only counts seeds entries.
-		expect(report.seed_citations.unique).toBe(1);
-		expect(report.seed_citations.top_cited[0]).toMatchObject({
-			id: "mulch-007",
+		// Back-compat: mission_citations still only counts missions entries.
+		expect(report.mission_citations.unique).toBe(1);
+		expect(report.mission_citations.top_cited[0]).toMatchObject({
+			id: "atlas-007",
 			count: 2,
 			status: "closed",
 		});
 	});
 
-	it("resolves seed citations against .seeds/issues.jsonl", async () => {
-		const config: MulchConfig = {
+	it("resolves seed citations against .luuna/missions/issues.jsonl", async () => {
+		const config: AtlasConfig = {
 			...DEFAULT_CONFIG,
 			domains: { cli: {} },
 		};
 		await writeConfig(config, tmpDir);
 		await seedDomain(tmpDir, "cli", [
-			convention({ content: "a", withSeed: "mulch-007" }),
-			convention({ content: "b", withSeed: "mulch-007" }),
-			convention({ content: "c", withSeed: "mulch-missing" }),
+			convention({ content: "a", withSeed: "atlas-007" }),
+			convention({ content: "b", withSeed: "atlas-007" }),
+			convention({ content: "c", withSeed: "atlas-missing" }),
 		]);
-		await mkdir(join(tmpDir, ".seeds"), { recursive: true });
+		await mkdir(join(tmpDir, ".luuna/missions"), { recursive: true });
 		await writeFile(
-			join(tmpDir, ".seeds", "issues.jsonl"),
-			`${JSON.stringify({ id: "mulch-007", status: "closed", title: "Fix stdin" })}\n`,
+			join(tmpDir, ".luuna/missions", "issues.jsonl"),
+			`${JSON.stringify({ id: "atlas-007", status: "closed", title: "Fix stdin" })}\n`,
 		);
 
 		const report = await computeAudit(config, { cwd: tmpDir });
-		expect(report.seed_citations.unique).toBe(2);
-		expect(report.seed_citations.status_counts.closed).toBe(1);
-		expect(report.seed_citations.missing_in_seeds).toBe(1);
-		expect(report.seed_citations.top_cited[0]).toMatchObject({
-			id: "mulch-007",
+		expect(report.mission_citations.unique).toBe(2);
+		expect(report.mission_citations.status_counts.closed).toBe(1);
+		expect(report.mission_citations.missing_in_missions).toBe(1);
+		expect(report.mission_citations.top_cited[0]).toMatchObject({
+			id: "atlas-007",
 			count: 2,
 			status: "closed",
 		});
@@ -378,8 +378,8 @@ describe("audit CLI", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-audit-cli-"));
-		await initMulchDir(tmpDir);
+		tmpDir = await mkdtemp(join(tmpdir(), "atlas-audit-cli-"));
+		await initAtlasDir(tmpDir);
 	});
 
 	afterEach(async () => {
@@ -387,20 +387,20 @@ describe("audit CLI", () => {
 	});
 
 	it("exits 0 and renders human output by default", async () => {
-		const config: MulchConfig = { ...DEFAULT_CONFIG, domains: { cli: {} } };
+		const config: AtlasConfig = { ...DEFAULT_CONFIG, domains: { cli: {} } };
 		await writeConfig(config, tmpDir);
 		await seedDomain(tmpDir, "cli", [convention({ content: "Always use mkdtemp", withSeed: "x" })]);
 
 		const result = runCli(["audit"], tmpDir);
 		expect(result.exitCode).toBe(0);
 		const stdout = result.stdout.toString();
-		expect(stdout).toContain("=== mulch-audit:");
+		expect(stdout).toContain("=== atlas-audit:");
 		expect(stdout).toContain("total records: 1");
 		expect(stdout).toContain("--- summary signals ---");
 	});
 
-	it("human output omits the seeds line for gh-only repos and renders tracker-prefixed top-cited ids", async () => {
-		const config: MulchConfig = { ...DEFAULT_CONFIG, domains: { cli: {} } };
+	it("human output omits the missions line for gh-only repos and renders tracker-prefixed top-cited ids", async () => {
+		const config: AtlasConfig = { ...DEFAULT_CONFIG, domains: { cli: {} } };
 		await writeConfig(config, tmpDir);
 		await seedDomain(tmpDir, "cli", [
 			convention({ content: "a", withGh: "42" }),
@@ -410,13 +410,13 @@ describe("audit CLI", () => {
 		const result = runCli(["audit"], tmpDir);
 		expect(result.exitCode).toBe(0);
 		const stdout = result.stdout.toString();
-		// Per-tracker breakdown: gh present, seeds/linear/bead omitted (0).
+		// Per-tracker breakdown: gh present, missions/linear/bead omitted (0).
 		expect(stdout).toContain("- gh: 2");
-		expect(stdout).not.toContain("- seeds:");
+		expect(stdout).not.toContain("- missions:");
 		expect(stdout).not.toContain("- linear:");
 		expect(stdout).not.toContain("- bead:");
-		// Old "seeds-ev" line is gone in favor of the per-tracker breakdown.
-		expect(stdout).not.toContain("with seeds-ev");
+		// Old "missions-ev" line is gone in favor of the per-tracker breakdown.
+		expect(stdout).not.toContain("with missions-ev");
 		// Citation block renders under the generalized header.
 		expect(stdout).toContain("tracker-citation");
 		expect(stdout).toContain("top-cited tracker ids:");
@@ -424,7 +424,7 @@ describe("audit CLI", () => {
 	});
 
 	it("--ci emits JSON and exits 0 when no FAIL signals", async () => {
-		const config: MulchConfig = { ...DEFAULT_CONFIG, domains: { cli: {} } };
+		const config: AtlasConfig = { ...DEFAULT_CONFIG, domains: { cli: {} } };
 		await writeConfig(config, tmpDir);
 		await seedDomain(tmpDir, "cli", [
 			convention({ content: "always use foo because bar", withSeed: "x" }),
@@ -441,7 +441,7 @@ describe("audit CLI", () => {
 	});
 
 	it("--ci exits 1 when a signal is in FAIL band", async () => {
-		const config: MulchConfig = {
+		const config: AtlasConfig = {
 			...DEFAULT_CONFIG,
 			domains: { cli: {} },
 			audit: {
@@ -458,7 +458,7 @@ describe("audit CLI", () => {
 	});
 
 	it("--suggest emits actionable remediation commands", async () => {
-		const config: MulchConfig = { ...DEFAULT_CONFIG, domains: { cli: {} } };
+		const config: AtlasConfig = { ...DEFAULT_CONFIG, domains: { cli: {} } };
 		await writeConfig(config, tmpDir);
 		await seedDomain(tmpDir, "cli", [
 			convention({
@@ -474,11 +474,11 @@ describe("audit CLI", () => {
 		expect(stdout).toContain("[REVISE]");
 		expect(stdout).toContain("[ATTRIBUTE]");
 		expect(stdout).toContain("mx-flotr0");
-		expect(stdout).toContain("ml edit mx-flotr0");
+		expect(stdout).toContain("luuna-atlas edit mx-flotr0");
 	});
 
 	it("--domain scopes audit to one domain", async () => {
-		const config: MulchConfig = {
+		const config: AtlasConfig = {
 			...DEFAULT_CONFIG,
 			domains: { cli: {}, testing: {} },
 		};
@@ -498,7 +498,7 @@ describe("audit CLI", () => {
 	});
 
 	it("--ignore-domains drops domains from the metric set", async () => {
-		const config: MulchConfig = {
+		const config: AtlasConfig = {
 			...DEFAULT_CONFIG,
 			domains: { cli: {}, docs: {} },
 		};
@@ -518,7 +518,7 @@ describe("audit CLI", () => {
 	});
 
 	it("rejects unknown --domain with an error and non-zero exit", async () => {
-		const config: MulchConfig = { ...DEFAULT_CONFIG, domains: { cli: {} } };
+		const config: AtlasConfig = { ...DEFAULT_CONFIG, domains: { cli: {} } };
 		await writeConfig(config, tmpDir);
 
 		const result = runCli(["audit", "--domain", "nope"], tmpDir);
@@ -528,7 +528,7 @@ describe("audit CLI", () => {
 	});
 
 	it("global --json emits JSON without forcing exit-code on warnings", async () => {
-		const config: MulchConfig = { ...DEFAULT_CONFIG, domains: { cli: {} } };
+		const config: AtlasConfig = { ...DEFAULT_CONFIG, domains: { cli: {} } };
 		await writeConfig(config, tmpDir);
 		// 4 records, 0 evidence → 0% coverage. With default thresholds (PASS≥0.5,
 		// WARN≥0.3), 0% is FAIL — but without --ci the exit code stays 0.

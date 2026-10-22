@@ -1,7 +1,7 @@
 import type { ExpertiseRecord } from "../schemas/record.ts";
 
 // Interpolation only — no conditionals, fallbacks, or transforms in v1 (per
-// epic mulch-632e locked design). Both `{field}` and `{{field}}` are accepted
+// epic atlas-632e locked design). Both `{field}` and `{{field}}` are accepted
 // because Mustache-style is muscle memory; the double-brace branch is matched
 // first so it's preferred over the single-brace fallback.
 const TOKEN_RE = /\{\{([a-z_][a-z0-9_]*)\}\}|\{([a-z_][a-z0-9_]*)\}/gi;

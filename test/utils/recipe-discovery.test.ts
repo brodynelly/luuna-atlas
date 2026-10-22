@@ -75,8 +75,8 @@ describe("loadFilesystemRecipe", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-recipe-fs-"));
-		await mkdir(join(tmpDir, ".mulch", "recipes"), { recursive: true });
+		tmpDir = await mkdtemp(join(tmpdir(), "luuna-atlas-recipe-fs-"));
+		await mkdir(join(tmpDir, ".luuna/atlas", "recipes"), { recursive: true });
 	});
 
 	afterEach(async () => {
@@ -89,7 +89,7 @@ describe("loadFilesystemRecipe", () => {
 	});
 
 	it("loads a TypeScript recipe with a default export", async () => {
-		const tsPath = join(tmpDir, ".mulch", "recipes", "internal.ts");
+		const tsPath = join(tmpDir, ".luuna/atlas", "recipes", "internal.ts");
 		await writeFile(tsPath, STUB_BUILTIN_TS, "utf-8");
 
 		const result = await loadFilesystemRecipe("internal", tmpDir);
@@ -103,7 +103,7 @@ describe("loadFilesystemRecipe", () => {
 	});
 
 	it("loads a shell recipe and runs install/check/remove via argv", async () => {
-		const shPath = join(tmpDir, ".mulch", "recipes", "legacy.sh");
+		const shPath = join(tmpDir, ".luuna/atlas", "recipes", "legacy.sh");
 		await writeFile(shPath, SHELL_SCRIPT, "utf-8");
 		await chmod(shPath, 0o755);
 
@@ -126,7 +126,7 @@ describe("loadFilesystemRecipe", () => {
 	});
 
 	it("surfaces a non-zero shell exit as a failure with stderr", async () => {
-		const shPath = join(tmpDir, ".mulch", "recipes", "broken.sh");
+		const shPath = join(tmpDir, ".luuna/atlas", "recipes", "broken.sh");
 		await writeFile(shPath, FAILING_SHELL, "utf-8");
 		await chmod(shPath, 0o755);
 
@@ -137,8 +137,8 @@ describe("loadFilesystemRecipe", () => {
 	});
 
 	it("prefers .ts over .sh when both exist", async () => {
-		const tsPath = join(tmpDir, ".mulch", "recipes", "both.ts");
-		const shPath = join(tmpDir, ".mulch", "recipes", "both.sh");
+		const tsPath = join(tmpDir, ".luuna/atlas", "recipes", "both.ts");
+		const shPath = join(tmpDir, ".luuna/atlas", "recipes", "both.sh");
 		await writeFile(tsPath, STUB_BUILTIN_TS, "utf-8");
 		await writeFile(shPath, SHELL_SCRIPT, "utf-8");
 		await chmod(shPath, 0o755);
@@ -148,7 +148,7 @@ describe("loadFilesystemRecipe", () => {
 	});
 
 	it("throws when a TS recipe default export is not a valid ProviderRecipe", async () => {
-		const tsPath = join(tmpDir, ".mulch", "recipes", "bad.ts");
+		const tsPath = join(tmpDir, ".luuna/atlas", "recipes", "bad.ts");
 		await writeFile(tsPath, "export default { install: 'not a function' };\n", "utf-8");
 
 		await expect(loadFilesystemRecipe("bad", tmpDir)).rejects.toThrow(
@@ -157,10 +157,10 @@ describe("loadFilesystemRecipe", () => {
 	});
 
 	it("rejects a TS recipe with no default export, only named install/check/remove", async () => {
-		// Regression for mulch-828d: the prior loader did `mod.default ?? mod`
+		// Regression for atlas-828d: the prior loader did `mod.default ?? mod`
 		// so a module with named exports but no default validated under the
 		// namespace fallback. Spec is "default export only," so this must throw.
-		const tsPath = join(tmpDir, ".mulch", "recipes", "named-only.ts");
+		const tsPath = join(tmpDir, ".luuna/atlas", "recipes", "named-only.ts");
 		await writeFile(
 			tsPath,
 			`export const install = async () => ({ success: true, message: "" });
@@ -180,23 +180,23 @@ describe("listFilesystemRecipes", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-recipe-list-"));
+		tmpDir = await mkdtemp(join(tmpdir(), "luuna-atlas-recipe-list-"));
 	});
 
 	afterEach(async () => {
 		await rm(tmpDir, { recursive: true, force: true });
 	});
 
-	it("returns empty when .mulch/recipes/ does not exist", async () => {
+	it("returns empty when .luuna/atlas/recipes/ does not exist", async () => {
 		const list = await listFilesystemRecipes(tmpDir);
 		expect(list).toEqual([]);
 	});
 
 	it("lists .ts and .sh recipes sorted alphabetically", async () => {
-		await mkdir(join(tmpDir, ".mulch", "recipes"), { recursive: true });
-		await writeFile(join(tmpDir, ".mulch", "recipes", "zeta.sh"), SHELL_SCRIPT, "utf-8");
-		await writeFile(join(tmpDir, ".mulch", "recipes", "alpha.ts"), STUB_BUILTIN_TS, "utf-8");
-		await writeFile(join(tmpDir, ".mulch", "recipes", "README.md"), "# ignore me\n", "utf-8");
+		await mkdir(join(tmpDir, ".luuna/atlas", "recipes"), { recursive: true });
+		await writeFile(join(tmpDir, ".luuna/atlas", "recipes", "zeta.sh"), SHELL_SCRIPT, "utf-8");
+		await writeFile(join(tmpDir, ".luuna/atlas", "recipes", "alpha.ts"), STUB_BUILTIN_TS, "utf-8");
+		await writeFile(join(tmpDir, ".luuna/atlas", "recipes", "README.md"), "# ignore me\n", "utf-8");
 
 		const list = await listFilesystemRecipes(tmpDir);
 		expect(list.map((l) => l.name)).toEqual(["alpha", "zeta"]);
@@ -209,7 +209,7 @@ describe("loadNpmRecipe", () => {
 	let tmpDir: string;
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-recipe-npm-"));
+		tmpDir = await mkdtemp(join(tmpdir(), "luuna-atlas-recipe-npm-"));
 	});
 
 	afterEach(async () => {
@@ -221,7 +221,7 @@ describe("loadNpmRecipe", () => {
 		expect(result).toBeNull();
 	});
 
-	it("loads a recipe from node_modules/mulch-recipe-<name>", async () => {
+	it("loads a recipe from node_modules/luuna-atlas-recipe-<name>", async () => {
 		const pkgDir = join(tmpDir, "node_modules", `${NPM_RECIPE_PREFIX}fakeprovider`);
 		await mkdir(pkgDir, { recursive: true });
 		await writeFile(
@@ -301,7 +301,7 @@ describe("resolveRecipe", () => {
 	};
 
 	beforeEach(async () => {
-		tmpDir = await mkdtemp(join(tmpdir(), "mulch-recipe-resolve-"));
+		tmpDir = await mkdtemp(join(tmpdir(), "luuna-atlas-recipe-resolve-"));
 	});
 
 	afterEach(async () => {
@@ -321,8 +321,8 @@ describe("resolveRecipe", () => {
 	});
 
 	it("filesystem recipe shadows built-in of the same name", async () => {
-		await mkdir(join(tmpDir, ".mulch", "recipes"), { recursive: true });
-		await writeFile(join(tmpDir, ".mulch", "recipes", "claude.ts"), STUB_BUILTIN_TS, "utf-8");
+		await mkdir(join(tmpDir, ".luuna/atlas", "recipes"), { recursive: true });
+		await writeFile(join(tmpDir, ".luuna/atlas", "recipes", "claude.ts"), STUB_BUILTIN_TS, "utf-8");
 
 		const result = await resolveRecipe("claude", tmpDir, { claude: stubBuiltin });
 		expect(result?.source).toBe("filesystem-ts");
@@ -331,8 +331,8 @@ describe("resolveRecipe", () => {
 	});
 
 	it("filesystem recipe is preferred over npm recipe", async () => {
-		await mkdir(join(tmpDir, ".mulch", "recipes"), { recursive: true });
-		await writeFile(join(tmpDir, ".mulch", "recipes", "shared.ts"), STUB_BUILTIN_TS, "utf-8");
+		await mkdir(join(tmpDir, ".luuna/atlas", "recipes"), { recursive: true });
+		await writeFile(join(tmpDir, ".luuna/atlas", "recipes", "shared.ts"), STUB_BUILTIN_TS, "utf-8");
 
 		const pkgDir = join(tmpDir, "node_modules", `${NPM_RECIPE_PREFIX}shared`);
 		await mkdir(pkgDir, { recursive: true });
