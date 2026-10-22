@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * CI <-> `check:all` parity drift detector — fleet-canonical port of
- * warren's original (warren-6296), generalized for the os-eco
+ * the original orchestrator script, generalized for the os-eco
  * check:all standard (docs/check-all-standard.md, os-eco-5db7).
  *
  * This file is BYTE-IDENTICAL across every conforming repo — do not

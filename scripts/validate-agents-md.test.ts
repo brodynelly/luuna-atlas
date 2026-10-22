@@ -67,13 +67,13 @@ describe("extraction helpers", () => {
 
 	test("extractBacktickedPaths skips non-path tokens", () => {
 		const md =
-			"see `src/server/types.ts` and `package.json`, npm pkg `@os-eco/burrow`, " +
+			"see `src/server/types.ts` and `package.json`, npm pkg `@example/widget`, " +
 			"placeholder `src/runs/...`, URL `https://example.com/foo.md`, " +
 			"bare ext `.ts`, glob `src/**/*.ts`, code `foo()`";
 		const paths = extractBacktickedPaths(md);
 		expect(paths).toContain("src/server/types.ts");
 		expect(paths).toContain("package.json");
-		expect(paths).not.toContain("@os-eco/burrow");
+		expect(paths).not.toContain("@example/widget");
 		expect(paths.some((p) => p.endsWith("..."))).toBe(false);
 		expect(paths.some((p) => p.startsWith("http"))).toBe(false);
 		expect(paths).not.toContain(".ts");

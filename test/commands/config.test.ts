@@ -115,7 +115,7 @@ describe("config command", () => {
 
 			// Spot-check that every optional knob from the TS interface has a
 			// schema entry. Drift here would mean the schema lags the type and
-			// warren can't render UI for the missing knob.
+			// a config UI can't render for the missing knob.
 			const expectedProps = [
 				"version",
 				"domains",
@@ -141,7 +141,7 @@ describe("config command", () => {
 				tmpDir,
 				[
 					"version: '1'",
-					"domains: { warren: {}, luuna-atlas: {} }",
+					"domains: { api: {}, luuna-atlas: {} }",
 					"governance: { max_entries: 50, warn_entries: 75, hard_limit: 100 }",
 					"classification_defaults: { shelf_life: { tactical: 14, observational: 30 } }",
 					"search: { boost_factor: 0.25 }",
@@ -157,7 +157,7 @@ describe("config command", () => {
 				search?: { boost_factor: number };
 			};
 			expect(parsed.version).toBe("1");
-			expect(parsed.domains.warren).toEqual({});
+			expect(parsed.domains.api).toEqual({});
 			expect(parsed.governance.max_entries).toBe(50);
 			expect(parsed.search?.boost_factor).toBe(0.25);
 		});
@@ -321,11 +321,11 @@ describe("config command", () => {
 
 			// list
 			const list = runCli(
-				["config", "set", "domains.warren", "{ allowed_types: [convention, pattern] }"],
+				["config", "set", "domains.api", "{ allowed_types: [convention, pattern] }"],
 				tmpDir,
 			);
 			expect(list.exitCode).toBe(0);
-			const showList = runCli(["config", "show", "--path", "domains.warren.allowed_types"], tmpDir);
+			const showList = runCli(["config", "show", "--path", "domains.api.allowed_types"], tmpDir);
 			expect(showList.exitCode).toBe(0);
 			expect(JSON.parse(showList.stdout.toString())).toEqual(["convention", "pattern"]);
 
@@ -413,7 +413,7 @@ describe("config command", () => {
 	describe("config unset", () => {
 		const baseConfig = [
 			"version: '1'",
-			"domains: { warren: { allowed_types: [convention] } }",
+			"domains: { api: { allowed_types: [convention] } }",
 			"governance: { max_entries: 100, warn_entries: 150, hard_limit: 200 }",
 			"classification_defaults: { shelf_life: { tactical: 14, observational: 30 } }",
 			"search: { boost_factor: 0.25 }",
@@ -438,7 +438,7 @@ describe("config command", () => {
 
 		it("removes an entry from an open map (domains.<name>)", async () => {
 			await initAtlasProject(tmpDir, baseConfig);
-			const unset = runCli(["config", "unset", "domains.warren"], tmpDir);
+			const unset = runCli(["config", "unset", "domains.api"], tmpDir);
 			expect(unset.exitCode).toBe(0);
 
 			const show = runCli(["config", "show", "--path", "domains"], tmpDir);
@@ -536,7 +536,7 @@ describe("config command — worktree integration", () => {
 
 	const baseConfig = [
 		"version: '1'",
-		"domains: { warren: { allowed_types: [convention] } }",
+		"domains: { api: { allowed_types: [convention] } }",
 		"governance: { max_entries: 100, warn_entries: 150, hard_limit: 200 }",
 		"classification_defaults: { shelf_life: { tactical: 14, observational: 30 } }",
 		"search: { boost_factor: 0.25 }",

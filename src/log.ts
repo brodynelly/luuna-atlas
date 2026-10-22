@@ -132,7 +132,7 @@ export function createLogger(
 
 /**
  * Strip credentials (`user:password@`) from a URL before logging it.
- * Mirrors warren's helper: non-URL sentinels (`:memory:`, bare sqlite
+ * Mirrors the shared orchestrator helper: non-URL sentinels (`:memory:`, bare sqlite
  * paths) and credential-free URLs pass through unchanged; an unparseable
  * URL collapses to a safe placeholder so a malformed value can never leak.
  */

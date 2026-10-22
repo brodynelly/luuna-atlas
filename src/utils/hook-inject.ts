@@ -10,7 +10,7 @@
 //                              (no record is injected twice per session)
 //   usage.jsonl                one line per injection:
 //     {"ts":"<ISO>","session":"<id>|null","tool":"Read","files":["src/a.ts"],"ids":["mx-1a2b3c"]}
-// The usage log is passive telemetry for ranking / warren; nothing reads it on
+// The usage log is passive telemetry for ranking and downstream tools; nothing reads it on
 // the hook path.
 
 import { existsSync } from "node:fs";

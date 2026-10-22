@@ -1,7 +1,7 @@
 // JSON Schema for AtlasConfig (.luuna/atlas/config.yaml).
 //
 // Hand-authored to mirror the TypeScript AtlasConfig interface in ./config.ts.
-// Powers `luuna-atlas config schema` for warren and any other tool that needs to render
+// Powers `luuna-atlas config schema` for schema-driven configuration UIs and any other tool that needs to render
 // a generic configuration UI against luuna-atlas's settings. Keep this in lockstep
 // with the TS interface — when you add a knob, add it here too (a doctor /
 // test-time check enforces parity).
@@ -251,7 +251,7 @@ export const configSchema = {
 	$schema: "http://json-schema.org/draft-07/schema#",
 	title: "Atlas Configuration",
 	description:
-		"Schema for .luuna/atlas/config.yaml. Mirrors the AtlasConfig TypeScript interface in src/schemas/config.ts. Consumers (e.g. warren) render generic configuration UIs against this schema via `luuna-atlas config schema --json`.",
+		"Schema for .luuna/atlas/config.yaml. Mirrors the AtlasConfig TypeScript interface in src/schemas/config.ts. Consumers (e.g. the Luuna desktop) render generic configuration UIs against this schema via `luuna-atlas config schema --json`.",
 	type: "object",
 	required: ["version", "domains", "governance", "classification_defaults"],
 	properties: {

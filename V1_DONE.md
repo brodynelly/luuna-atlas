@@ -96,7 +96,7 @@ Structured expertise management for AI agents — store, query, and inject proje
 
 ## Current State
 
-Atlas is V1-complete. All 24 CLI commands are implemented and tested. 775 tests pass across 39 files with 1793 `expect()` calls, no mocks, and no skipped tests. TypeScript strict mode and CI are clean. Published to npm at v0.6.3 (2026-02-26). The programmatic API is stable and actively used by overstory. Multi-agent concurrency is battle-tested (advisory locks + atomic writes + git merge=union). Source code has zero TODO/FIXME/HACK comments.
+Atlas is V1-complete. All 24 CLI commands are implemented and tested. 775 tests pass across 39 files with 1793 `expect()` calls, no mocks, and no skipped tests. TypeScript strict mode and CI are clean. Published to npm at v0.6.3 (2026-02-26). The programmatic API is stable and actively used by downstream orchestrators. Multi-agent concurrency is battle-tested (advisory locks + atomic writes + git merge=union). Source code has zero TODO/FIXME/HACK comments.
 
 Test count grew from 763 (v0.6.3 release) to 775 (+12) since last release — new coverage for sync git integration, upgrade version checking, and bulk delete. The upgrade `--check` test timeout was recently increased to 20s to handle npm registry latency.
 

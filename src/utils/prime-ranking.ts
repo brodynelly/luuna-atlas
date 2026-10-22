@@ -45,7 +45,7 @@ export function sortByTrust<T extends ExpertiseRecord>(
 
 // "Why surfaced now" reasons — one per record, picked in priority order so the
 // strongest signal wins. The agent-facing suffix shows the picked reason; the
-// structured shape stays in the type system for future consumers (warren UI,
+// structured shape stays in the type system for future consumers (configuration UIs,
 // audit reports).
 export type SurfaceReason =
 	| { kind: "file_match"; anchor: string }

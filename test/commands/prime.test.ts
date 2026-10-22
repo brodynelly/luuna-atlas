@@ -2990,7 +2990,7 @@ describe("prime command", () => {
 				await program.parseAsync(["node", "luuna-atlas", "--format", "plain", "prime"]);
 				const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
 				// Spawn-injection contract: no decorative title, no underline,
-				// no Session Close trailer (warren handles framing contextually).
+				// no Session Close trailer (the caller handles framing contextually).
 				expect(output).not.toContain("Project Expertise (via Atlas)");
 				expect(output).not.toMatch(/^=+$/m);
 				expect(output).not.toContain("SESSION CLOSE");
