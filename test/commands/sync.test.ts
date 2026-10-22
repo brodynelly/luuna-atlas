@@ -216,6 +216,8 @@ describe("sync command", () => {
 		});
 
 		afterEach(async () => {
+			// Leave the directory first: Windows cannot remove the current cwd.
+			process.chdir(tmpDir);
 			await rm(nonGitDir, { recursive: true, force: true });
 		});
 

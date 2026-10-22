@@ -1,9 +1,10 @@
 import { randomBytes } from "node:crypto";
-import { mkdir, rename, unlink, writeFile } from "node:fs/promises";
+import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { ExpertiseRecord } from "../schemas/record.ts";
 import { getAtlasDir, validateDomainName } from "./config.ts";
 import { readExpertiseFile, writeExpertiseFile } from "./expertise.ts";
+import { renameReplacing } from "./fs-rename.ts";
 import { withFileLock } from "./lock.ts";
 
 const ARCHIVE_DIR = "archive";
@@ -42,7 +43,7 @@ export async function writeArchiveFile(
 	const tmpPath = `${filePath}.tmp.${randomBytes(8).toString("hex")}`;
 	await writeFile(tmpPath, content, "utf-8");
 	try {
-		await rename(tmpPath, filePath);
+		await renameReplacing(tmpPath, filePath);
 	} catch (err) {
 		try {
 			await unlink(tmpPath);

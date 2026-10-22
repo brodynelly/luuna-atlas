@@ -439,6 +439,8 @@ describe("query command", () => {
 				expect(output.error).toContain(".luuna/atlas/");
 			} finally {
 				errorSpy.mockRestore();
+				// Leave the directory first: Windows cannot remove the current cwd.
+				process.chdir(originalCwd);
 				await rm(bareTmpDir, { recursive: true, force: true });
 			}
 		});

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { existsSync } from "node:fs";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, sep } from "node:path";
 import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
 import type { ExpertiseRecord } from "../../src/schemas/record.ts";
 import {
@@ -44,7 +44,7 @@ describe("archive utilities", () => {
 	it("getArchivePath places domain files under .luuna/atlas/archive/", () => {
 		const path = getArchivePath("testing", tmpDir);
 		expect(path).toBe(join(getArchiveDir(tmpDir), "testing.jsonl"));
-		expect(path.includes("/.luuna/atlas/archive/")).toBe(true);
+		expect(path.includes(`${sep}.luuna${sep}atlas${sep}archive${sep}`)).toBe(true);
 	});
 
 	it("writeArchiveFile prefixes file with the standard banner", async () => {

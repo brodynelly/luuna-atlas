@@ -1033,7 +1033,9 @@ async function writeHookScript(dir: string, name: string, body: string): Promise
 	const path = join(dir, name);
 	await writeFile(path, `#!/bin/sh\n${body}\n`, "utf-8");
 	await chmod(path, 0o755);
-	return path;
+	// Hooks run through `sh -c`, which reads backslashes as escapes; the sh
+	// shipped with Git for Windows accepts forward-slash drive paths.
+	return path.replaceAll("\\", "/");
 }
 
 describe("luuna-atlas compact archive integration", () => {

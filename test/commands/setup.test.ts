@@ -383,7 +383,8 @@ describe("setup command", () => {
 			expect(content).toContain("luuna-atlas validate");
 		});
 
-		it("makes hook executable", async () => {
+		// Windows has no POSIX execute bit (Git for Windows runs hooks without one).
+		it.skipIf(process.platform === "win32")("makes hook executable", async () => {
 			await mkdir(join(tmpDir, ".git", "hooks"), { recursive: true });
 			await installGitHook(tmpDir);
 
@@ -508,6 +509,8 @@ exit 1
 				cwd,
 				stdout: "pipe",
 				stderr: "pipe",
+				// The live env, so shell recipes find `sh` via the test preload's PATH.
+				env: process.env,
 			});
 		}
 
@@ -532,7 +535,7 @@ exit 1
 
 			const internal = out.providers.find((p: { name: string }) => p.name === "internal-ide");
 			expect(internal.source).toBe("filesystem-ts");
-			expect(internal.path).toContain(".luuna/atlas/recipes/internal-ide.ts");
+			expect(internal.path).toContain(join(".luuna", "atlas", "recipes", "internal-ide.ts"));
 
 			const legacy = out.providers.find((p: { name: string }) => p.name === "legacy-bot");
 			expect(legacy.source).toBe("filesystem-sh");

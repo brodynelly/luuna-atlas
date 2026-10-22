@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
@@ -2263,7 +2263,7 @@ describe("dir_anchors (R-01)", () => {
 	});
 
 	it("auto-populates dir_anchors from common parent of 3+ changed files", async () => {
-		execFileSync("mkdir", ["-p", "src/utils"], { cwd: tmpDir });
+		await mkdir(join(tmpDir, "src/utils"), { recursive: true });
 		await writeFile(join(tmpDir, "src/utils/a.ts"), "// a", "utf-8");
 		await writeFile(join(tmpDir, "src/utils/b.ts"), "// b", "utf-8");
 		await writeFile(join(tmpDir, "src/utils/c.ts"), "// c", "utf-8");
@@ -2280,7 +2280,7 @@ describe("dir_anchors (R-01)", () => {
 	});
 
 	it("does NOT auto-populate when only 2 files share a parent dir", async () => {
-		execFileSync("mkdir", ["-p", "src/utils"], { cwd: tmpDir });
+		await mkdir(join(tmpDir, "src/utils"), { recursive: true });
 		await writeFile(join(tmpDir, "src/utils/a.ts"), "// a", "utf-8");
 		await writeFile(join(tmpDir, "src/utils/b.ts"), "// b", "utf-8");
 		execFileSync("git", ["add", "src/utils"], { cwd: tmpDir });
@@ -2296,7 +2296,7 @@ describe("dir_anchors (R-01)", () => {
 	});
 
 	it("explicit --dir-anchor wins over auto-population", async () => {
-		execFileSync("mkdir", ["-p", "src/utils"], { cwd: tmpDir });
+		await mkdir(join(tmpDir, "src/utils"), { recursive: true });
 		await writeFile(join(tmpDir, "src/utils/a.ts"), "// a", "utf-8");
 		await writeFile(join(tmpDir, "src/utils/b.ts"), "// b", "utf-8");
 		await writeFile(join(tmpDir, "src/utils/c.ts"), "// c", "utf-8");

@@ -16,6 +16,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Library exports renamed: `MulchConfig` is now `AtlasConfig`; `getMulchDir`/`initMulchDir` are `getAtlasDir`/`initAtlasDir` (and `MULCH_README` is `ATLAS_README`).
 - Removed docs/UPSTREAM-README.md (a copy of the upstream README); attribution is in README.md and UPSTREAM.md.
 
+### Fixed
+
+- Atomic writes of expertise, archive and config files retry the final rename on Windows, which refuses to replace a file another handle holds open (EPERM/EACCES/EBUSY). Concurrent writes and open readers no longer make writes fail.
+- Hook timeouts work on Windows: the hook's process tree is terminated with `taskkill` and its pipes are released, so a looping hook no longer hangs the command. A child that the MSYS shell forks into the background can still outlive the timeout there.
+- Shell recipes (`.luuna/atlas/recipes/*.sh`) run through `sh` on Windows instead of failing with EFTYPE.
+
+### Changed
+
+- The test suite passes on Windows, and CI runs `bun run verify` on `windows-latest`. A test preload puts Git for Windows' POSIX tools on PATH. Hooks and shell recipes on Windows need that `sh`.
+
 ## [0.11.0] - 2026-09-29
 
 ### Added

@@ -30,20 +30,20 @@ describe("config utils", () => {
 
 	describe("path helpers", () => {
 		it("getAtlasDir returns .luuna/atlas under cwd", () => {
-			expect(getAtlasDir("/some/path")).toBe("/some/path/.luuna/atlas");
+			expect(getAtlasDir("/some/path")).toBe(join("/some/path", ".luuna", "atlas"));
 		});
 
 		it("getConfigPath returns config file under .luuna/atlas", () => {
-			expect(getConfigPath("/some/path")).toBe("/some/path/.luuna/atlas/config.yaml");
+			expect(getConfigPath("/some/path")).toBe(join("/some/path", ".luuna", "atlas", "config.yaml"));
 		});
 
 		it("getExpertiseDir returns expertise dir under .luuna/atlas", () => {
-			expect(getExpertiseDir("/some/path")).toBe("/some/path/.luuna/atlas/expertise");
+			expect(getExpertiseDir("/some/path")).toBe(join("/some/path", ".luuna", "atlas", "expertise"));
 		});
 
 		it("getExpertisePath returns JSONL file for a domain", () => {
 			expect(getExpertisePath("testing", "/some/path")).toBe(
-				"/some/path/.luuna/atlas/expertise/testing.jsonl",
+				join("/some/path", ".luuna", "atlas", "expertise", "testing.jsonl"),
 			);
 		});
 	});
@@ -181,7 +181,7 @@ governance:
 	describe("getExpertisePath with validation", () => {
 		it("returns path for valid domain", () => {
 			expect(getExpertisePath("testing", "/some/path")).toBe(
-				"/some/path/.luuna/atlas/expertise/testing.jsonl",
+				join("/some/path", ".luuna", "atlas", "expertise", "testing.jsonl"),
 			);
 		});
 

@@ -49,7 +49,10 @@ export function validateRecipeShape(obj: unknown): obj is ProviderRecipe {
 function makeShellRecipe(name: string, scriptPath: string): ProviderRecipe {
 	const run = (action: "install" | "check" | "remove", cwd: string): Promise<RecipeResult> =>
 		new Promise((resolve) => {
-			const child = spawn(scriptPath, [action], {
+			// Windows cannot exec a shell script directly; run it through `sh`
+			// (as hooks are) instead of failing with EFTYPE.
+			const viaSh = process.platform === "win32";
+			const child = spawn(viaSh ? "sh" : scriptPath, viaSh ? [scriptPath, action] : [action], {
 				cwd,
 				env: {
 					...process.env,

@@ -8,8 +8,9 @@ import { dirname, join, resolve } from "node:path";
 const CLI_PATH = resolve(import.meta.dir, "..", "..", "src", "cli.ts");
 const SNAPSHOT_PATH = join(import.meta.dir, "__snapshots__", "config-schema.snapshot.json");
 
+// process.execPath, not "bun": on Windows an npm-installed bun resolves to a .cmd shim that rejects quoted args.
 function runCli(args: string[], cwd: string) {
-	return Bun.spawnSync(["bun", CLI_PATH, ...args], {
+	return Bun.spawnSync([process.execPath, CLI_PATH, ...args], {
 		cwd,
 		stdout: "pipe",
 		stderr: "pipe",
@@ -17,7 +18,7 @@ function runCli(args: string[], cwd: string) {
 }
 
 function runCliAsync(args: string[], cwd: string) {
-	const proc = Bun.spawn(["bun", CLI_PATH, ...args], {
+	const proc = Bun.spawn([process.execPath, CLI_PATH, ...args], {
 		cwd,
 		stdout: "pipe",
 		stderr: "pipe",
@@ -82,7 +83,9 @@ describe("config command", () => {
 				);
 			}
 
-			const expected = await readFile(SNAPSHOT_PATH, "utf-8");
+			// The snapshot is stored with LF; a Windows checkout with
+			// core.autocrlf may hold it with CRLF.
+			const expected = (await readFile(SNAPSHOT_PATH, "utf-8")).replace(/\r\n/g, "\n");
 			// Byte-exact comparison so accidental drift (structural OR
 			// formatting/reordering) fails CI. Intentional schema changes
 			// regenerate via `UPDATE_SNAPSHOTS=1 bun test test/commands/config.test.ts`.
