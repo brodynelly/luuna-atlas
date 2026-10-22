@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { type ChildProcess, spawn } from "node:child_process";
 import { log } from "../log.ts";
 import {
 	DEFAULT_HOOK_TIMEOUT_MS,
@@ -78,6 +78,32 @@ interface RunOneResult {
 	timedOut: boolean;
 }
 
+// Kill a timed-out hook and every descendant it started.
+function killHookTree(child: ChildProcess, pid: number): void {
+	if (process.platform === "win32") {
+		// Windows has no process groups to signal, so terminate the process tree
+		// rooted at the hook's shell. A process the MSYS shell forked (e.g.
+		// `sleep 30 &`) is not linked into that tree and can outlive the kill
+		// while holding the hook's pipes open; stop reading them so the timeout
+		// still returns promptly.
+		const killer = spawn("taskkill", ["/pid", String(pid), "/T", "/F"], {
+			stdio: "ignore",
+			windowsHide: true,
+		});
+		killer.on("error", () => {});
+		child.stdout?.destroy();
+		child.stderr?.destroy();
+		return;
+	}
+	try {
+		// Negative pid → process group. SIGKILL is unblockable so this
+		// reaches every descendant even if the hook script ignores SIGTERM.
+		process.kill(-pid, "SIGKILL");
+	} catch {
+		// ESRCH if the group already died; ignore.
+	}
+}
+
 async function runOne(
 	command: string,
 	stdinJson: string,
@@ -105,13 +131,7 @@ async function runOne(
 	const timer = setTimeout(() => {
 		timedOut = true;
 		if (typeof child.pid === "number") {
-			try {
-				// Negative pid → process group. SIGKILL is unblockable so this
-				// reaches every descendant even if the hook script ignores SIGTERM.
-				process.kill(-child.pid, "SIGKILL");
-			} catch {
-				// ESRCH if the group already died; ignore.
-			}
+			killHookTree(child, child.pid);
 		}
 	}, timeoutMs);
 

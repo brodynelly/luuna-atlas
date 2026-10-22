@@ -1,11 +1,12 @@
 import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
-import { rename, unlink, writeFile } from "node:fs/promises";
+import { unlink, writeFile } from "node:fs/promises";
 import Ajv, { type ErrorObject } from "ajv";
 import type { Command } from "commander";
 import yaml from "js-yaml";
 import { configSchema } from "../schemas/config-schema.ts";
 import { getConfigPath, readConfig } from "../utils/config.ts";
+import { renameReplacing } from "../utils/fs-rename.ts";
 import { withFileLock } from "../utils/lock.ts";
 
 export function registerConfigCommand(program: Command): void {
@@ -303,7 +304,7 @@ async function writeFileAtomic(filePath: string, content: string): Promise<void>
 	const tmpPath = `${filePath}.tmp.${randomBytes(8).toString("hex")}`;
 	await writeFile(tmpPath, content, "utf-8");
 	try {
-		await rename(tmpPath, filePath);
+		await renameReplacing(tmpPath, filePath);
 	} catch (err) {
 		try {
 			await unlink(tmpPath);

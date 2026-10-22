@@ -82,7 +82,9 @@ describe("config command", () => {
 				);
 			}
 
-			const expected = await readFile(SNAPSHOT_PATH, "utf-8");
+			// The snapshot is stored with LF; a Windows checkout with
+			// core.autocrlf may hold it with CRLF.
+			const expected = (await readFile(SNAPSHOT_PATH, "utf-8")).replace(/\r\n/g, "\n");
 			// Byte-exact comparison so accidental drift (structural OR
 			// formatting/reordering) fails CI. Intentional schema changes
 			// regenerate via `UPDATE_SNAPSHOTS=1 bun test test/commands/config.test.ts`.

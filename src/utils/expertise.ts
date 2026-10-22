@@ -1,8 +1,9 @@
 import { createHash, randomBytes } from "node:crypto";
-import { appendFile, readFile, rename, stat, unlink, writeFile } from "node:fs/promises";
+import { appendFile, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import { getRegistry, type TypeDefinition } from "../registry/type-registry.ts";
 import type { Classification, ExpertiseRecord } from "../schemas/record.ts";
 import { DEFAULT_BM25_PARAMS, extractRecordText, searchBM25 } from "./bm25.ts";
+import { renameReplacing } from "./fs-rename.ts";
 import { isAllowUnknownTypes } from "./runtime-flags.ts";
 import { applyConfirmationBoost } from "./scoring.ts";
 
@@ -155,7 +156,7 @@ export async function writeExpertiseFile(
 	const tmpPath = `${filePath}.tmp.${randomBytes(8).toString("hex")}`;
 	await writeFile(tmpPath, content, "utf-8");
 	try {
-		await rename(tmpPath, filePath);
+		await renameReplacing(tmpPath, filePath);
 	} catch (err) {
 		try {
 			await unlink(tmpPath);

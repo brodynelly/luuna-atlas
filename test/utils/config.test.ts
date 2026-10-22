@@ -30,20 +30,20 @@ describe("config utils", () => {
 
 	describe("path helpers", () => {
 		it("getMulchDir returns .mulch under cwd", () => {
-			expect(getMulchDir("/some/path")).toBe("/some/path/.mulch");
+			expect(getMulchDir("/some/path")).toBe(join("/some/path", ".mulch"));
 		});
 
 		it("getConfigPath returns config file under .mulch", () => {
-			expect(getConfigPath("/some/path")).toBe("/some/path/.mulch/mulch.config.yaml");
+			expect(getConfigPath("/some/path")).toBe(join("/some/path", ".mulch", "mulch.config.yaml"));
 		});
 
 		it("getExpertiseDir returns expertise dir under .mulch", () => {
-			expect(getExpertiseDir("/some/path")).toBe("/some/path/.mulch/expertise");
+			expect(getExpertiseDir("/some/path")).toBe(join("/some/path", ".mulch", "expertise"));
 		});
 
 		it("getExpertisePath returns JSONL file for a domain", () => {
 			expect(getExpertisePath("testing", "/some/path")).toBe(
-				"/some/path/.mulch/expertise/testing.jsonl",
+				join("/some/path", ".mulch", "expertise", "testing.jsonl"),
 			);
 		});
 	});
@@ -181,7 +181,7 @@ governance:
 	describe("getExpertisePath with validation", () => {
 		it("returns path for valid domain", () => {
 			expect(getExpertisePath("testing", "/some/path")).toBe(
-				"/some/path/.mulch/expertise/testing.jsonl",
+				join("/some/path", ".mulch", "expertise", "testing.jsonl"),
 			);
 		});
 

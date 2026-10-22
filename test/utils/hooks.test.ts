@@ -10,7 +10,9 @@ async function writeScript(dir: string, name: string, body: string): Promise<str
 	const path = join(dir, name);
 	await writeFile(path, `#!/bin/sh\n${body}\n`, "utf-8");
 	await chmod(path, 0o755);
-	return path;
+	// Hooks run through `sh -c`, which reads backslashes as escapes; the sh
+	// shipped with Git for Windows accepts forward-slash drive paths.
+	return path.replaceAll("\\", "/");
 }
 
 async function setHooks(cwd: string, hooks: MulchConfig["hooks"]): Promise<void> {
@@ -227,31 +229,37 @@ echo '{"value":99}'`,
 		expect(elapsed).toBeLessThan(3000);
 	});
 
-	it("times out cleanly even when the hook backgrounds a forked exec that holds stdout open", async () => {
-		// Regression for mulch-9c81 (PR #21 stress finding): `sleep` is a forked
-		// exec, not a shell builtin. Bun.spawn's `timeout` only signals the
-		// direct `sh` child, leaving the orphaned `sleep` to keep the inherited
-		// stdout fd open — which made `Promise.all([Response.text(), …])` hang
-		// indefinitely. Running the hook in its own process group and calling
-		// `process.kill(-pid, "SIGKILL")` on timeout reaches every descendant.
-		const script = await writeScript(tmpDir, "background-sleep.sh", "sleep 30 & wait");
-		await writeConfig(
-			{
-				...DEFAULT_CONFIG,
-				hooks: { "pre-record": [script] },
-				hook_settings: { timeout_ms: 300 },
-			},
-			tmpDir,
-		);
-		const start = Date.now();
-		const res = await runHooks("pre-record", {}, { cwd: tmpDir, forwardStderr: false });
-		const elapsed = Date.now() - start;
-		expect(res.blocked).toBe(true);
-		expect(res.blockReason).toContain("timed out");
-		// If the orphan sleep kept stdout open, this would block until either
-		// `sleep` exits (30s) or the test runner times out.
-		expect(elapsed).toBeLessThan(2000);
-	});
+	// POSIX only: on Windows the MSYS shell's forked `sleep` is not linked into
+	// the hook's Windows process tree, so the timeout cannot reach it (the hook
+	// still returns promptly) and the surviving process keeps tmpDir busy.
+	it.skipIf(process.platform === "win32")(
+		"times out cleanly even when the hook backgrounds a forked exec that holds stdout open",
+		async () => {
+			// Regression for mulch-9c81 (PR #21 stress finding): `sleep` is a forked
+			// exec, not a shell builtin. Bun.spawn's `timeout` only signals the
+			// direct `sh` child, leaving the orphaned `sleep` to keep the inherited
+			// stdout fd open — which made `Promise.all([Response.text(), …])` hang
+			// indefinitely. Running the hook in its own process group and calling
+			// `process.kill(-pid, "SIGKILL")` on timeout reaches every descendant.
+			const script = await writeScript(tmpDir, "background-sleep.sh", "sleep 30 & wait");
+			await writeConfig(
+				{
+					...DEFAULT_CONFIG,
+					hooks: { "pre-record": [script] },
+					hook_settings: { timeout_ms: 300 },
+				},
+				tmpDir,
+			);
+			const start = Date.now();
+			const res = await runHooks("pre-record", {}, { cwd: tmpDir, forwardStderr: false });
+			const elapsed = Date.now() - start;
+			expect(res.blocked).toBe(true);
+			expect(res.blockReason).toContain("timed out");
+			// If the orphan sleep kept stdout open, this would block until either
+			// `sleep` exits (30s) or the test runner times out.
+			expect(elapsed).toBeLessThan(2000);
+		},
+	);
 
 	it("pre-prune blocks but never mutates payload", async () => {
 		const script = await writeScript(
