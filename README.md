@@ -10,7 +10,7 @@ bun src/cli.ts --help
 bun run verify
 ```
 
-The primary executable is `luuna-atlas` with `la` as its short alias. Direct source execution uses the command above.
+The standalone executable is `luuna-atlas`; `lat` is the Luuna suite shortcut and `la` remains a compatibility alias. `luuna atlas <args>` is the equivalent entry through Luuna's installed launcher. In a checkout, install dependencies with the command above and run `bun src/cli.ts <args>`. Registry publication is disabled; use the Luuna CLI installer from the main checkout to make the commands available on PATH.
 
 Project data lives in `.luuna/atlas/` (configuration in `.luuna/atlas/config.yaml`). A project that still has the pre-Luuna data directory is moved there automatically the first time a command needs the store, with one notice on stderr; record formats are unchanged. Luuna consumes a pinned Git submodule and integrates through the CLI/JSON boundary (Atlas also exports a TypeScript library); runtime policy and approvals remain Luuna's responsibility.
 

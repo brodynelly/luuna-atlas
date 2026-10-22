@@ -5,6 +5,7 @@
   "type": "module",
   "bin": {
     "luuna-atlas": "src/cli.ts",
+    "lat": "src/cli.ts",
     "la": "src/cli.ts"
   },
   "main": "src/index.ts",
