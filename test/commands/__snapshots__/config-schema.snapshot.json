@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Atlas Configuration",
-  "description": "Schema for .luuna/atlas/config.yaml. Mirrors the AtlasConfig TypeScript interface in src/schemas/config.ts. Consumers (e.g. warren) render generic configuration UIs against this schema via `luuna-atlas config schema --json`.",
+  "description": "Schema for .luuna/atlas/config.yaml. Mirrors the AtlasConfig TypeScript interface in src/schemas/config.ts. Consumers (e.g. the Luuna desktop) render generic configuration UIs against this schema via `luuna-atlas config schema --json`.",
   "type": "object",
   "required": [
     "version",

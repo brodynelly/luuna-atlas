@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Ecosystem references removed.** Comments, help text, schema descriptions, docs, and test fixtures no longer name upstream sibling tools; wording only, no behaviour or contract change.
 - **Luuna layout and identity.** Project data moved from `.mulch/` to `.luuna/atlas/`, and the config file from `mulch.config.yaml` to `config.yaml` (other names inside, and the JSONL record format, are unchanged). The first command that needs the store moves a legacy `.mulch/` automatically (one stderr notice; refuses symlinks; errors if both layouts exist) and rewrites the `.gitattributes`/`.gitignore` lines it previously wrote. All legacy names live in `src/utils/legacy-layout.ts`.
 - Removed the `ml` and `mulch` bin aliases; `luuna-atlas` and `la` remain. Help text, snippets, recipes, completions and the Claude Code hook (`luuna-atlas prime` / `luuna-atlas hook`) use the new names; hooks installed by older versions are upgraded in place on the next `setup claude`. Integration markers are now `<!-- luuna-atlas:start/end -->`; sections written with the old markers are still recognised and replaced.
 - Environment variables `MULCH_DEBUG`, `MULCH_LOG_LEVEL`, `MULCH_LOG_JSON`, `MULCH_HOOK`, `MULCH_RECIPE_NAME` and `MULCH_RECIPE_ACTION` are now `LUUNA_ATLAS_*`. npm recipes are discovered as `luuna-atlas-recipe-<name>`; the Cursor rule file is `.cursor/rules/luuna-atlas.mdc`.

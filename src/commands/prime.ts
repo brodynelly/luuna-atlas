@@ -392,7 +392,7 @@ export function registerPrimeCommand(program: Command): void {
 						);
 					} else {
 						output = formatPrimeManifest(manifestDomains, config.governance, format);
-						// Plain format is the spawn-injection contract — warren / other
+						// Plain format is the spawn-injection contract — orchestrators / other
 						// embedders handle session framing in their own dispatch, so the
 						// reminder would be redundant noise inside a system prompt.
 						if (format !== "plain") {
@@ -643,7 +643,7 @@ export function registerPrimeCommand(program: Command): void {
 							output += `\n\n${formatBudgetSummary(droppedCount, droppedDomainCount)}`;
 						}
 
-						// Plain format is the spawn-injection contract — warren / other
+						// Plain format is the spawn-injection contract — orchestrators / other
 						// embedders handle session framing in their own dispatch, so the
 						// reminder would be redundant noise inside a system prompt.
 						// --records-only (editor hooks) skips it for the same reason.

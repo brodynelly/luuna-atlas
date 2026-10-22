@@ -14,9 +14,9 @@ The single structural insight underneath every recommendation below: **the cost 
 
 What 1.0 freezes (and therefore must be right before tagging):
 
-- **Record envelope:** `id`, `type`, `recorded_at`, `recorded_by`, `evidence`, `relates_to`, `supersedes`, `classification`, `freshness_score`. Adding a field after 1.0 requires `luuna-atlas migrate` for every consumer (warren, beacon, overstory, sapling).
+- **Record envelope:** `id`, `type`, `recorded_at`, `recorded_by`, `evidence`, `relates_to`, `supersedes`, `classification`, `freshness_score`. Adding a field after 1.0 requires `luuna-atlas migrate` for every consumer (beacon and other downstream tools).
 - **The seven built-in types:** the existing six (`convention`, `pattern`, `failure`, `decision`, `reference`, `guide`) plus `note` (new in this plan, see §4.1). Custom types via config remain extensible; downstream tools that filter on built-ins must keep working forever.
-- **LWW merge semantics:** already used by warren's `reap.ts:atlas_merge`. Stays.
+- **LWW merge semantics:** already used by downstream orchestrators' merge logic. Stays.
 - **JSONL on-disk shape with versioned migrations:** `luuna-atlas migrate` for schema bumps, never silent rewrites.
 - **Soft-archive contract:** `.luuna/atlas/archive/<domain>.jsonl` with `# ARCHIVED` banner, `status: "archived"`, `archived_at` stamp. `luuna-atlas restore <id>` reverses.
 
@@ -91,7 +91,7 @@ The team-of-50 unlock. Four commands, all of which **must reuse the existing `ou
 - **`luuna-atlas challenge <mx-id> --reason "..."`** — appends an outcome with `status: "failure"`, includes reason. Surfaced by `luuna-atlas doctor` and `luuna-atlas audit --suggest` as candidates for review. Does not delete or hide the record.
 - **`luuna-atlas supersede <old> <new>`** — explicit replacement using the existing `supersedes:` field on records. Prime returns the new record; `luuna-atlas search` finds both. Triggers the existing supersession decay tier-walk (`src/commands/prune.ts:81-85, 394`).
 
-**Why this matters:** the existing primitives already do 80% of the work. Building parallel `confirmations: []` and `challenges: []` arrays would split the truth across two fields, double the merge logic in warren's `atlas_merge`, and force every consumer to read both. Keep one source of truth.
+**Why this matters:** the existing primitives already do 80% of the work. Building parallel `confirmations: []` and `challenges: []` arrays would split the truth across two fields, double the merge logic in downstream orchestrators, and force every consumer to read both. Keep one source of truth.
 
 **Solo degradation:** With `record.author_required: false` (default), `recorded_by` resolves silently from git email and is invisible in normal output. Solo devs see no friction.
 
@@ -128,7 +128,7 @@ This is what 1.0 means for downstream tools. Agreement on freezing the record en
 - Retry and failure handling
 - Authentication for cross-process subscribers
 
-Warren's merge in `reap.ts` already works against polling JSONL. Beacon and overstory have not asked for real-time. **There is no shipped consumer that needs sub-poll-interval latency.** Building the webhook system adds significant maintenance surface for hypothetical demand. Defer to v1.1 when a real consumer asks.
+Downstream orchestrator merges already works against polling JSONL. Beacon and other orchestrators have not asked for real-time. **There is no shipped consumer that needs sub-poll-interval latency.** Building the webhook system adds significant maintenance surface for hypothetical demand. Defer to v1.1 when a real consumer asks.
 
 What ships in v1.0 to satisfy the integration story:
 

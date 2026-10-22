@@ -14,7 +14,7 @@ export function registerConfigCommand(program: Command): void {
 
 	config
 		.command("schema")
-		.description("Emit AtlasConfig JSON Schema for warren and other config-UI consumers")
+		.description("Emit AtlasConfig JSON Schema for schema-driven configuration UIs")
 		.action(() => {
 			process.stdout.write(`${JSON.stringify(configSchema, null, 2)}\n`);
 		});
@@ -66,7 +66,7 @@ export function registerConfigCommand(program: Command): void {
 		)
 		.argument(
 			"<path>",
-			"Dot-notation path (e.g. governance.max_entries, search.boost_factor, domains.warren.allowed_types)",
+			"Dot-notation path (e.g. governance.max_entries, search.boost_factor, domains.api.allowed_types)",
 		)
 		.argument("<value>", "YAML-parsed value to set at <path>")
 		.action(async (path: string, value: string) => {
@@ -85,7 +85,7 @@ export function registerConfigCommand(program: Command): void {
 		)
 		.argument(
 			"<path>",
-			"Dot-notation path (e.g. search.boost_factor, domains.warren, hooks.pre-record)",
+			"Dot-notation path (e.g. search.boost_factor, domains.api, hooks.pre-record)",
 		)
 		.action(async (path: string) => {
 			try {

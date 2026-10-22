@@ -222,7 +222,7 @@ publish the patch with the previous behavior restored (§3.2–§3.3).
 - Edit the GitHub release notes for `vX.Y.Z` with a banner:
   `> ⚠️ This release contains a regression. Use vX.Y.(Z+1) or later.`
 - File / update `atlas-XXXX` with root cause + remediation links.
-- If a downstream consumer (warren, overstory, sapling) pinned the bad
+- If a downstream consumer (downstream tools) pinned the bad
   version, open an issue against that repo recommending the upgrade.
 
 ## 4. Debugging a broken `luuna-atlas prime`
