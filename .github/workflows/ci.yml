@@ -28,3 +28,18 @@ jobs:
           bad = [p for p in paths if re.search(r'(^|/)(node_modules|\.pi|\.seeds|\.mulch|\.canopy)/|(^|/)\.env($|\.(?!example$))', p)]
           assert not bad, 'Private artifacts must not be tracked'
           PY
+  verify-windows:
+    # Same supported surface on Windows. Hook and shell-recipe tests run real
+    # sh scripts; the bunfig test preload puts Git for Windows' usr/bin on
+    # PATH.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - run: bun run verify

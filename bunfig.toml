@@ -9,6 +9,10 @@
 #
 # The `[test].root` key below documents where the suite lives. Discovery
 # already works without it; do not rely on it to "fix" test discovery.
+#
+# The preload puts Git for Windows' POSIX tools on PATH for the Windows run
+# (a no-op elsewhere); see test/preload.ts.
 
 [test]
 root = "test"
+preload = ["./test/preload.ts"]

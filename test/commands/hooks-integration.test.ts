@@ -20,7 +20,9 @@ async function writeHookScript(dir: string, name: string, body: string): Promise
 	const path = join(dir, name);
 	await writeFile(path, `#!/bin/sh\n${body}\n`, "utf-8");
 	await chmod(path, 0o755);
-	return path;
+	// Hooks run through `sh -c`, which reads backslashes as escapes; the sh
+	// shipped with Git for Windows accepts forward-slash drive paths.
+	return path.replaceAll("\\", "/");
 }
 
 async function configureWith(cwd: string, hooks: MulchConfig["hooks"]): Promise<void> {
@@ -279,6 +281,8 @@ console.log(JSON.stringify(j));
 			cwd: tmpDir,
 			stdout: "pipe",
 			stderr: "pipe",
+			// The live env, so the CLI resolves `sh` via the test preload's PATH.
+			env: process.env,
 		});
 		expect(proc.exitCode).not.toBe(0);
 		// stderr contains the hook's own stderr output (forwarded) followed by
@@ -327,6 +331,8 @@ describe("prune + hooks (CLI)", () => {
 			cwd: tmpDir,
 			stdout: "pipe",
 			stderr: "pipe",
+			// The live env, so the CLI resolves `sh` via the test preload's PATH.
+			env: process.env,
 		});
 		expect(proc.exitCode).not.toBe(0);
 
@@ -357,6 +363,8 @@ describe("prune + hooks (CLI)", () => {
 			cwd: tmpDir,
 			stdout: "pipe",
 			stderr: "pipe",
+			// The live env, so the CLI resolves `sh` via the test preload's PATH.
+			env: process.env,
 		});
 		expect(proc.exitCode).toBe(0);
 
@@ -390,6 +398,8 @@ describe("prune + hooks (CLI)", () => {
 			cwd: tmpDir,
 			stdout: "pipe",
 			stderr: "pipe",
+			// The live env, so the CLI resolves `sh` via the test preload's PATH.
+			env: process.env,
 		});
 		expect(proc.exitCode).toBe(0);
 		expect(existsSync(marker)).toBe(false);

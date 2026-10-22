@@ -439,6 +439,8 @@ describe("query command", () => {
 				expect(output.error).toContain(".mulch/");
 			} finally {
 				errorSpy.mockRestore();
+				// Leave the directory first: Windows cannot remove the current cwd.
+				process.chdir(originalCwd);
 				await rm(bareTmpDir, { recursive: true, force: true });
 			}
 		});
