@@ -12,7 +12,7 @@
 // install strips those and appends one fresh group per event, leaving every
 // other hook as it was. Re-running is a no-op. Remove strips luuna-atlas handlers
 // from every event (including the legacy PreCompact entry) and drops groups
-// and events they leave empty. Mirrors missions' `sd setup claude`.
+// and events they leave empty. Mirrors `luuna-missions setup claude`.
 
 import { LEGACY_HOOK_COMMAND_RE } from "./legacy-layout.ts";
 
