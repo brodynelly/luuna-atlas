@@ -4,15 +4,15 @@ import { existsSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import type { ExpertiseRecord } from "../../src/schemas/record.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import type { ExpertiseRecord } from "../../compat/reference/src/schemas/record.ts";
 import {
 	getExpertiseDir,
 	getExpertisePath,
 	initAtlasDir,
 	writeConfig,
-} from "../../src/utils/config.ts";
-import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../src/utils/expertise.ts";
+} from "../../compat/reference/src/utils/config.ts";
+import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../compat/reference/src/utils/expertise.ts";
 
 const cliPath = resolve(process.cwd(), "src/cli.ts");
 
@@ -89,7 +89,7 @@ describe("doctor health checks", () => {
 		expect(records).toHaveLength(1);
 
 		// Import isStale to verify
-		const { isRecordStale } = await import("../../src/utils/expertise.ts");
+		const { isRecordStale } = await import("../../compat/reference/src/utils/expertise.ts");
 		const shelfLife = DEFAULT_CONFIG.classification_defaults.shelf_life;
 		const r0 = records[0];
 		if (!r0) throw new Error("expected record");
@@ -131,7 +131,7 @@ describe("doctor health checks", () => {
 		const records = await readExpertiseFile(filePath);
 		expect(records).toHaveLength(2);
 
-		const { findDuplicate } = await import("../../src/utils/expertise.js");
+		const { findDuplicate } = await import("../../compat/reference/src/utils/expertise.js");
 		const r0dup = records[0];
 		const r1dup = records[1];
 		if (!r0dup || !r1dup) throw new Error("expected two records");
@@ -140,7 +140,7 @@ describe("doctor health checks", () => {
 	});
 
 	it("foundational records are never stale", async () => {
-		const { isRecordStale } = await import("../../src/utils/expertise.ts");
+		const { isRecordStale } = await import("../../compat/reference/src/utils/expertise.ts");
 		const record: ExpertiseRecord = {
 			type: "convention",
 			content: "Permanent rule",

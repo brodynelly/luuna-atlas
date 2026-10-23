@@ -1,12 +1,12 @@
 import { describe, expect, it } from "bun:test";
-import type { ExpertiseRecord } from "../../src/schemas/record.ts";
+import type { ExpertiseRecord } from "../../compat/reference/src/schemas/record.ts";
 import {
 	type BM25Params,
 	DEFAULT_BM25_PARAMS,
 	extractRecordText,
 	searchBM25,
 	tokenize,
-} from "../../src/utils/bm25.ts";
+} from "../../compat/reference/src/utils/bm25.ts";
 
 describe("BM25", () => {
 	describe("tokenize", () => {

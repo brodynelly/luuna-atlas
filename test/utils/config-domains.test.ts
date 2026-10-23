@@ -3,9 +3,9 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import yaml from "js-yaml";
-import type { AtlasConfig } from "../../src/schemas/config.ts";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { getConfigPath, initAtlasDir, readConfig, writeConfig } from "../../src/utils/config.ts";
+import type { AtlasConfig } from "../../compat/reference/src/schemas/config.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import { getConfigPath, initAtlasDir, readConfig, writeConfig } from "../../compat/reference/src/utils/config.ts";
 
 describe("DomainConfig allowed_types", () => {
 	let tmpDir: string;

@@ -3,12 +3,12 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Command } from "commander";
-import { registerPruneCommand } from "../../src/commands/prune.ts";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import type { ExpertiseRecord } from "../../src/schemas/record.ts";
-import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
-import { appendRecord, createExpertiseFile } from "../../src/utils/expertise.ts";
-import { setQuiet } from "../../src/utils/palette.ts";
+import { registerPruneCommand } from "../../compat/reference/src/commands/prune.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import type { ExpertiseRecord } from "../../compat/reference/src/schemas/record.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../compat/reference/src/utils/config.ts";
+import { appendRecord, createExpertiseFile } from "../../compat/reference/src/utils/expertise.ts";
+import { setQuiet } from "../../compat/reference/src/utils/palette.ts";
 
 function daysAgo(days: number): string {
 	const d = new Date();

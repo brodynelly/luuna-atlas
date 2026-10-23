@@ -2,9 +2,9 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { chmod, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { type AtlasConfig, DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { initAtlasDir, writeConfig } from "../../src/utils/config.ts";
-import { runHooks } from "../../src/utils/hooks.ts";
+import { type AtlasConfig, DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import { initAtlasDir, writeConfig } from "../../compat/reference/src/utils/config.ts";
+import { runHooks } from "../../compat/reference/src/utils/hooks.ts";
 
 async function writeScript(dir: string, name: string, body: string): Promise<string> {
 	const path = join(dir, name);

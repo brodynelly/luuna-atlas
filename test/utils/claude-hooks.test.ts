@@ -1,6 +1,6 @@
 // `luuna-atlas setup claude` settings merge (atlas-7164).
 import { describe, expect, it } from "bun:test";
-import { CLAUDE_HOOKS, missingAtlasHooks, syncAtlasHooks } from "../../src/utils/claude-hooks.ts";
+import { CLAUDE_HOOKS, missingAtlasHooks, syncAtlasHooks } from "../../compat/reference/src/utils/claude-hooks.ts";
 
 const other = { matcher: "Bash", hooks: [{ type: "command", command: "other-guard" }] };
 

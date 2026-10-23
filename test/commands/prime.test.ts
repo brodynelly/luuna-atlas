@@ -4,26 +4,26 @@ import { mkdir, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Command } from "commander";
-import { estimateRecordText, registerPrimeCommand } from "../../src/commands/prime.ts";
-import { initRegistryFromConfig } from "../../src/registry/init.ts";
-import { resetRegistry } from "../../src/registry/type-registry.ts";
-import type { CustomTypeConfig } from "../../src/schemas/config.ts";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import type { ExpertiseRecord } from "../../src/schemas/record.ts";
-import type { DomainRecords } from "../../src/utils/budget.ts";
+import { estimateRecordText, registerPrimeCommand } from "../../compat/reference/src/commands/prime.ts";
+import { initRegistryFromConfig } from "../../compat/reference/src/registry/init.ts";
+import { resetRegistry } from "../../compat/reference/src/registry/type-registry.ts";
+import type { CustomTypeConfig } from "../../compat/reference/src/schemas/config.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import type { ExpertiseRecord } from "../../compat/reference/src/schemas/record.ts";
+import type { DomainRecords } from "../../compat/reference/src/utils/budget.ts";
 import {
 	applyBudget,
 	DEFAULT_BUDGET,
 	estimateTokens,
 	formatBudgetSummary,
-} from "../../src/utils/budget.ts";
-import { getExpertisePath, initAtlasDir, readConfig, writeConfig } from "../../src/utils/config.ts";
+} from "../../compat/reference/src/utils/budget.ts";
+import { getExpertisePath, initAtlasDir, readConfig, writeConfig } from "../../compat/reference/src/utils/config.ts";
 import {
 	appendRecord,
 	createExpertiseFile,
 	getFileModTime,
 	readExpertiseFile,
-} from "../../src/utils/expertise.ts";
+} from "../../compat/reference/src/utils/expertise.ts";
 import {
 	formatDomainExpertise,
 	formatDomainExpertiseCompact,
@@ -35,8 +35,8 @@ import {
 	formatPrimeOutputPlain,
 	formatPrimeOutputXml,
 	getSessionEndReminder,
-} from "../../src/utils/format.ts";
-import { fileMatchesAny, filterByContext } from "../../src/utils/git.ts";
+} from "../../compat/reference/src/utils/format.ts";
+import { fileMatchesAny, filterByContext } from "../../compat/reference/src/utils/git.ts";
 
 describe("prime command", () => {
 	let tmpDir: string;

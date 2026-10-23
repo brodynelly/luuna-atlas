@@ -4,15 +4,15 @@ import { spawnSync } from "node:child_process";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
-import { readExpertiseFile } from "../../src/utils/expertise.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../compat/reference/src/utils/config.ts";
+import { readExpertiseFile } from "../../compat/reference/src/utils/expertise.ts";
 import {
 	applyDescriptionDefaults,
 	deriveName,
 	deriveTitle,
 	deriveUniqueName,
-} from "../../src/utils/record-flags.ts";
+} from "../../compat/reference/src/utils/record-flags.ts";
 
 const cliPath = resolve(process.cwd(), "src/cli.ts");
 const BUILTIN = (name: string) => ({ name, kind: "builtin" });

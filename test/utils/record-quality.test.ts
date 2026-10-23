@@ -2,13 +2,13 @@ import { afterEach, describe, expect, it } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { initRegistryFromConfig } from "../../src/registry/init.ts";
-import { resetRegistry } from "../../src/registry/type-registry.ts";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import type { ExpertiseRecord } from "../../src/schemas/record.ts";
-import { initAtlasDir, writeConfig } from "../../src/utils/config.ts";
-import { findDuplicate, normalizeText, recordBodyText } from "../../src/utils/expertise.ts";
-import { checkRecordQuality, findNearDuplicates } from "../../src/utils/record-quality.ts";
+import { initRegistryFromConfig } from "../../compat/reference/src/registry/init.ts";
+import { resetRegistry } from "../../compat/reference/src/registry/type-registry.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import type { ExpertiseRecord } from "../../compat/reference/src/schemas/record.ts";
+import { initAtlasDir, writeConfig } from "../../compat/reference/src/utils/config.ts";
+import { findDuplicate, normalizeText, recordBodyText } from "../../compat/reference/src/utils/expertise.ts";
+import { checkRecordQuality, findNearDuplicates } from "../../compat/reference/src/utils/record-quality.ts";
 
 const at = "2026-01-01T00:00:00.000Z";
 

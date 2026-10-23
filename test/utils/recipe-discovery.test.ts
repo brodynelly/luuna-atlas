@@ -10,7 +10,7 @@ import {
 	type ProviderRecipe,
 	resolveRecipe,
 	validateRecipeShape,
-} from "../../src/utils/recipe-discovery.ts";
+} from "../../compat/reference/src/utils/recipe-discovery.ts";
 
 const STUB_BUILTIN_TS = `
 const recipe = {

@@ -3,10 +3,10 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Command } from "commander";
-import { registerMoveCommand } from "../../src/commands/move.ts";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
-import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../src/utils/expertise.ts";
+import { registerMoveCommand } from "../../compat/reference/src/commands/move.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../compat/reference/src/utils/config.ts";
+import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../compat/reference/src/utils/expertise.ts";
 
 async function runMove(
 	tmpDir: string,

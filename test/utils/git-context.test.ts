@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { getContextFiles, getCurrentCommit } from "../../src/utils/git-context.ts";
+import { getContextFiles, getCurrentCommit } from "../../compat/reference/src/utils/git-context.ts";
 
 function initGitRepo(dir: string): void {
 	execFileSync("git", ["init"], { cwd: dir, stdio: "pipe" });

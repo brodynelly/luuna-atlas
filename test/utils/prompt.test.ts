@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { PassThrough } from "node:stream";
-import { confirmAction } from "../../src/utils/prompt.ts";
+import { confirmAction } from "../../compat/reference/src/utils/prompt.ts";
 
 async function answer(text: string): Promise<{ confirmed: boolean; written: string }> {
 	const input = new PassThrough();

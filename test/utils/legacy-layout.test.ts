@@ -3,18 +3,18 @@ import { existsSync, readFileSync } from "node:fs";
 import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { getAtlasDir, getConfigPath } from "../../src/utils/config.ts";
+import { getAtlasDir, getConfigPath } from "../../compat/reference/src/utils/config.ts";
 import {
 	evidenceMissionRef,
 	hasLegacyStore,
 	migrateLegacyStore,
 	resolveMissionsDir,
-} from "../../src/utils/legacy-layout.ts";
+} from "../../compat/reference/src/utils/legacy-layout.ts";
 import {
 	hasMarkerSection,
 	removeMarkerSection,
 	replaceMarkerSection,
-} from "../../src/utils/markers.ts";
+} from "../../compat/reference/src/utils/markers.ts";
 
 const CLI_PATH = resolve(import.meta.dir, "..", "..", "src", "cli.ts");
 const LAYOUT = { luunaDir: ".luuna", storeRel: ".luuna/atlas", configFile: "config.yaml" };

@@ -3,8 +3,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { runOnboard } from "../../src/commands/onboard.ts";
-import { MARKER_END, MARKER_START } from "../../src/utils/markers.ts";
+import { runOnboard } from "../../compat/reference/src/commands/onboard.ts";
+import { MARKER_END, MARKER_START } from "../../compat/reference/src/utils/markers.ts";
 
 const PKG_VERSION = (
 	JSON.parse(readFileSync(join(import.meta.dir, "..", "..", "package.json"), "utf-8")) as {

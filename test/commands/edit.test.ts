@@ -3,10 +3,10 @@ import { spawnSync } from "node:child_process";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import type { ExpertiseRecord } from "../../src/schemas/record.ts";
-import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
-import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../src/utils/expertise.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import type { ExpertiseRecord } from "../../compat/reference/src/schemas/record.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../compat/reference/src/utils/config.ts";
+import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../compat/reference/src/utils/expertise.ts";
 
 describe("edit command", () => {
 	let tmpDir: string;
@@ -39,7 +39,7 @@ describe("edit command", () => {
 		if (record.type === "convention") {
 			record.content = "New content";
 		}
-		const { writeExpertiseFile } = await import("../../src/utils/expertise.js");
+		const { writeExpertiseFile } = await import("../../compat/reference/src/utils/expertise.js");
 		await writeExpertiseFile(filePath, [record]);
 
 		const updated = await readExpertiseFile(filePath);
@@ -67,7 +67,7 @@ describe("edit command", () => {
 		if (record.type === "pattern") {
 			record.description = "Updated description";
 		}
-		const { writeExpertiseFile } = await import("../../src/utils/expertise.js");
+		const { writeExpertiseFile } = await import("../../compat/reference/src/utils/expertise.js");
 		await writeExpertiseFile(filePath, [record]);
 
 		const updated = await readExpertiseFile(filePath);
@@ -91,7 +91,7 @@ describe("edit command", () => {
 		const r0 = records[0];
 		if (!r0) throw new Error("Expected record");
 		const record: ExpertiseRecord = { ...r0, classification: "foundational" as const };
-		const { writeExpertiseFile } = await import("../../src/utils/expertise.js");
+		const { writeExpertiseFile } = await import("../../compat/reference/src/utils/expertise.js");
 		await writeExpertiseFile(filePath, [record]);
 
 		const updated = await readExpertiseFile(filePath);
@@ -118,7 +118,7 @@ describe("edit command", () => {
 		if (record.type === "failure") {
 			record.resolution = "Better fix";
 		}
-		const { writeExpertiseFile } = await import("../../src/utils/expertise.js");
+		const { writeExpertiseFile } = await import("../../compat/reference/src/utils/expertise.js");
 		await writeExpertiseFile(filePath, [record]);
 
 		const updated = await readExpertiseFile(filePath);
@@ -145,7 +145,7 @@ describe("edit command", () => {
 		if (record.type === "decision") {
 			record.rationale = "Better tree-shaking and modern standards";
 		}
-		const { writeExpertiseFile } = await import("../../src/utils/expertise.js");
+		const { writeExpertiseFile } = await import("../../compat/reference/src/utils/expertise.js");
 		await writeExpertiseFile(filePath, [record]);
 
 		const updated = await readExpertiseFile(filePath);
@@ -188,7 +188,7 @@ describe("edit command", () => {
 		}
 		records[1] = record;
 
-		const { writeExpertiseFile } = await import("../../src/utils/expertise.js");
+		const { writeExpertiseFile } = await import("../../compat/reference/src/utils/expertise.js");
 		await writeExpertiseFile(filePath, records);
 
 		const updated = await readExpertiseFile(filePath);
@@ -222,7 +222,7 @@ describe("edit command", () => {
 		if (record.type === "pattern") {
 			record.files = ["new.ts", "other.ts"];
 		}
-		const { writeExpertiseFile } = await import("../../src/utils/expertise.js");
+		const { writeExpertiseFile } = await import("../../compat/reference/src/utils/expertise.js");
 		await writeExpertiseFile(filePath, [record]);
 
 		const updated = await readExpertiseFile(filePath);
@@ -247,7 +247,7 @@ describe("edit command", () => {
 			...r0,
 			outcomes: [{ status: "success" as const, duration: 1200 }],
 		};
-		const { writeExpertiseFile } = await import("../../src/utils/expertise.js");
+		const { writeExpertiseFile } = await import("../../compat/reference/src/utils/expertise.js");
 		await writeExpertiseFile(filePath, [record]);
 
 		const updated = await readExpertiseFile(filePath);
@@ -280,7 +280,7 @@ describe("edit command", () => {
 				},
 			],
 		};
-		const { writeExpertiseFile } = await import("../../src/utils/expertise.js");
+		const { writeExpertiseFile } = await import("../../compat/reference/src/utils/expertise.js");
 		await writeExpertiseFile(filePath, [record]);
 
 		const updated = await readExpertiseFile(filePath);
@@ -307,7 +307,7 @@ describe("edit command", () => {
 			...r0,
 			outcomes: [{ status: "success" as const }],
 		};
-		const { writeExpertiseFile } = await import("../../src/utils/expertise.js");
+		const { writeExpertiseFile } = await import("../../compat/reference/src/utils/expertise.js");
 		await writeExpertiseFile(filePath, [record]);
 
 		const updated = await readExpertiseFile(filePath);

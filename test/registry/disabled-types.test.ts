@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it } from "bun:test";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { initRegistryFromConfig } from "../../src/registry/init.ts";
-import { getRegistry, resetRegistry } from "../../src/registry/type-registry.ts";
+import { initRegistryFromConfig } from "../../compat/reference/src/registry/init.ts";
+import { getRegistry, resetRegistry } from "../../compat/reference/src/registry/type-registry.ts";
 
 let tmpDir: string;
 

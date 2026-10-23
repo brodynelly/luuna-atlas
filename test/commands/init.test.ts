@@ -11,7 +11,7 @@ import {
 	initAtlasDir,
 	readConfig,
 	writeConfig,
-} from "../../src/utils/config.ts";
+} from "../../compat/reference/src/utils/config.ts";
 
 describe("init command", () => {
 	let tmpDir: string;

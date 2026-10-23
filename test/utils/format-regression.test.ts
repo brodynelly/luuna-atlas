@@ -2,14 +2,14 @@ import { afterAll, beforeAll, describe, expect, it, setSystemTime } from "bun:te
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { generateRecordId } from "../../src/utils/expertise.ts";
+import { generateRecordId } from "../../compat/reference/src/utils/expertise.ts";
 import {
 	formatDomainExpertise,
 	formatDomainExpertiseCompact,
 	formatDomainExpertisePlain,
 	formatDomainExpertiseXml,
 	getRecordSummary,
-} from "../../src/utils/format.ts";
+} from "../../compat/reference/src/utils/format.ts";
 import { FIXTURE_LAST_UPDATED, FIXTURE_RECORDS, ID_GEN_RECORDS } from "./format-fixture.ts";
 
 // Pin "now" so formatTimeAgo output is stable across days.

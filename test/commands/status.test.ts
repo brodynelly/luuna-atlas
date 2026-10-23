@@ -3,15 +3,15 @@ import { existsSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import type { ExpertiseRecord } from "../../src/schemas/record.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import type { ExpertiseRecord } from "../../compat/reference/src/schemas/record.ts";
 import {
 	getAtlasDir,
 	getExpertisePath,
 	initAtlasDir,
 	readConfig,
 	writeConfig,
-} from "../../src/utils/config.ts";
+} from "../../compat/reference/src/utils/config.ts";
 import {
 	appendRecord,
 	calculateDomainHealth,
@@ -19,8 +19,8 @@ import {
 	createExpertiseFile,
 	getFileModTime,
 	readExpertiseFile,
-} from "../../src/utils/expertise.ts";
-import { formatStatusOutput } from "../../src/utils/format.ts";
+} from "../../compat/reference/src/utils/expertise.ts";
+import { formatStatusOutput } from "../../compat/reference/src/utils/format.ts";
 
 const CLI_PATH = resolve(import.meta.dir, "..", "..", "src", "cli.ts");
 

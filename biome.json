@@ -4,6 +4,10 @@
 		"includes": [
 			"src/**",
 			"test/**",
+			"scripts/build-native.ts",
+			"scripts/go-tool.ts",
+			"scripts/verify-native.ts",
+			"scripts/version-bump.ts",
 			"!**/node_modules",
 			"!test/**/__snapshots__/**"
 		]

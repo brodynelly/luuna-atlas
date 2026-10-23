@@ -1,17 +1,6 @@
-import type { Classification, ExpertiseRecord, Outcome } from "./schemas/record.ts";
-import { getExpertisePath, readConfig } from "./utils/config.ts";
-import {
-	appendRecord,
-	filterByClassification,
-	filterByFile,
-	filterByType,
-	findDuplicate,
-	readExpertiseFile,
-	resolveRecordId,
-	searchRecords,
-	writeExpertiseFile,
-} from "./utils/expertise.ts";
-import { withFileLock } from "./utils/lock.ts";
+/** Public TypeScript compatibility facade for the native Go library. */
+import { nativeCallAsync } from "./native.ts";
+import type { Classification, ExpertiseRecord, Outcome } from "./types.ts";
 
 export interface RecordOptions {
 	force?: boolean;
@@ -74,282 +63,76 @@ export interface RecordUpdates {
 	files?: string[];
 }
 
-/**
- * Record an expertise record in the given domain.
- * Named record types (pattern, decision, reference, guide) are upserted on
- * duplicate key; convention and failure duplicates are skipped unless force=true.
- */
 export async function recordExpertise(
 	domain: string,
 	record: ExpertiseRecord,
 	options: RecordOptions = {},
 ): Promise<RecordResult> {
-	const { force = false, cwd } = options;
-
-	const config = await readConfig(cwd);
-	if (!(domain in config.domains)) {
-		throw new Error(
-			`Domain "${domain}" not found in config. Available domains: ${Object.keys(config.domains).join(", ") || "(none)"}`,
-		);
+	const response = await nativeCallAsync<{
+		result: RecordResult;
+		mutation: ExpertiseRecord;
+		error?: string;
+	}>("recordExpertiseTransport", [domain, record, options]);
+	if (response.mutation.id !== undefined) record.id = response.mutation.id;
+	if (response.error !== undefined) throw new Error(response.error);
+	const result = response.result;
+	if (result.action !== "skipped") {
+		if (result.record.id !== undefined) record.id = result.record.id;
+		result.record = record;
 	}
-
-	const filePath = getExpertisePath(domain, cwd);
-
-	return withFileLock(filePath, async () => {
-		const existing = await readExpertiseFile(filePath);
-		const dup = findDuplicate(existing, record);
-
-		if (dup && !force) {
-			const isNamed =
-				record.type === "pattern" ||
-				record.type === "decision" ||
-				record.type === "reference" ||
-				record.type === "guide";
-
-			if (isNamed) {
-				existing[dup.index] = record;
-				await writeExpertiseFile(filePath, existing);
-				return { action: "updated" as const, record };
-			}
-			return { action: "skipped" as const, record: dup.record };
-		}
-		await appendRecord(filePath, record);
-		return { action: "created" as const, record };
-	});
+	return result;
 }
 
-/**
- * Search expertise records across domains using BM25 ranking.
- * Returns domains with at least one matching record.
- */
 export async function searchExpertise(
 	query: string,
 	options: SearchOptions = {},
 ): Promise<SearchResult[]> {
-	const { cwd } = options;
-	const config = await readConfig(cwd);
-
-	let domainsToSearch: string[];
-	if (options.domain) {
-		if (!(options.domain in config.domains)) {
-			throw new Error(
-				`Domain "${options.domain}" not found in config. Available domains: ${Object.keys(config.domains).join(", ")}`,
-			);
-		}
-		domainsToSearch = [options.domain];
-	} else {
-		domainsToSearch = Object.keys(config.domains);
-	}
-
-	const results: SearchResult[] = [];
-
-	for (const d of domainsToSearch) {
-		const filePath = getExpertisePath(d, cwd);
-		let records = await readExpertiseFile(filePath);
-
-		if (options.type) {
-			records = filterByType(records, options.type);
-		}
-		if (options.tag) {
-			const tagLower = options.tag.toLowerCase();
-			records = records.filter((r) => r.tags?.some((t) => t.toLowerCase() === tagLower));
-		}
-		if (options.classification) {
-			records = filterByClassification(records, options.classification);
-		}
-		if (options.file) {
-			records = filterByFile(records, options.file);
-		}
-
-		const matches = searchRecords(records, query);
-		if (matches.length > 0) {
-			results.push({ domain: d, records: matches });
-		}
-	}
-
-	return results;
+	return await nativeCallAsync<SearchResult[]>("searchExpertise", [query, options]);
 }
 
-/**
- * Query all records in a domain with optional filtering.
- */
 export async function queryDomain(
 	domain: string,
 	options: QueryOptions = {},
 ): Promise<ExpertiseRecord[]> {
-	const { cwd } = options;
-	const config = await readConfig(cwd);
-
-	if (!(domain in config.domains)) {
-		throw new Error(
-			`Domain "${domain}" not found in config. Available domains: ${Object.keys(config.domains).join(", ") || "(none)"}`,
-		);
-	}
-
-	const filePath = getExpertisePath(domain, cwd);
-	let records = await readExpertiseFile(filePath);
-
-	if (options.type) {
-		records = filterByType(records, options.type);
-	}
-	if (options.classification) {
-		records = filterByClassification(records, options.classification);
-	}
-	if (options.file) {
-		records = filterByFile(records, options.file);
-	}
-
-	return records;
+	return await nativeCallAsync<ExpertiseRecord[]>("queryDomain", [domain, options]);
 }
 
-/**
- * Locate a record by ID under the domain's file lock, hand a copy to `mutate`,
- * and write the returned record back in place.
- */
-async function updateRecordById(
-	domain: string,
-	id: string,
-	cwd: string | undefined,
-	mutate: (record: ExpertiseRecord) => Promise<ExpertiseRecord>,
-): Promise<ExpertiseRecord> {
-	const config = await readConfig(cwd);
-
-	if (!(domain in config.domains)) {
-		throw new Error(
-			`Domain "${domain}" not found in config. Available domains: ${Object.keys(config.domains).join(", ") || "(none)"}`,
-		);
-	}
-
-	const filePath = getExpertisePath(domain, cwd);
-
-	return withFileLock(filePath, async () => {
-		const records = await readExpertiseFile(filePath);
-		const resolved = resolveRecordId(records, id);
-
-		if (!resolved.ok) {
-			throw new Error(resolved.error);
-		}
-
-		const targetIndex = resolved.index;
-		const original = records[targetIndex];
-		if (!original) {
-			throw new Error(`Record at index ${targetIndex} not found`);
-		}
-		const record = await mutate({ ...original });
-
-		records[targetIndex] = record;
-		await writeExpertiseFile(filePath, records);
-
-		return record;
-	});
-}
-
-/**
- * Edit an existing record by ID in the given domain.
- * Only provided fields in updates are modified; all other fields are preserved.
- */
 export async function editRecord(
 	domain: string,
 	id: string,
 	updates: RecordUpdates,
 	options: EditOptions = {},
 ): Promise<ExpertiseRecord> {
-	return updateRecordById(domain, id, options.cwd, async (record) => {
-		// Apply common updates
-		if (updates.classification !== undefined) {
-			record.classification = updates.classification;
-		}
-		if (updates.tags !== undefined) {
-			record.tags = updates.tags;
-		}
-		if (updates.relates_to !== undefined) {
-			record.relates_to = updates.relates_to;
-		}
-		if (updates.supersedes !== undefined) {
-			record.supersedes = updates.supersedes;
-		}
-		if (updates.outcomes !== undefined) {
-			record.outcomes = updates.outcomes;
-		}
-
-		// Apply type-specific updates
-		switch (record.type) {
-			case "convention":
-				if (updates.content !== undefined) {
-					record.content = updates.content;
-				}
-				break;
-			case "pattern":
-				if (updates.name !== undefined) {
-					record.name = updates.name;
-				}
-				if (updates.description !== undefined) {
-					record.description = updates.description;
-				}
-				if (updates.files !== undefined) {
-					record.files = updates.files;
-				}
-				break;
-			case "failure":
-				if (updates.description !== undefined) {
-					record.description = updates.description;
-				}
-				if (updates.resolution !== undefined) {
-					record.resolution = updates.resolution;
-				}
-				break;
-			case "decision":
-				if (updates.title !== undefined) {
-					record.title = updates.title;
-				}
-				if (updates.rationale !== undefined) {
-					record.rationale = updates.rationale;
-				}
-				break;
-			case "reference":
-				if (updates.name !== undefined) {
-					record.name = updates.name;
-				}
-				if (updates.description !== undefined) {
-					record.description = updates.description;
-				}
-				if (updates.files !== undefined) {
-					record.files = updates.files;
-				}
-				break;
-			case "guide":
-				if (updates.name !== undefined) {
-					record.name = updates.name;
-				}
-				if (updates.description !== undefined) {
-					record.description = updates.description;
-				}
-				break;
-		}
-
-		return record;
-	});
+	const record = await nativeCallAsync<ExpertiseRecord>("editRecord", [
+		domain,
+		id,
+		updates,
+		options,
+	]);
+	// The source API assigns supplied arrays by reference; IPC must restore those references.
+	if (updates.tags !== undefined) record.tags = updates.tags;
+	if (updates.relates_to !== undefined) record.relates_to = updates.relates_to;
+	if (updates.supersedes !== undefined) record.supersedes = updates.supersedes;
+	if (updates.outcomes !== undefined) record.outcomes = updates.outcomes;
+	if (updates.files !== undefined && (record.type === "pattern" || record.type === "reference")) {
+		record.files = updates.files;
+	}
+	return record;
 }
 
-/**
- * Append an outcome to an existing record by ID in the given domain.
- * Outcomes accumulate (are not replaced) to build a confirmation-frequency
- * history that drives confidence scoring.
- */
 export async function appendOutcome(
 	domain: string,
 	id: string,
 	outcome: Outcome,
 	options: OutcomeOptions = {},
 ): Promise<AppendOutcomeResult> {
-	const o: Outcome = {
-		...outcome,
-		recorded_at: outcome.recorded_at ?? new Date().toISOString(),
-	};
-	const record = await updateRecordById(domain, id, options.cwd, async (record) => {
-		record.outcomes = [...(record.outcomes ?? []), o];
-		return record;
-	});
-
-	return { record, outcome: o, total_outcomes: record.outcomes?.length ?? 0 };
+	const result = await nativeCallAsync<AppendOutcomeResult>("appendOutcome", [
+		domain,
+		id,
+		outcome,
+		options,
+	]);
+	const outcomes = result.record.outcomes;
+	if (outcomes?.length) outcomes[outcomes.length - 1] = result.outcome;
+	return result;
 }

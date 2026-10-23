@@ -3,11 +3,11 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Command } from "commander";
-import { registerRankCommand } from "../../src/commands/rank.ts";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import type { ExpertiseRecord, Outcome } from "../../src/schemas/record.ts";
-import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
-import { appendRecord, createExpertiseFile } from "../../src/utils/expertise.ts";
+import { registerRankCommand } from "../../compat/reference/src/commands/rank.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import type { ExpertiseRecord, Outcome } from "../../compat/reference/src/schemas/record.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../compat/reference/src/utils/config.ts";
+import { appendRecord, createExpertiseFile } from "../../compat/reference/src/utils/expertise.ts";
 
 function outcome(status: Outcome["status"], iso = new Date().toISOString()): Outcome {
 	return { status, recorded_at: iso };

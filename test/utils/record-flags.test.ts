@@ -1,9 +1,9 @@
 import { describe, expect, it } from "bun:test";
 import { Command } from "commander";
-import { BUILTIN_DEFS, SHARED_DEFINITIONS } from "../../src/registry/builtins.ts";
-import { buildCustomTypeDefinitions } from "../../src/registry/custom.ts";
-import { buildBuiltinRegistry, TypeRegistry } from "../../src/registry/type-registry.ts";
-import { addCustomTypeFieldOptions, parseOutcomeFlags } from "../../src/utils/record-flags.ts";
+import { BUILTIN_DEFS, SHARED_DEFINITIONS } from "../../compat/reference/src/registry/builtins.ts";
+import { buildCustomTypeDefinitions } from "../../compat/reference/src/registry/custom.ts";
+import { buildBuiltinRegistry, TypeRegistry } from "../../compat/reference/src/registry/type-registry.ts";
+import { addCustomTypeFieldOptions, parseOutcomeFlags } from "../../compat/reference/src/utils/record-flags.ts";
 
 function registryWithCustomType(): TypeRegistry {
 	const custom = buildCustomTypeDefinitions({

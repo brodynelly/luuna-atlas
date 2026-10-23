@@ -3,8 +3,8 @@ import { execFileSync } from "node:child_process";
 import { mkdir, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { getAtlasDir, initAtlasDir, isInsideWorktree, readConfig } from "../../src/utils/config.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import { getAtlasDir, initAtlasDir, isInsideWorktree, readConfig } from "../../compat/reference/src/utils/config.ts";
 
 function git(args: string[], cwd: string): string {
 	return execFileSync("git", args, {

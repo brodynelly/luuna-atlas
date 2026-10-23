@@ -3,10 +3,10 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Command } from "commander";
-import { registerPrimeCommand } from "../../src/commands/prime.ts";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { getExpertisePath, initAtlasDir, readConfig, writeConfig } from "../../src/utils/config.ts";
-import { appendRecord, createExpertiseFile } from "../../src/utils/expertise.ts";
+import { registerPrimeCommand } from "../../compat/reference/src/commands/prime.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import { getExpertisePath, initAtlasDir, readConfig, writeConfig } from "../../compat/reference/src/utils/config.ts";
+import { appendRecord, createExpertiseFile } from "../../compat/reference/src/utils/expertise.ts";
 
 // Index-mode prime (atlas-bffe): failure-first ranking, anchored-failure
 // pinning under --budget, --records-only hook output, supersession hiding.

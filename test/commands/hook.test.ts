@@ -5,13 +5,13 @@ import { existsSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { hookOutput } from "../../src/commands/hook.ts";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import type { ExpertiseRecord } from "../../src/schemas/record.ts";
-import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
-import { appendRecord } from "../../src/utils/expertise.ts";
-import { bashWritesExpertise, guardDecision } from "../../src/utils/hook-guard.ts";
-import { findRepoRoot } from "../../src/utils/hook-inject.ts";
+import { hookOutput } from "../../compat/reference/src/commands/hook.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import type { ExpertiseRecord } from "../../compat/reference/src/schemas/record.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../compat/reference/src/utils/config.ts";
+import { appendRecord } from "../../compat/reference/src/utils/expertise.ts";
+import { bashWritesExpertise, guardDecision } from "../../compat/reference/src/utils/hook-guard.ts";
+import { findRepoRoot } from "../../compat/reference/src/utils/hook-inject.ts";
 
 const cliPath = resolve(process.cwd(), "src/cli.ts");
 

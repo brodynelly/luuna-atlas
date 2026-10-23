@@ -3,15 +3,15 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import Ajv from "ajv";
-import { initRegistryFromConfig } from "../../src/registry/init.ts";
+import { initRegistryFromConfig } from "../../compat/reference/src/registry/init.ts";
 import {
 	buildBuiltinRegistry,
 	getRegistry,
 	resetRegistry,
-} from "../../src/registry/type-registry.ts";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { recordSchema } from "../../src/schemas/record-schema.ts";
-import { initAtlasDir, writeConfig } from "../../src/utils/config.ts";
+} from "../../compat/reference/src/registry/type-registry.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import { recordSchema } from "../../compat/reference/src/schemas/record-schema.ts";
+import { initAtlasDir, writeConfig } from "../../compat/reference/src/utils/config.ts";
 
 const baseTimestamp = "2026-05-07T00:00:00Z";
 

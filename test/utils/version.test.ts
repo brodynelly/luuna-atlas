@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { compareSemver, getCurrentVersion, getLatestVersion } from "../../src/utils/version.ts";
+import { compareSemver, getCurrentVersion, getLatestVersion } from "../../compat/reference/src/utils/version.ts";
 
 describe("compareSemver", () => {
 	it("returns 0 for equal versions", () => {

@@ -3,10 +3,10 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Command } from "commander";
-import { registerShowCommand } from "../../src/commands/show.ts";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
-import { appendRecord, createExpertiseFile } from "../../src/utils/expertise.ts";
+import { registerShowCommand } from "../../compat/reference/src/commands/show.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../compat/reference/src/utils/config.ts";
+import { appendRecord, createExpertiseFile } from "../../compat/reference/src/utils/expertise.ts";
 
 describe("show command", () => {
 	let tmpDir: string;

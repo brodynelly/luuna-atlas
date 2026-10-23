@@ -2,15 +2,15 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { BUILTIN_DEFS } from "../../src/registry/builtins.ts";
-import { buildCustomTypeDefinition } from "../../src/registry/custom.ts";
+import { BUILTIN_DEFS } from "../../compat/reference/src/registry/builtins.ts";
+import { buildCustomTypeDefinition } from "../../compat/reference/src/registry/custom.ts";
 import {
 	buildBuiltinRegistry,
 	resetRegistry,
 	setRegistry,
 	TypeRegistry,
-} from "../../src/registry/type-registry.ts";
-import type { ExpertiseRecord } from "../../src/schemas/record.ts";
+} from "../../compat/reference/src/registry/type-registry.ts";
+import type { ExpertiseRecord } from "../../compat/reference/src/schemas/record.ts";
 import {
 	appendRecord,
 	countRecords,
@@ -19,7 +19,7 @@ import {
 	readExpertiseFile,
 	searchRecords,
 	writeExpertiseFile,
-} from "../../src/utils/expertise.ts";
+} from "../../compat/reference/src/utils/expertise.ts";
 
 const makeConvention = (content: string): ExpertiseRecord => ({
 	type: "convention",

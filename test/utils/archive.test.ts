@@ -3,8 +3,8 @@ import { existsSync } from "node:fs";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, sep } from "node:path";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import type { ExpertiseRecord } from "../../src/schemas/record.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import type { ExpertiseRecord } from "../../compat/reference/src/schemas/record.ts";
 import {
 	ARCHIVE_BANNER,
 	archiveRecords,
@@ -15,9 +15,9 @@ import {
 	restoreToExpertise,
 	stripArchiveFields,
 	writeArchiveFile,
-} from "../../src/utils/archive.ts";
-import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
-import { readExpertiseFile } from "../../src/utils/expertise.ts";
+} from "../../compat/reference/src/utils/archive.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../compat/reference/src/utils/config.ts";
+import { readExpertiseFile } from "../../compat/reference/src/utils/expertise.ts";
 
 function makeRecord(content: string): ExpertiseRecord {
 	return {

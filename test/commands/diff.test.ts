@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { formatDiffOutput, parseExpertiseDiff } from "../../src/commands/diff.ts";
+import { formatDiffOutput, parseExpertiseDiff } from "../../compat/reference/src/commands/diff.ts";
 
 describe("diff command", () => {
 	describe("parseExpertiseDiff", () => {

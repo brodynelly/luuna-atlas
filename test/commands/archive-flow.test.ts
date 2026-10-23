@@ -4,14 +4,14 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Command } from "commander";
-import { registerPruneCommand } from "../../src/commands/prune.ts";
-import { registerRestoreCommand } from "../../src/commands/restore.ts";
-import { registerSearchCommand } from "../../src/commands/search.ts";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import type { ExpertiseRecord } from "../../src/schemas/record.ts";
-import { getArchivePath, readArchiveFile } from "../../src/utils/archive.ts";
-import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
-import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../src/utils/expertise.ts";
+import { registerPruneCommand } from "../../compat/reference/src/commands/prune.ts";
+import { registerRestoreCommand } from "../../compat/reference/src/commands/restore.ts";
+import { registerSearchCommand } from "../../compat/reference/src/commands/search.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import type { ExpertiseRecord } from "../../compat/reference/src/schemas/record.ts";
+import { getArchivePath, readArchiveFile } from "../../compat/reference/src/utils/archive.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../compat/reference/src/utils/config.ts";
+import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../compat/reference/src/utils/expertise.ts";
 
 function daysAgo(days: number): string {
 	const d = new Date();

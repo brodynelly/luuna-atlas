@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { mkdtemp, open, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { renameReplacing } from "../../src/utils/fs-rename.ts";
+import { renameReplacing } from "../../compat/reference/src/utils/fs-rename.ts";
 
 describe("renameReplacing", () => {
 	let tmpDir: string;

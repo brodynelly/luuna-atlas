@@ -10,6 +10,8 @@ bun.lockb
 
 # ---- node / bun ----------------------------------------------------
 node_modules/
+.atlas-bin/
+.tac/runs/
 .bun/
 bun.lockb.bak
 

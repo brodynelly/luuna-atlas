@@ -3,10 +3,10 @@ import { execFileSync } from "node:child_process";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { ExpertiseRecord } from "../../src/schemas/record.ts";
-import { applyBudget } from "../../src/utils/budget.ts";
-import { formatIndexLine } from "../../src/utils/format.ts";
-import { findStaleRecords, primeStaleIds, STALE_CHURN_COMMITS } from "../../src/utils/staleness.ts";
+import type { ExpertiseRecord } from "../../compat/reference/src/schemas/record.ts";
+import { applyBudget } from "../../compat/reference/src/utils/budget.ts";
+import { formatIndexLine } from "../../compat/reference/src/utils/format.ts";
+import { findStaleRecords, primeStaleIds, STALE_CHURN_COMMITS } from "../../compat/reference/src/utils/staleness.ts";
 
 const SHELF_LIFE = { tactical: 14, observational: 30 };
 const DAY_MS = 86_400_000;

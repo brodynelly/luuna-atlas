@@ -4,9 +4,9 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { recordSchema } from "../../src/schemas/record-schema.ts";
-import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import { recordSchema } from "../../compat/reference/src/schemas/record-schema.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../compat/reference/src/utils/config.ts";
 
 describe("validate command", () => {
 	const ajv = new Ajv();
