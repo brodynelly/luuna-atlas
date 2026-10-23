@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { mkdtemp, readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { withFileLock } from "../../src/utils/lock.ts";
+import { withFileLock } from "../../compat/reference/src/utils/lock.ts";
 
 describe("withFileLock", () => {
 	let tmpDir: string;

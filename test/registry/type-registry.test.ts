@@ -1,14 +1,14 @@
 import { afterEach, describe, expect, it } from "bun:test";
-import { BUILTIN_DEFS } from "../../src/registry/builtins.ts";
-import { compileSummaryTemplate } from "../../src/registry/template.ts";
+import { BUILTIN_DEFS } from "../../compat/reference/src/registry/builtins.ts";
+import { compileSummaryTemplate } from "../../compat/reference/src/registry/template.ts";
 import {
 	buildBuiltinRegistry,
 	getRegistry,
 	resetRegistry,
 	setRegistry,
 	TypeRegistry,
-} from "../../src/registry/type-registry.ts";
-import type { ExpertiseRecord } from "../../src/schemas/record.ts";
+} from "../../compat/reference/src/registry/type-registry.ts";
+import type { ExpertiseRecord } from "../../compat/reference/src/schemas/record.ts";
 
 const SIX = ["convention", "pattern", "failure", "decision", "reference", "guide"] as const;
 

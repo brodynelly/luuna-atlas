@@ -12,7 +12,7 @@ import {
 	type ResolverHit,
 	resolveActiveWork,
 	TRACKERS,
-} from "../../src/utils/active-work.ts";
+} from "../../compat/reference/src/utils/active-work.ts";
 
 function initGitRepo(dir: string): void {
 	execFileSync("git", ["init", "-q", "-b", "main"], { cwd: dir, stdio: "pipe" });

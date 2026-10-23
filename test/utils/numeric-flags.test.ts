@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import {
 	parseStrictNonNegativeNumber,
 	parseStrictPositiveInt,
-} from "../../src/utils/numeric-flags.ts";
+} from "../../compat/reference/src/utils/numeric-flags.ts";
 
 describe("parseStrictNonNegativeNumber", () => {
 	it("accepts integers", () => {

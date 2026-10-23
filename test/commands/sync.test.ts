@@ -4,12 +4,12 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Command } from "commander";
-import { registerSyncCommand } from "../../src/commands/sync.ts";
-import { initRegistryFromConfig } from "../../src/registry/init.ts";
-import { resetRegistry } from "../../src/registry/type-registry.ts";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
-import { appendRecord, createExpertiseFile } from "../../src/utils/expertise.ts";
+import { registerSyncCommand } from "../../compat/reference/src/commands/sync.ts";
+import { initRegistryFromConfig } from "../../compat/reference/src/registry/init.ts";
+import { resetRegistry } from "../../compat/reference/src/registry/type-registry.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../compat/reference/src/utils/config.ts";
+import { appendRecord, createExpertiseFile } from "../../compat/reference/src/utils/expertise.ts";
 
 function makeProgram(): Command {
 	const program = new Command();
@@ -565,7 +565,7 @@ describe("sync command", () => {
 			);
 
 			const { setAllowDomainMismatch, resetRuntimeFlags } = await import(
-				"../../src/utils/runtime-flags.ts"
+				"../../compat/reference/src/utils/runtime-flags.ts"
 			);
 			setAllowDomainMismatch(true);
 

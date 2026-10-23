@@ -4,17 +4,17 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Command } from "commander";
-import { registerAddCommand } from "../../src/commands/add.ts";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
+import { registerAddCommand } from "../../compat/reference/src/commands/add.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
 import {
 	getAtlasDir,
 	getExpertisePath,
 	initAtlasDir,
 	readConfig,
 	writeConfig,
-} from "../../src/utils/config.ts";
-import { createExpertiseFile } from "../../src/utils/expertise.ts";
-import { setQuiet } from "../../src/utils/palette.ts";
+} from "../../compat/reference/src/utils/config.ts";
+import { createExpertiseFile } from "../../compat/reference/src/utils/expertise.ts";
+import { setQuiet } from "../../compat/reference/src/utils/palette.ts";
 
 describe("add command", () => {
 	let tmpDir: string;

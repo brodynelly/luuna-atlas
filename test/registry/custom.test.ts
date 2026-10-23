@@ -3,7 +3,7 @@ import {
 	buildCustomTypeDefinition,
 	buildCustomTypeDefinitions,
 	validateCustomTypeConfig,
-} from "../../src/registry/custom.ts";
+} from "../../compat/reference/src/registry/custom.ts";
 
 describe("validateCustomTypeConfig", () => {
 	it("accepts a well-formed custom type", () => {

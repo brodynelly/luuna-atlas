@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
-import { DEFAULT_PRIME_TIER_WEIGHTS } from "../../src/schemas/config.ts";
-import type { ExpertiseRecord, Outcome } from "../../src/schemas/record.ts";
-import type { ActiveContext } from "../../src/utils/git.ts";
+import { DEFAULT_PRIME_TIER_WEIGHTS } from "../../compat/reference/src/schemas/config.ts";
+import type { ExpertiseRecord, Outcome } from "../../compat/reference/src/schemas/record.ts";
+import type { ActiveContext } from "../../compat/reference/src/utils/git.ts";
 import {
 	buildSurfaceAnnotations,
 	computeTrustScore,
@@ -11,7 +11,7 @@ import {
 	type SurfaceReason,
 	sortByTrust,
 	whySurfaced,
-} from "../../src/utils/prime-ranking.ts";
+} from "../../compat/reference/src/utils/prime-ranking.ts";
 
 function makeConvention(over: Partial<ExpertiseRecord> = {}): ExpertiseRecord {
 	return {

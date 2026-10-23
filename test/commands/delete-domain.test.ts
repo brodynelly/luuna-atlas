@@ -4,8 +4,8 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Command } from "commander";
-import { registerDeleteDomainCommand } from "../../src/commands/delete-domain.ts";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
+import { registerDeleteDomainCommand } from "../../compat/reference/src/commands/delete-domain.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
 import {
 	addDomain,
 	getExpertisePath,
@@ -13,8 +13,8 @@ import {
 	readConfig,
 	removeDomain,
 	writeConfig,
-} from "../../src/utils/config.ts";
-import { createExpertiseFile } from "../../src/utils/expertise.ts";
+} from "../../compat/reference/src/utils/config.ts";
+import { createExpertiseFile } from "../../compat/reference/src/utils/expertise.ts";
 
 async function runDeleteDomain(
 	tmpDir: string,

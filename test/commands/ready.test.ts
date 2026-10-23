@@ -3,12 +3,12 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Command } from "commander";
-import { registerReadyCommand } from "../../src/commands/ready.ts";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import type { ExpertiseRecord } from "../../src/schemas/record.ts";
-import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
-import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../src/utils/expertise.ts";
-import { formatTimeAgo, getRecordSummary } from "../../src/utils/format.ts";
+import { registerReadyCommand } from "../../compat/reference/src/commands/ready.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import type { ExpertiseRecord } from "../../compat/reference/src/schemas/record.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../compat/reference/src/utils/config.ts";
+import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../compat/reference/src/utils/expertise.ts";
+import { formatTimeAgo, getRecordSummary } from "../../compat/reference/src/utils/format.ts";
 
 let tmpDir: string;
 

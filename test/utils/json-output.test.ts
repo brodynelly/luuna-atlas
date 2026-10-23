@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, spyOn } from "bun:test";
-import { outputJson, outputJsonError } from "../../src/utils/json-output.ts";
+import { outputJson, outputJsonError } from "../../compat/reference/src/utils/json-output.ts";
 
 describe("outputJson", () => {
 	let logSpy: ReturnType<typeof spyOn>;

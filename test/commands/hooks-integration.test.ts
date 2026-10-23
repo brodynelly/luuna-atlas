@@ -3,16 +3,16 @@ import { existsSync } from "node:fs";
 import { chmod, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { processStdinRecords } from "../../src/commands/record.ts";
-import { initRegistryFromConfig } from "../../src/registry/init.ts";
-import { resetRegistry } from "../../src/registry/type-registry.ts";
-import { type AtlasConfig, DEFAULT_CONFIG } from "../../src/schemas/config.ts";
+import { processStdinRecords } from "../../compat/reference/src/commands/record.ts";
+import { initRegistryFromConfig } from "../../compat/reference/src/registry/init.ts";
+import { resetRegistry } from "../../compat/reference/src/registry/type-registry.ts";
+import { type AtlasConfig, DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
 import {
 	getExpertisePath,
 	initAtlasDir,
 	writeConfig as writeAtlasConfig,
-} from "../../src/utils/config.ts";
-import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../src/utils/expertise.ts";
+} from "../../compat/reference/src/utils/config.ts";
+import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../compat/reference/src/utils/expertise.ts";
 
 const CLI = resolve(__dirname, "../../src/cli.ts");
 

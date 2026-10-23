@@ -5,10 +5,10 @@ import { spawnSync } from "node:child_process";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { DEFAULT_CONFIG, type QualityLevel } from "../../src/schemas/config.ts";
-import type { ExpertiseRecord } from "../../src/schemas/record.ts";
-import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
-import { appendRecord, readExpertiseFile } from "../../src/utils/expertise.ts";
+import { DEFAULT_CONFIG, type QualityLevel } from "../../compat/reference/src/schemas/config.ts";
+import type { ExpertiseRecord } from "../../compat/reference/src/schemas/record.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../compat/reference/src/utils/config.ts";
+import { appendRecord, readExpertiseFile } from "../../compat/reference/src/utils/expertise.ts";
 
 const cliPath = resolve(process.cwd(), "src/cli.ts");
 

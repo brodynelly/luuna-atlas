@@ -1,4 +1,4 @@
-import type { ExpertiseRecord } from "../../src/schemas/record.ts";
+import type { ExpertiseRecord } from "../../compat/reference/src/schemas/record.ts";
 
 // A fixed record set covering all six built-in types with files/tags/relates_to/
 // supersedes/outcomes/evidence so format renderers exercise every branch. Used

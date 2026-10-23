@@ -4,7 +4,7 @@ import {
 	fileLivesUnderDir,
 	inferDirAnchors,
 	normalizeDirAnchor,
-} from "../../src/utils/dir-anchors.ts";
+} from "../../compat/reference/src/utils/dir-anchors.ts";
 
 describe("normalizeDirAnchor", () => {
 	it("strips trailing slash", () => {

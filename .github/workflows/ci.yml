@@ -15,6 +15,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24.19.0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.27.0
+          cache-dependency-path: go.sum
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
@@ -29,15 +33,17 @@ jobs:
           assert not bad, 'Private artifacts must not be tracked'
           PY
   verify-windows:
-    # Same supported surface on Windows. Hook and shell-recipe tests run real
-    # sh scripts; the bunfig test preload puts Git for Windows' usr/bin on
-    # PATH.
+    # Go and Bun hook/recipe tests use Git for Windows' POSIX tools locally.
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24.19.0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.27.0
+          cache-dependency-path: go.sum
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3

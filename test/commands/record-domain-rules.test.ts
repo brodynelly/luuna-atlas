@@ -7,12 +7,12 @@ import { spawnSync } from "node:child_process";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { processStdinRecords } from "../../src/commands/record.ts";
-import { initRegistryFromConfig } from "../../src/registry/init.ts";
-import { resetRegistry } from "../../src/registry/type-registry.ts";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
-import { createExpertiseFile, readExpertiseFile } from "../../src/utils/expertise.ts";
+import { processStdinRecords } from "../../compat/reference/src/commands/record.ts";
+import { initRegistryFromConfig } from "../../compat/reference/src/registry/init.ts";
+import { resetRegistry } from "../../compat/reference/src/registry/type-registry.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../compat/reference/src/utils/config.ts";
+import { createExpertiseFile, readExpertiseFile } from "../../compat/reference/src/utils/expertise.ts";
 
 describe("per-domain allowed_types (R-01b)", () => {
 	const cliPath = resolve(process.cwd(), "src/cli.ts");

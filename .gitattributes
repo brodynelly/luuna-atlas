@@ -1,1 +1,2 @@
 .luuna/atlas/expertise/*.jsonl merge=union
+*.go text eol=lf

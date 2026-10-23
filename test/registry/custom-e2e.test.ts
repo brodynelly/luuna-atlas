@@ -2,20 +2,20 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { mergeRecords } from "../../src/commands/compact.ts";
-import { matchFilesToDomains } from "../../src/commands/learn.ts";
-import { initRegistryFromConfig } from "../../src/registry/init.ts";
-import { resetRegistry } from "../../src/registry/type-registry.ts";
-import type { CustomTypeConfig } from "../../src/schemas/config.ts";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import type { ExpertiseRecord } from "../../src/schemas/record.ts";
-import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
+import { mergeRecords } from "../../compat/reference/src/commands/compact.ts";
+import { matchFilesToDomains } from "../../compat/reference/src/commands/learn.ts";
+import { initRegistryFromConfig } from "../../compat/reference/src/registry/init.ts";
+import { resetRegistry } from "../../compat/reference/src/registry/type-registry.ts";
+import type { CustomTypeConfig } from "../../compat/reference/src/schemas/config.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import type { ExpertiseRecord } from "../../compat/reference/src/schemas/record.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../compat/reference/src/utils/config.ts";
 import {
 	appendRecord,
 	createExpertiseFile,
 	findDuplicate,
 	readExpertiseFile,
-} from "../../src/utils/expertise.ts";
+} from "../../compat/reference/src/utils/expertise.ts";
 
 const HYPOTHESIS_CFG: CustomTypeConfig = {
 	required: ["statement", "prediction"],
@@ -62,7 +62,7 @@ describe("custom_types end-to-end", () => {
 	});
 
 	it("registry sees both built-ins and declared custom types", async () => {
-		const { getRegistry } = await import("../../src/registry/type-registry.ts");
+		const { getRegistry } = await import("../../compat/reference/src/registry/type-registry.ts");
 		const reg = getRegistry();
 		expect(reg.names()).toContain("convention");
 		expect(reg.names()).toContain("hypothesis");
@@ -71,7 +71,7 @@ describe("custom_types end-to-end", () => {
 	});
 
 	it("validator accepts a well-formed custom-type record", async () => {
-		const { getRegistry } = await import("../../src/registry/type-registry.ts");
+		const { getRegistry } = await import("../../compat/reference/src/registry/type-registry.ts");
 		const validator = getRegistry().validator;
 		const ok = validator({
 			type: "hypothesis",
@@ -84,7 +84,7 @@ describe("custom_types end-to-end", () => {
 	});
 
 	it("validator rejects a custom-type record missing required fields", async () => {
-		const { getRegistry } = await import("../../src/registry/type-registry.ts");
+		const { getRegistry } = await import("../../compat/reference/src/registry/type-registry.ts");
 		const validator = getRegistry().validator;
 		const ok = validator({
 			type: "hypothesis",
@@ -96,7 +96,7 @@ describe("custom_types end-to-end", () => {
 	});
 
 	it("validator rejects unknown fields not declared in required/optional", async () => {
-		const { getRegistry } = await import("../../src/registry/type-registry.ts");
+		const { getRegistry } = await import("../../compat/reference/src/registry/type-registry.ts");
 		const validator = getRegistry().validator;
 		const ok = validator({
 			type: "hypothesis",

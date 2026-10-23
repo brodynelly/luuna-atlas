@@ -21,3 +21,11 @@ The owner requested the explicit luuna-* repository names on October 21, 2026. G
 - Sibling data: Missions is read from `.luuna/missions/` (legacy `.seeds/` read-only fallback).
 - Removed aliases `ml` and `mulch`; environment variables `MULCH_*` are `LUUNA_ATLAS_*`.
 - Re-run `luuna-atlas setup claude` to replace old hook commands; re-run `luuna-atlas onboard` to refresh instruction snippets (old marker sections are replaced in place).
+
+# Native Go implementation, October 22, 2026
+
+The CLI and library operations were rewritten in Go against Atlas commit `27477c313a3049b1579dfdc32c39da600726721f`, compatibility version `0.11.0`. No additional data migration is introduced. Existing commands, aliases, configuration keys, record schemas and the layout migration above remain the compatibility boundary.
+
+Development now requires Go 1.27.0 and Bun 1.4.3. Go dependencies are vendored. `bun run build:native` produces the standalone executable and aliases; `bun run verify` checks the native implementation and compatibility surfaces. Existing TypeScript entry points call Go. The former implementation is a frozen test oracle under `compat/reference/`, excluded from production packaging and execution.
+
+See [GO-REWRITE-REPORT.md](GO-REWRITE-REPORT.md) for architecture, command coverage and verification. This rewrite does not update a Luuna consumer pin, publish a package or change runtime policy. Those steps retain their separate review requirements.

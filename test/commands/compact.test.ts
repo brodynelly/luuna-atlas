@@ -3,13 +3,13 @@ import { chmod, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Command } from "commander";
-import { registerCompactCommand } from "../../src/commands/compact.ts";
-import { registerRestoreCommand } from "../../src/commands/restore.ts";
-import { type AtlasConfig, DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import type { ExpertiseRecord } from "../../src/schemas/record.ts";
-import { getArchivePath, readArchiveFile } from "../../src/utils/archive.ts";
-import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
-import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../src/utils/expertise.ts";
+import { registerCompactCommand } from "../../compat/reference/src/commands/compact.ts";
+import { registerRestoreCommand } from "../../compat/reference/src/commands/restore.ts";
+import { type AtlasConfig, DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import type { ExpertiseRecord } from "../../compat/reference/src/schemas/record.ts";
+import { getArchivePath, readArchiveFile } from "../../compat/reference/src/utils/archive.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../compat/reference/src/utils/config.ts";
+import { appendRecord, createExpertiseFile, readExpertiseFile } from "../../compat/reference/src/utils/expertise.ts";
 
 function daysAgo(n: number): string {
 	const d = new Date();
@@ -89,7 +89,7 @@ describe("compact command", () => {
 
 	describe("auto", () => {
 		it("merges convention content fields", async () => {
-			const { mergeRecords } = await import("../../src/commands/compact.js");
+			const { mergeRecords } = await import("../../compat/reference/src/commands/compact.js");
 
 			const records: ExpertiseRecord[] = [
 				{
@@ -127,7 +127,7 @@ describe("compact command", () => {
 		});
 
 		it("merges pattern names by choosing longest", async () => {
-			const { mergeRecords } = await import("../../src/commands/compact.js");
+			const { mergeRecords } = await import("../../compat/reference/src/commands/compact.js");
 
 			const records: ExpertiseRecord[] = [
 				{
@@ -168,7 +168,7 @@ describe("compact command", () => {
 		});
 
 		it("merges failure descriptions and resolutions", async () => {
-			const { mergeRecords } = await import("../../src/commands/compact.js");
+			const { mergeRecords } = await import("../../compat/reference/src/commands/compact.js");
 
 			const records: ExpertiseRecord[] = [
 				{
@@ -200,7 +200,7 @@ describe("compact command", () => {
 		});
 
 		it("merges decision titles by choosing longest", async () => {
-			const { mergeRecords } = await import("../../src/commands/compact.js");
+			const { mergeRecords } = await import("../../compat/reference/src/commands/compact.js");
 
 			const records: ExpertiseRecord[] = [
 				{
@@ -240,7 +240,7 @@ describe("compact command", () => {
 		});
 
 		it("preserves and merges tags across records", async () => {
-			const { mergeRecords } = await import("../../src/commands/compact.js");
+			const { mergeRecords } = await import("../../compat/reference/src/commands/compact.js");
 
 			const records: ExpertiseRecord[] = [
 				{
@@ -277,7 +277,7 @@ describe("compact command", () => {
 		});
 
 		it("preserves and merges files for pattern types", async () => {
-			const { mergeRecords } = await import("../../src/commands/compact.js");
+			const { mergeRecords } = await import("../../compat/reference/src/commands/compact.js");
 
 			const records: ExpertiseRecord[] = [
 				{
@@ -321,7 +321,7 @@ describe("compact command", () => {
 		});
 
 		it("merges reference types correctly", async () => {
-			const { mergeRecords } = await import("../../src/commands/compact.js");
+			const { mergeRecords } = await import("../../compat/reference/src/commands/compact.js");
 
 			const records: ExpertiseRecord[] = [
 				{
@@ -352,7 +352,7 @@ describe("compact command", () => {
 		});
 
 		it("merges guide types correctly", async () => {
-			const { mergeRecords } = await import("../../src/commands/compact.js");
+			const { mergeRecords } = await import("../../compat/reference/src/commands/compact.js");
 
 			const records: ExpertiseRecord[] = [
 				{
@@ -403,7 +403,7 @@ describe("compact command", () => {
 
 			// With --min-group 5 (default), 4 records should not be compacted
 			// unless they have stale records
-			await import("../../src/commands/compact.js");
+			await import("../../compat/reference/src/commands/compact.js");
 			// We'd need to export findCandidates to test this properly, or test via CLI
 			// For now, we verify that the logic works in the auto handler
 		});
@@ -463,7 +463,7 @@ describe("compact command", () => {
 		});
 
 		it("merges records with min-group threshold of 3", async () => {
-			const { mergeRecords } = await import("../../src/commands/compact.js");
+			const { mergeRecords } = await import("../../compat/reference/src/commands/compact.js");
 
 			const records: ExpertiseRecord[] = [
 				{
@@ -832,7 +832,7 @@ describe("compact command", () => {
 			};
 			remaining.push(replacement);
 
-			const { writeExpertiseFile } = await import("../../src/utils/expertise.js");
+			const { writeExpertiseFile } = await import("../../compat/reference/src/utils/expertise.js");
 			await writeExpertiseFile(filePath, remaining);
 
 			const after = await readExpertiseFile(filePath);
@@ -887,7 +887,7 @@ describe("compact command", () => {
 			};
 			remaining.push(replacement);
 
-			const { writeExpertiseFile } = await import("../../src/utils/expertise.js");
+			const { writeExpertiseFile } = await import("../../compat/reference/src/utils/expertise.js");
 			await writeExpertiseFile(filePath, remaining);
 
 			const after = await readExpertiseFile(filePath);
@@ -929,7 +929,7 @@ describe("compact command", () => {
 				supersedes: beforeIds,
 			};
 
-			const { writeExpertiseFile } = await import("../../src/utils/expertise.js");
+			const { writeExpertiseFile } = await import("../../compat/reference/src/utils/expertise.js");
 			await writeExpertiseFile(filePath, [replacement]);
 
 			const after = await readExpertiseFile(filePath);
@@ -971,7 +971,7 @@ describe("compact command", () => {
 				supersedes: sourceIds,
 			};
 
-			const { writeExpertiseFile } = await import("../../src/utils/expertise.js");
+			const { writeExpertiseFile } = await import("../../compat/reference/src/utils/expertise.js");
 			await writeExpertiseFile(filePath, [replacement]);
 
 			const after = await readExpertiseFile(filePath);

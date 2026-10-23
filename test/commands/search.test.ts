@@ -3,9 +3,9 @@ import { appendFile, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Command } from "commander";
-import { registerSearchCommand } from "../../src/commands/search.ts";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { getExpertisePath, initAtlasDir, writeConfig } from "../../src/utils/config.ts";
+import { registerSearchCommand } from "../../compat/reference/src/commands/search.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import { getExpertisePath, initAtlasDir, writeConfig } from "../../compat/reference/src/utils/config.ts";
 import {
 	appendRecord,
 	createExpertiseFile,
@@ -14,12 +14,12 @@ import {
 	filterByType,
 	readExpertiseFile,
 	searchRecords,
-} from "../../src/utils/expertise.ts";
+} from "../../compat/reference/src/utils/expertise.ts";
 import {
 	type Outcome,
 	type ScoredRecord,
 	sortByConfirmationScore,
-} from "../../src/utils/scoring.ts";
+} from "../../compat/reference/src/utils/scoring.ts";
 
 describe("search command", () => {
 	let tmpDir: string;

@@ -2,12 +2,12 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { buildCustomTypeDefinition, validateCustomTypeConfig } from "../../src/registry/custom.ts";
-import { initRegistryFromConfig } from "../../src/registry/init.ts";
-import { getRegistry, resetRegistry } from "../../src/registry/type-registry.ts";
-import type { CustomTypeConfig } from "../../src/schemas/config.ts";
-import { DEFAULT_CONFIG } from "../../src/schemas/config.ts";
-import { initAtlasDir, writeConfig } from "../../src/utils/config.ts";
+import { buildCustomTypeDefinition, validateCustomTypeConfig } from "../../compat/reference/src/registry/custom.ts";
+import { initRegistryFromConfig } from "../../compat/reference/src/registry/init.ts";
+import { getRegistry, resetRegistry } from "../../compat/reference/src/registry/type-registry.ts";
+import type { CustomTypeConfig } from "../../compat/reference/src/schemas/config.ts";
+import { DEFAULT_CONFIG } from "../../compat/reference/src/schemas/config.ts";
+import { initAtlasDir, writeConfig } from "../../compat/reference/src/utils/config.ts";
 
 describe("validateCustomTypeConfig — extends", () => {
 	it("accepts extends: <builtin> with no other fields", () => {

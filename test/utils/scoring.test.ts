@@ -9,7 +9,7 @@ import {
 	type Outcome,
 	type ScoredRecord,
 	sortByConfirmationScore,
-} from "../../src/utils/scoring.ts";
+} from "../../compat/reference/src/utils/scoring.ts";
 
 // Helpers for building test records
 function makePattern(overrides: Partial<ScoredRecord> = {}): ScoredRecord {

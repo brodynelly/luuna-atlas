@@ -2,12 +2,12 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { ExpertiseRecord } from "../../src/schemas/record.ts";
+import type { ExpertiseRecord } from "../../compat/reference/src/schemas/record.ts";
 import {
 	computeAnchorValidity,
 	getRecordAnchors,
 	passedAnchorGrace,
-} from "../../src/utils/anchor-validity.ts";
+} from "../../compat/reference/src/utils/anchor-validity.ts";
 
 function makePattern(over: Partial<ExpertiseRecord> = {}): ExpertiseRecord {
 	return {

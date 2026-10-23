@@ -3,14 +3,14 @@ import { execFileSync } from "node:child_process";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { ExpertiseRecord } from "../../src/schemas/record.ts";
+import type { ExpertiseRecord } from "../../compat/reference/src/schemas/record.ts";
 import {
 	type ActiveContext,
 	activeContextHasSignal,
 	filterByActiveContext,
 	getActiveFiles,
 	getChangedFiles,
-} from "../../src/utils/git.ts";
+} from "../../compat/reference/src/utils/git.ts";
 
 function initGitRepo(dir: string): void {
 	execFileSync("git", ["init", "-q", "-b", "main"], { cwd: dir, stdio: "pipe" });

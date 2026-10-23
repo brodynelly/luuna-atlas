@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { buildCustomTypeDefinition, validateCustomTypeConfig } from "../../src/registry/custom.ts";
-import { applyAliases } from "../../src/utils/expertise.ts";
+import { buildCustomTypeDefinition, validateCustomTypeConfig } from "../../compat/reference/src/registry/custom.ts";
+import { applyAliases } from "../../compat/reference/src/utils/expertise.ts";
 
 describe("validateCustomTypeConfig — aliases", () => {
 	it("accepts canonical-to-legacy mapping where canonical is declared", () => {

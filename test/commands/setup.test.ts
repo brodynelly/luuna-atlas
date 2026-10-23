@@ -10,8 +10,8 @@ import {
 	installGitHook,
 	recipes,
 	removeGitHook,
-} from "../../src/commands/setup.ts";
-import { initAtlasDir } from "../../src/utils/config.ts";
+} from "../../compat/reference/src/commands/setup.ts";
+import { initAtlasDir } from "../../compat/reference/src/utils/config.ts";
 
 const CLI_PATH = resolve(import.meta.dir, "..", "..", "src", "cli.ts");
 

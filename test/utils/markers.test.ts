@@ -6,7 +6,7 @@ import {
 	removeMarkerSection,
 	replaceMarkerSection,
 	wrapInMarkers,
-} from "../../src/utils/markers.ts";
+} from "../../compat/reference/src/utils/markers.ts";
 
 describe("markers utility", () => {
 	it("hasMarkerSection detects markers", () => {
