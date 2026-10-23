@@ -51,7 +51,7 @@ describe("native version maintenance", () => {
 		const contract = JSON.parse(readFileSync(join(root, "internal/atlas/contract.json"), "utf8"));
 		expect(contract.cli.commands[0].commands[0].help).toContain("v0.12.0");
 		expect(contract.baseline).toBe("frozen");
-		expect(readdirSync(join(root, "internal/atlas"))).toEqual(["app.go", "contract.json"]);
+		expect(readdirSync(join(root, "internal/atlas")).sort()).toEqual(["app.go", "contract.json"]);
 	});
 	it("validates the complete plan before writing", () => {
 		const root = fixture();
@@ -71,7 +71,7 @@ describe("native version maintenance", () => {
 			}),
 		).toThrow("simulated rename failure");
 		for (const file of plan.changes) expect(readFileSync(file.path, "utf8")).toBe(file.before);
-		expect(readdirSync(join(root, "internal/atlas"))).toEqual(["app.go", "contract.json"]);
+		expect(readdirSync(join(root, "internal/atlas")).sort()).toEqual(["app.go", "contract.json"]);
 	});
 	it("rejects edits made after planning without overwriting them", () => {
 		const root = fixture();
