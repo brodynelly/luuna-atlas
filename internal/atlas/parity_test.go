@@ -189,9 +189,17 @@ func parityTree(t *testing.T, dir string, started time.Time) map[string]any {
 	})
 	return out
 }
+func parityCanonicalRoot(t *testing.T, root string) string {
+	t.Helper()
+	canonical, e := filepath.EvalSymlinks(root)
+	if e != nil {
+		t.Fatal(e)
+	}
+	return canonical
+}
 func parityProjects(t *testing.T) (string, string) {
 	t.Helper()
-	root := t.TempDir()
+	root := parityCanonicalRoot(t, t.TempDir())
 	ref, goDir := filepath.Join(root, "reference", "project"), filepath.Join(root, "go", "project")
 	for _, dir := range []string{ref, goDir} {
 		if e := os.MkdirAll(dir, 0755); e != nil {
@@ -199,6 +207,42 @@ func parityProjects(t *testing.T) (string, string) {
 		}
 	}
 	return ref, goDir
+}
+func TestParityProjectsCanonicalRoot(t *testing.T) {
+	base := t.TempDir()
+	real := filepath.Join(base, "real")
+	link := filepath.Join(base, "link")
+	if e := os.MkdirAll(real, 0755); e != nil {
+		t.Fatal(e)
+	}
+	if e := os.Symlink(real, link); e != nil {
+		t.Skipf("symlinks unsupported: %v", e)
+	}
+	want, e := filepath.EvalSymlinks(real)
+	if e != nil {
+		t.Fatal(e)
+	}
+	got := parityCanonicalRoot(t, link)
+	if got != want {
+		t.Errorf("parityCanonicalRoot(%q) = %q, want %q", link, got, want)
+	}
+	if got == link {
+		t.Errorf("parityCanonicalRoot(%q) returned the symlink unchanged", link)
+	}
+	refDir, goDir := parityProjects(t)
+	for _, dir := range []string{refDir, goDir} {
+		resolved, e := filepath.EvalSymlinks(dir)
+		if e != nil {
+			t.Fatal(e)
+		}
+		if resolved != dir {
+			t.Errorf("parityProjects dir %q is not canonical (resolves to %q)", dir, resolved)
+		}
+	}
+	canon := parityCanonicalRoot(t, base)
+	if normalized := parityNormalize(filepath.Join(canon, "x"), canon, time.Now()); normalized != filepath.Join("<PROJECT>", "x") {
+		t.Errorf("parityNormalize canonical path = %q, want %q", normalized, filepath.Join("<PROJECT>", "x"))
+	}
 }
 func parityExecute(t *testing.T, steps []parityStep, prepare func(string)) {
 	t.Helper()

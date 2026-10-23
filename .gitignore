@@ -12,6 +12,7 @@ bun.lockb
 node_modules/
 .atlas-bin/
 .tac/runs/
+.tac/tools/
 .bun/
 bun.lockb.bak
 

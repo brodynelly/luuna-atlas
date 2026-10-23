@@ -1,0 +1,71 @@
+# Builds unpublished native Atlas archives as workflow artifacts only.
+# Manual dispatch only. Creating tags, releases, attestations or registry
+# packages is an owner gate described in docs/RELEASING.md and is not done here.
+name: Native release artifacts (unpublished)
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Archive version, MAJOR.MINOR.PATCH[-prerelease] without a leading v
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: release-artifacts-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  package:
+    name: ${{ matrix.os }}/${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-14
+            os: darwin
+            arch: arm64
+          - runner: macos-15-intel
+            os: darwin
+            arch: amd64
+          - runner: ubuntu-latest
+            os: linux
+            arch: amd64
+          - runner: ubuntu-24.04-arm
+            os: linux
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    env:
+      # The input reaches scripts only through the environment, never inline.
+      ARCHIVE_VERSION: ${{ inputs.version }}
+      TARGET_OS: ${{ matrix.os }}
+      TARGET_ARCH: ${{ matrix.arch }}
+      GOTOOLCHAIN: local
+      GOPROXY: "off"
+      GOFLAGS: -mod=vendor
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.27.0
+          cache: false
+      - name: Go tests
+        run: go test -p=1 -mod=vendor ./...
+      - name: Release script tests (offline fixtures)
+        run: sh scripts/release/test-release.sh --skip-build
+      - name: Package host-native archive
+        run: sh scripts/release/package.sh --version "$ARCHIVE_VERSION" --os "$TARGET_OS" --arch "$TARGET_ARCH" --out dist --require-clean
+      - name: Check archive and execute it on this runner
+        run: sh scripts/release/check-archive.sh --require-exec "dist/luuna-atlas_${ARCHIVE_VERSION}_${TARGET_OS}_${TARGET_ARCH}.tar.gz"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: luuna-atlas-${{ inputs.version }}-${{ matrix.os }}-${{ matrix.arch }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
+      # OWNER GATE (disabled): build provenance attestation. Enabling it needs
+      # `id-token: write` and `attestations: write` and stores a public record.
+      # - uses: actions/attest-build-provenance@v2
+      #   with:
+      #     subject-path: dist/*.tar.gz
